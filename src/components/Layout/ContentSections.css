@@ -1,0 +1,29 @@
+.content-split {
+  flex: 1;
+  padding-top: 0;
+  padding-bottom: clamp(24px, 4vw, 40px);
+  min-height: 0;
+}
+
+.content-col {
+  display: flex;
+  flex-direction: column;
+  min-height: min(420px, calc(100svh - 240px));
+}
+
+.content-col .panel-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+@media (max-width: 768px) {
+  .content-col {
+    min-height: 200px;
+  }
+
+  .content-col:last-child {
+    min-height: 280px;
+  }
+}

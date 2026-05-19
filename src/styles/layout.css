@@ -1,0 +1,35 @@
+/* 30% / 70% 分栏，与下方内容区对齐 */
+.page-split {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 20px);
+  padding: clamp(20px, 4vw, 32px) clamp(16px, 4vw, 32px) clamp(12px, 2vw, 16px);
+  box-sizing: border-box;
+}
+
+.page-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.page-col--left {
+  flex: 0 0 30%;
+}
+
+.page-col--right {
+  flex: 0 0 70%;
+}
+
+@media (max-width: 768px) {
+  .page-split {
+    flex-direction: column;
+    padding-bottom: 8px;
+  }
+
+  .page-col--left,
+  .page-col--right {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}

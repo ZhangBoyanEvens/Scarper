@@ -1,0 +1,25 @@
+.top-toolbar {
+  flex-shrink: 0;
+}
+
+.top-toolbar-split {
+  align-items: stretch;
+}
+
+.top-toolbar-left {
+  flex: 0 0 70%;
+  justify-content: stretch;
+}
+
+.top-toolbar-right {
+  flex: 0 0 30%;
+  justify-content: stretch;
+}
+
+@media (max-width: 768px) {
+  .top-toolbar-left,
+  .top-toolbar-right {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}

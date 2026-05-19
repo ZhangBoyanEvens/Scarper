@@ -1,0 +1,113 @@
+.panel-body--results {
+  overflow: auto;
+}
+
+.results-placeholder {
+  margin: 0;
+  color: #475569;
+}
+
+.results-placeholder code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.9em;
+  color: #94a3b8;
+}
+
+.results-url-list {
+  margin: 12px 0 0;
+  padding-left: 1.2rem;
+  text-align: left;
+}
+
+.results-url-list .results-url {
+  margin-bottom: 6px;
+}
+
+.results-batch {
+  text-align: left;
+}
+
+.results-loading {
+  color: #94a3b8;
+}
+
+.results-prompt-hint {
+  color: #22d3ee;
+  font-size: 0.85em;
+}
+
+.results-url {
+  word-break: break-all;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 8px;
+}
+
+.results-error {
+  color: #f87171;
+  line-height: 1.5;
+}
+
+.results-article {
+  text-align: left;
+  color: #e2e8f0;
+}
+
+.results-title {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.results-meta {
+  margin: 0 0 16px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.results-meta a {
+  color: #22d3ee;
+  text-decoration: none;
+}
+
+.results-meta a:hover {
+  text-decoration: underline;
+}
+
+.results-article section {
+  margin-bottom: 16px;
+}
+
+.results-article h4 {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.results-article p,
+.results-article li {
+  margin: 0;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.results-article ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.results-content {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #94a3b8;
+  max-height: 280px;
+  overflow: auto;
+}

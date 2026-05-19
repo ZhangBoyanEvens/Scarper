@@ -1,0 +1,95 @@
+.result-card {
+  text-align: left;
+  color: #e2e8f0;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.result-card:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.result-card--error {
+  color: #f87171;
+}
+
+.result-card-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.result-card .results-title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.result-card .results-meta {
+  margin: 0 0 12px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.result-card .results-meta a {
+  color: #22d3ee;
+  text-decoration: none;
+}
+
+.result-card .results-meta a:hover {
+  text-decoration: underline;
+}
+
+.result-card section {
+  margin-bottom: 12px;
+}
+
+.result-card h4 {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.result-card p,
+.result-card li {
+  margin: 0;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+
+.result-card ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.result-card .results-content {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #94a3b8;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.result-card .results-url {
+  word-break: break-all;
+  font-size: 0.85rem;
+  margin: 0 0 6px;
+}

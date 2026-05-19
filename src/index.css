@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
+
+:root {
+  color-scheme: dark;
+  --bg-deep: #03040a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    'Outfit',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background: var(--bg-deep);
+  color: #e2e8f0;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100svh;
+}

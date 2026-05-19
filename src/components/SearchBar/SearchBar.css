@@ -1,0 +1,100 @@
+.search-bar {
+  width: 100%;
+}
+
+.search-shell {
+  width: 100%;
+}
+
+.search-shell--focus {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 16px 32px -12px rgba(0, 0, 0, 0.55),
+    0 0 72px -16px rgba(6, 182, 212, 0.3);
+}
+
+.search-shell--invalid {
+  box-shadow:
+    0 0 0 1px rgba(248, 113, 113, 0.35) inset,
+    0 16px 32px -12px rgba(0, 0, 0, 0.5);
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 6px 8px 6px 20px;
+  cursor: text;
+  box-sizing: border-box;
+}
+
+.search-icon {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  color: #94a3b8;
+}
+
+.search-shell--focus .search-icon {
+  color: #22d3ee;
+}
+
+.search-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: #f1f5f9;
+  font-size: clamp(0.95rem, 2vw, 1.05rem);
+  font-weight: 450;
+  letter-spacing: 0.02em;
+  outline: none;
+  padding: 14px 0;
+}
+
+.search-input::placeholder {
+  color: #64748b;
+  font-size: 0.9em;
+}
+
+.search-shell--focus .search-input::placeholder {
+  color: #94a3b8;
+}
+
+.search-go {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+}
+
+.search-go:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #334155;
+}
+
+.search-go svg {
+  width: 22px;
+  height: 22px;
+}
+
+.search-error {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: #f87171;
+  text-align: left;
+}
