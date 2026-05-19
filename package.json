@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:api": "cd backend && python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
