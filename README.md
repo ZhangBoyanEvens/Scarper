@@ -1,73 +1,88 @@
-# React + TypeScript + Vite
+<p align="center">
+  <img src="public/assets/logo.svg" alt="Scarper" width="72" height="72" />
+</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<h1 align="center">Scarper</h1>
 
-Currently, two official plugins are available:
+<p align="center">Secure web scraping &amp; AI analysis</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+<p align="center">
+  <a href="https://www.sparnex.us">sparnex.us</a>
+</p>
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Scarper takes a URL, fetches and sanitizes the page, then uses DeepSeek to produce a summary and key points. Supports saved processing prompts, batch URLs, output language/detail, and per-user daily extract limits for signed-in users.
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Secure pipeline: httpx → (optional) Playwright → sanitize → extract → AI summary
+- Clerk authentication; free plan: 20 extracts per day (`n/20`)
+- Saved processing prompt applied on each search
+- Batch URLs separated by `???` (max 10)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Frontend | Backend |
+|----------|---------|
+| React · Vite · TypeScript | FastAPI · httpx · trafilatura |
+| Clerk | DeepSeek API |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Local development
+
+**1. Environment** — Copy `.env.example` to `.env` and fill in values.
+
+**2. Backend**
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+pip install -r requirements.txt
+playwright install chromium     # optional; needed for JS-heavy pages
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**3. Frontend** (repo root)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
+
+Open http://localhost:5173. In dev, Vite proxies `/api` to `127.0.0.1:8000`.
+
+## Production
+
+| Service | Platform | Notes |
+|---------|----------|--------|
+| Frontend | [Vercel](https://vercel.com) | Preset: **Vite**, output `dist` |
+| API | [Render](https://render.com) | **Python 3**, see below |
+
+**Vercel:** `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_BACKEND_URL` (Render service URL)
+
+**Render:** `DEEPSEEK_API_KEY`, `CLERK_SECRET_KEY`, `CLERK_JWT_ISSUER`, `CORS_ORIGINS` (frontend origin(s), comma-separated), `PLAYWRIGHT_ENABLED=false`
+
+Example Render commands:
+
+```bash
+# Build
+pip install -r backend/requirements.txt
+
+# Start
+cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+When using a custom domain, add it to **Render `CORS_ORIGINS`** and **Clerk Domains**.
+
+## API
+
+- `GET /api/health`
+- `GET /api/user/me` — requires auth
+- `POST /api/extract` — `{ "url", "processing_prompt?", "output_language", "output_detail" }`
+
+See [backend/README.md](backend/README.md) for backend details.
+
+## Repository
+
+https://github.com/ZhangBoyanEvens/Scarper

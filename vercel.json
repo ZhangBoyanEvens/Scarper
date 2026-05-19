@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://scarper-hcjs.onrender.com/api/:path*"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ SPA_HINTS = re.compile(
     re.I,
 )
 EMPTY_APP_ROOT = re.compile(
-    r'<div[^>]+id=["\'](root|app|__next)["\'][^>]*>\s*</motion>',
+    r'<div[^>]+id=["\'](root|app|__next)["\'][^>]*>\s*</div>',
     re.I,
 )
 
@@ -66,6 +66,9 @@ class PageFetcher:
                 return await self._fetch_playwright(url)
             raise
 
+    def _playwright_allowed(self) -> bool:
+        return settings.playwright_enabled
+
     async def _fetch_httpx(self, url: str) -> FetchResult:
         headers = {
             "User-Agent": (
@@ -113,6 +116,11 @@ class PageFetcher:
         )
 
     async def _fetch_playwright(self, url: str) -> FetchResult:
+        if not self._playwright_allowed():
+            raise FetchError(
+                "当前部署未启用浏览器渲染（Playwright），仅支持静态 HTML 页面",
+                "playwright_disabled",
+            )
         if self._playwright is None:
             self._playwright = PlaywrightFetcher()
         return await self._playwright.fetch(url)

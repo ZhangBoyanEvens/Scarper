@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     max_llm_chars: int = 8_000
     crawl_retries: int = 2
     allow_localhost: bool = False
+    # Render 等环境无法安装 Playwright 系统依赖时设为 false，仅用 httpx 抓取
+    playwright_enabled: bool = True
 
     # Cache (in-memory TTL seconds; 0 = disabled)
     cache_ttl_sec: int = 300

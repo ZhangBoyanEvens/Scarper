@@ -1,9 +1,8 @@
+import { apiBase } from '../config/api'
 import type { ExtractResponse } from '../types/extraction'
 import { buildAuthHeaders } from './authToken'
 import type { OutputDetail } from '../types/outputDetail'
 import type { OutputLanguage } from '../types/outputLanguage'
-
-const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 export interface ExtractOptions {
   /** 左侧已保存的处理指令 */
@@ -32,12 +31,25 @@ export async function extractUrl(
     body.processing_prompt = prompt
   }
 
-  const res = await fetch(`${API_BASE}/api/extract`, {
-    method: 'POST',
-    headers: await buildAuthHeaders(),
-    body: JSON.stringify(body),
-    signal: options?.signal,
-  })
+  const endpoint = apiBase ? `${apiBase}/api/extract` : '/api/extract'
+
+  let res: Response
+  try {
+    res = await fetch(endpoint, {
+      method: 'POST',
+      headers: await buildAuthHeaders(),
+      body: JSON.stringify(body),
+      signal: options?.signal,
+    })
+  } catch {
+    return {
+      url,
+      status: 'error',
+      error:
+        '无法连接后端（Failed to fetch）。请确认 Render 已启动，且 Vercel 已 Redeploy；或在 Vercel 设置 VITE_BACKEND_URL，并在 Render 设置 CORS_ORIGINS 为前端地址。',
+      error_code: 'network_error',
+    }
+  }
 
   if (res.status === 401) {
     return {
@@ -66,6 +78,25 @@ export async function extractUrl(
     }
   }
 
-  const data = (await res.json()) as ExtractResponse
-  return data
+  const raw = await res.text()
+  if (!raw.trim()) {
+    const hint = `后端返回为空（HTTP ${res.status}），请检查 Render 日志`
+    return {
+      url,
+      status: 'error',
+      error: hint,
+      error_code: 'empty_response',
+    }
+  }
+
+  try {
+    return JSON.parse(raw) as ExtractResponse
+  } catch {
+    return {
+      url,
+      status: 'error',
+      error: `后端响应不是有效 JSON（HTTP ${res.status}）`,
+      error_code: 'invalid_json',
+    }
+  }
 }
