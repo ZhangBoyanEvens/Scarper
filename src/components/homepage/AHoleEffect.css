@@ -1,0 +1,140 @@
+.ahole-host {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ahole {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #141414;
+  font-family: 'Martian Mono', ui-monospace, monospace;
+}
+
+.ahole::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  display: block;
+  width: 150%;
+  height: 140%;
+  background: radial-gradient(ellipse at 50% 55%, transparent 10%, black 50%);
+  transform: translate3d(-50%, -50%, 0);
+  content: '';
+  pointer-events: none;
+}
+
+@keyframes ahole-tint-cycle {
+  0%,
+  100% {
+    background: radial-gradient(
+      ellipse at 50% 75%,
+      rgba(74, 222, 128, 0.45) 15%,
+      transparent 72%
+    );
+  }
+  33% {
+    background: radial-gradient(
+      ellipse at 50% 75%,
+      rgba(34, 211, 238, 0.5) 18%,
+      transparent 72%
+    );
+  }
+  66% {
+    background: radial-gradient(
+      ellipse at 50% 75%,
+      rgba(240, 253, 250, 0.35) 16%,
+      transparent 72%
+    );
+  }
+}
+
+.ahole::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at 50% 75%,
+    rgba(74, 222, 128, 0.45) 15%,
+    transparent 72%
+  );
+  mix-blend-mode: overlay;
+  transform: translate3d(-50%, -50%, 0);
+  animation: ahole-tint-cycle 12s ease-in-out infinite;
+  content: '';
+  pointer-events: none;
+}
+
+@keyframes ahole-aura-glow {
+  0% {
+    background-position: 0 100%;
+  }
+  100% {
+    background-position: 0 300%;
+  }
+}
+
+.ahole__aura {
+  position: absolute;
+  top: -71.5%;
+  left: 50%;
+  z-index: 3;
+  width: 30%;
+  height: 140%;
+  background: linear-gradient(
+      20deg,
+      #4ade80,
+      #22d3ee35 18%,
+      #f0fdf4 36%,
+      #ffffff50 48%,
+      #06b6d4 62%,
+      #86efac40 78%,
+      #a7f3d0 88%,
+      #22d3ee 100%
+    )
+    0 100% / 100% 200%;
+  border-radius: 0 0 100% 100%;
+  filter: blur(50px);
+  mix-blend-mode: plus-lighter;
+  opacity: 0.75;
+  transform: translate3d(-50%, 0, 0);
+  animation: ahole-aura-glow 10s infinite linear;
+  pointer-events: none;
+}
+
+.ahole__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    transparent,
+    transparent 1px,
+    white 1px,
+    white 2px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ahole__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+}

@@ -64,8 +64,8 @@ export function useUserProfileOptional() {
 export function formatExtractQuota(profile: UserProfile | null): string {
   const count = profile?.extract_count ?? 0
   const limit = profile?.extract_limit
-  if (limit != null) {
+  if (limit != null && limit > 0) {
     return `${count}/${limit}`
   }
-  return String(count)
+  return `${count}（不限）`
 }

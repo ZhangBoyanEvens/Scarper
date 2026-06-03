@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-FREE_DAILY_EXTRACT_LIMIT = 20
+from app.config import settings
 
 # user_id -> (utc_date_iso, count)
 _user_daily_extracts: dict[str, tuple[str, int]] = {}
@@ -26,10 +26,11 @@ def is_free_plan(plan: str) -> bool:
 
 
 def get_daily_extract_limit(plan: str) -> int | None:
-    """free 返回每日上限；付费计划返回 None 表示不限。"""
-    if is_free_plan(plan):
-        return FREE_DAILY_EXTRACT_LIMIT
-    return None
+    """返回 None 表示不限每日抓取次数。"""
+    limit = settings.daily_extract_limit
+    if limit is None or limit <= 0:
+        return None
+    return limit
 
 
 def get_daily_extract_count(user_id: str) -> int:

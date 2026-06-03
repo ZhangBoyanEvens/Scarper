@@ -1,16 +1,21 @@
 import { ClerkProvider } from '@clerk/clerk-react'
 import { AuthGate } from './components/auth/AuthGate'
-import { AppNavbar } from './components/Layout/AppNavbar'
+import { AppLayout } from './AppLayout'
 import { clerkPublishableKey, isClerkConfigured } from './config/clerk'
+import { AppSettingsProvider } from './contexts/AppSettingsContext'
+import { ScrapeSessionProvider } from './contexts/ScrapeSessionContext'
 import { UserProfileProvider } from './contexts/UserProfileContext'
-import { ScarperApp } from './ScarperApp'
 import './App.css'
 
 function AppShell() {
   if (!isClerkConfigured) {
     return (
       <div className="app">
-        <ScarperApp />
+        <AppSettingsProvider>
+          <ScrapeSessionProvider>
+            <AppLayout />
+          </ScrapeSessionProvider>
+        </AppSettingsProvider>
       </div>
     )
   }
@@ -18,10 +23,13 @@ function AppShell() {
   return (
     <div className="app">
       <AuthGate>
-        <UserProfileProvider>
-          <AppNavbar />
-          <ScarperApp />
-        </UserProfileProvider>
+        <AppSettingsProvider>
+          <ScrapeSessionProvider>
+            <UserProfileProvider>
+              <AppLayout />
+            </UserProfileProvider>
+          </ScrapeSessionProvider>
+        </AppSettingsProvider>
       </AuthGate>
     </div>
   )

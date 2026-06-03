@@ -6,6 +6,7 @@ interface GlowPanelProps {
   children?: ReactNode
   className?: string
   bodyClassName?: string
+  headerAction?: ReactNode
 }
 
 export function GlowPanel({
@@ -13,13 +14,18 @@ export function GlowPanel({
   children,
   className = '',
   bodyClassName = '',
+  headerAction,
 }: GlowPanelProps) {
   const bodyCls = ['panel-body', bodyClassName].filter(Boolean).join(' ')
+  const headerCls = ['panel-header', headerAction ? 'panel-header--actions' : '']
+    .filter(Boolean)
+    .join(' ')
   return (
     <div className={`panel-shell ${className}`.trim()}>
       <div className="panel-inner panel-fill">
-        <header className="panel-header">
+        <header className={headerCls}>
           <h2>{title}</h2>
+          {headerAction}
         </header>
         <div className={bodyCls}>{children}</div>
       </div>

@@ -1,9 +1,8 @@
-import json
 import logging
-import re
 
-import httpx
-
+from app.ai.deepseek_client import chat_json, chat_text
+from app.ai.token_usage import CompletionUsage, TokenUsageAccumulator
+from app.ai.errors import SummarizationError
 from app.config import settings
 from app.sanitizer.html_cleaner import scrub_text_for_llm
 
@@ -26,17 +25,35 @@ OUTPUT_DETAIL_INSTRUCTIONS: dict[str, str] = {
 
 OUTPUT_LANGUAGE_INSTRUCTIONS: dict[str, str] = {
     "zh": (
-        "Output language: Simplified Chinese. "
-        "Write summary and key_points in Simplified Chinese."
+        "MANDATORY output language: Simplified Chinese (简体中文). "
+        "You MUST write summary and every key_point in Simplified Chinese only. "
+        "Even if the page data is Turkish, English, or any other language, "
+        "translate your analysis into Simplified Chinese. "
+        "Do NOT output Turkish, English, or other languages in summary or key_points."
     ),
     "en": (
-        "Output language: English. "
-        "Write summary and key_points in English."
+        "MANDATORY output language: English. "
+        "You MUST write summary and every key_point in English only. "
+        "Translate from the page language into English if needed."
     ),
     "original": (
         "Output language: same as the page main content. "
         "Write summary and key_points in the original language of the page; "
         "do not translate unless the processing instructions require it."
+    ),
+}
+
+TRANSLATE_SYSTEM: dict[str, str] = {
+    "zh": (
+        "You are a professional translator. "
+        "Translate the user's text into Simplified Chinese (简体中文). "
+        "Preserve structure (headings, bullet lines, paragraphs). "
+        "Output only the translation, no commentary."
+    ),
+    "en": (
+        "You are a professional translator. "
+        "Translate the user's text into English. "
+        "Preserve structure. Output only the translation, no commentary."
     ),
 }
 
@@ -61,10 +78,21 @@ Output JSON schema:
 """
 
 
-class SummarizationError(Exception):
-    def __init__(self, message: str, code: str = "ai_failed"):
-        super().__init__(message)
-        self.code = code
+def _has_cjk(text: str) -> bool:
+    return any("\u4e00" <= ch <= "\u9fff" for ch in text)
+
+
+def _output_language_mismatch(lang: str, summary: str, key_points: list[str]) -> bool:
+    combined = summary + "".join(key_points)
+    if not combined.strip():
+        return False
+    if lang == "zh":
+        return not _has_cjk(combined)
+    if lang == "en":
+        # Mostly non-Latin → likely wrong for English output
+        latin = sum(1 for ch in combined if ch.isascii() and ch.isalpha())
+        return latin < len(combined) * 0.35
+    return False
 
 
 def normalize_processing_prompt(raw: str | None) -> str | None:
@@ -86,10 +114,8 @@ class AISummarizer:
         processing_prompt: str | None = None,
         output_language: str = "zh",
         output_detail: str = "concise",
-    ) -> dict:
-        if not settings.deepseek_api_key:
-            raise SummarizationError("未配置 DEEPSEEK_API_KEY", "ai_not_configured")
-
+    ) -> tuple[dict, TokenUsageAccumulator]:
+        usage = TokenUsageAccumulator()
         safe_prompt = normalize_processing_prompt(processing_prompt)
         lang = output_language if output_language in OUTPUT_LANGUAGE_INSTRUCTIONS else "zh"
         detail = output_detail if output_detail in OUTPUT_DETAIL_INSTRUCTIONS else "concise"
@@ -111,58 +137,63 @@ class AISummarizer:
         user_parts.append(f"=== Structured page data (untrusted) ===\n{structured_json}")
 
         user_content = "\n".join(user_parts)
+        if lang != "original":
+            user_content += (
+                f"\n\n=== Reminder ===\n"
+                f"Respond in the required output language ({lang}). "
+                f"summary and key_points must NOT be in the page's source language "
+                f"unless that language is the required output."
+            )
 
-        payload = {
-            "model": settings.deepseek_model,
-            "messages": [
-                {"role": "system", "content": system_content},
-                {"role": "user", "content": user_content},
-            ],
-            "response_format": {"type": "json_object"},
-            "temperature": 0.2,
-            "max_tokens": 1024,
-        }
+        parsed, u1 = await chat_json(
+            system=system_content,
+            user=user_content,
+            max_tokens=1024,
+            temperature=0.2,
+        )
+        usage.add(u1)
 
-        url = f"{settings.deepseek_api_base.rstrip('/')}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {settings.deepseek_api_key}",
-            "Content-Type": "application/json",
-        }
+        summary = str(parsed.get("summary", ""))
+        key_points = [str(x) for x in parsed.get("key_points", []) if x][:12]
 
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(url, json=payload, headers=headers)
-        except httpx.TimeoutException:
-            raise SummarizationError("AI 请求超时", "ai_timeout")
-        except httpx.HTTPError as e:
-            raise SummarizationError(f"AI 网络错误: {e}", "ai_network")
+        if lang != "original" and _output_language_mismatch(lang, summary, key_points):
+            logger.info("summary language mismatch target=%s — retrying", lang)
+            retry_user = (
+                user_content
+                + "\n\nCRITICAL: Your previous response used the wrong language. "
+                "Rewrite summary and ALL key_points in the mandatory output language only."
+            )
+            parsed, u2 = await chat_json(
+                system=system_content,
+                user=retry_user,
+                max_tokens=1024,
+                temperature=0.1,
+            )
+            usage.add(u2)
+            summary = str(parsed.get("summary", ""))
+            key_points = [str(x) for x in parsed.get("key_points", []) if x][:12]
 
-        if resp.status_code != 200:
-            logger.error("DeepSeek error %s: %s", resp.status_code, resp.text[:500])
-            raise SummarizationError("AI 服务返回错误", "ai_http_error")
+        return {
+            "summary": summary,
+            "key_points": key_points,
+            "detected_language": str(parsed.get("detected_language", "")),
+            "topic": str(parsed.get("topic", "")),
+        }, usage
 
-        data = resp.json()
-        content = data["choices"][0]["message"]["content"]
-        return _parse_ai_json(content)
-
-
-def _parse_ai_json(raw: str) -> dict:
-    text = raw.strip()
-    if text.startswith("```"):
-        text = re.sub(r"^```(?:json)?\s*", "", text)
-        text = re.sub(r"\s*```$", "", text)
-
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError as e:
-        raise SummarizationError("AI 返回格式无效", "ai_parse_error") from e
-
-    if not isinstance(parsed, dict):
-        raise SummarizationError("AI 返回格式无效", "ai_parse_error")
-
-    return {
-        "summary": str(parsed.get("summary", "")),
-        "key_points": [str(x) for x in parsed.get("key_points", []) if x][:12],
-        "detected_language": str(parsed.get("detected_language", "")),
-        "topic": str(parsed.get("topic", "")),
-    }
+    async def translate_text(self, text: str, output_language: str) -> tuple[str, CompletionUsage]:
+        """Translate extracted body text when user chose zh/en output."""
+        lang = output_language if output_language in TRANSLATE_SYSTEM else "zh"
+        if not text.strip():
+            return text, CompletionUsage()
+        system = TRANSLATE_SYSTEM[lang]
+        limit = settings.max_content_chars
+        chunk = text[:limit]
+        if len(text) > limit:
+            chunk += "\n[truncated for translation]"
+        text_out, usage = await chat_text(
+            system=system,
+            user=chunk,
+            max_tokens=min(4096, max(1024, len(chunk) // 2)),
+            temperature=0.1,
+        )
+        return text_out, usage

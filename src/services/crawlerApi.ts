@@ -1,11 +1,11 @@
-import { apiBase } from '../config/api'
+import { resolveApiBase } from '../config/api'
 import type { ExtractResponse } from '../types/extraction'
 import { buildAuthHeaders } from './authToken'
 import type { OutputDetail } from '../types/outputDetail'
 import type { OutputLanguage } from '../types/outputLanguage'
 
 export interface ExtractOptions {
-  /** 左侧已保存的处理指令 */
+  /** Saved processing prompt from the toolbar */
   processingPrompt?: string | null
   outputLanguage?: OutputLanguage
   outputDetail?: OutputDetail
@@ -31,7 +31,8 @@ export async function extractUrl(
     body.processing_prompt = prompt
   }
 
-  const endpoint = apiBase ? `${apiBase}/api/extract` : '/api/extract'
+  const base = resolveApiBase()
+  const endpoint = base ? `${base}/api/extract` : '/api/extract'
 
   let res: Response
   try {
@@ -46,7 +47,7 @@ export async function extractUrl(
       url,
       status: 'error',
       error:
-        '无法连接后端（Failed to fetch）。请确认 Render 已启动，且 Vercel 已 Redeploy；或在 Vercel 设置 VITE_BACKEND_URL，并在 Render 设置 CORS_ORIGINS 为前端地址。',
+        'Cannot reach backend (Failed to fetch). Confirm the server is running and CORS is configured, or set VITE_BACKEND_URL.',
       error_code: 'network_error',
     }
   }
@@ -55,13 +56,13 @@ export async function extractUrl(
     return {
       url,
       status: 'error',
-      error: '请先登录后再抓取',
+      error: 'Sign in before scraping',
       error_code: 'unauthorized',
     }
   }
 
   if (res.status === 429) {
-    let message = '请求过于频繁，请稍后再试'
+    let message = 'Too many requests — try again later'
     try {
       const body = (await res.json()) as { detail?: string }
       if (typeof body.detail === 'string') {
@@ -80,7 +81,7 @@ export async function extractUrl(
 
   const raw = await res.text()
   if (!raw.trim()) {
-    const hint = `后端返回为空（HTTP ${res.status}），请检查 Render 日志`
+    const hint = `Empty backend response (HTTP ${res.status}) — check server logs`
     return {
       url,
       status: 'error',
@@ -95,7 +96,7 @@ export async function extractUrl(
     return {
       url,
       status: 'error',
-      error: `后端响应不是有效 JSON（HTTP ${res.status}）`,
+      error: `Backend response is not valid JSON (HTTP ${res.status})`,
       error_code: 'invalid_json',
     }
   }

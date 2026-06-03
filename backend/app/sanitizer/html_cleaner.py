@@ -26,7 +26,6 @@ TAGS_TO_REMOVE = frozenset(
         "frameset",
         "object",
         "embed",
-        "form",
         "svg",
         "math",
         "link",
@@ -35,6 +34,26 @@ TAGS_TO_REMOVE = frozenset(
         "template",
         "noscript",
     }
+)
+
+# Layout wrappers (e.g. ASP.NET WebForms) — unwrap instead of deleting children.
+TAGS_TO_UNWRAP = frozenset({"form"})
+
+# Cookie / consent overlays (Complianz, OneTrust, etc.) — not page content.
+CONSENT_SELECTORS = (
+    ".cmplz-cookiebanner",
+    "#cmplz-cookiebanner-container",
+    ".cmplz-manage-consent",
+    "#cookie-law-info-bar",
+    "#onetrust-banner-sdk",
+    "#onetrust-consent-sdk",
+    ".osano-cm-dialog",
+    ".cc-window",
+    "[class*='cookie-banner']",
+    "[class*='cookies-banner']",
+    "[class*='cookie-consent']",
+    "[id*='cookie-consent']",
+    "[id*='cookie-banner']",
 )
 
 KEEP_ATTRS = frozenset(
@@ -53,11 +72,35 @@ KEEP_ATTRS = frozenset(
 )
 
 
+def _strip_unsafe_tags(soup: BeautifulSoup) -> None:
+    for tag in list(soup.find_all(TAGS_TO_UNWRAP)):
+        tag.unwrap()
+    for tag in soup.find_all(TAGS_TO_REMOVE):
+        tag.decompose()
+
+
+def _remove_consent_chrome(soup: BeautifulSoup) -> None:
+    for selector in CONSENT_SELECTORS:
+        for tag in soup.select(selector):
+            tag.decompose()
+
+
+def clean_html_minimal(html: str) -> str:
+    """Lightweight sanitize when full clean_html fails on malformed DOM."""
+    soup = BeautifulSoup(html, "lxml")
+    _strip_unsafe_tags(soup)
+    _remove_consent_chrome(soup)
+    for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
+        comment.extract()
+    return str(soup)
+
+
 def clean_html(html: str) -> str:
     soup = BeautifulSoup(html, "lxml")
 
-    for tag in soup.find_all(TAGS_TO_REMOVE):
-        tag.decompose()
+    _strip_unsafe_tags(soup)
+
+    _remove_consent_chrome(soup)
 
     for comment in soup.find_all(string=lambda t: isinstance(t, Comment)):
         comment.extract()
@@ -87,13 +130,19 @@ def scrub_text_for_llm(text: str) -> str:
 
 
 def _is_hidden(tag) -> bool:
-    if tag.has_attr("hidden"):
+    # Some malformed nodes have attrs=None; tag.has_attr() then raises TypeError.
+    attrs = getattr(tag, "attrs", None)
+    if not attrs:
+        return False
+    if "hidden" in attrs:
         return True
-    if tag.get("aria-hidden") == "true":
+    if attrs.get("aria-hidden") == "true":
         return True
-    if tag.get("type") == "hidden":
+    if attrs.get("type") == "hidden":
         return True
-    style = tag.get("style", "")
+    style = attrs.get("style", "")
+    if isinstance(style, list):
+        style = " ".join(style)
     if re.search(r"display\s*:\s*none", style, re.I):
         return True
     if re.search(r"visibility\s*:\s*hidden", style, re.I):
@@ -102,7 +151,9 @@ def _is_hidden(tag) -> bool:
 
 
 def _strip_dangerous_attrs(tag) -> None:
-    attrs = dict(tag.attrs) if tag.attrs else {}
+    if not getattr(tag, "attrs", None):
+        return
+    attrs = dict(tag.attrs)
     for name in list(attrs.keys()):
         if EVENT_HANDLER_ATTRS.match(name):
             del tag.attrs[name]

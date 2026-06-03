@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.backend
+    env_file:
+      - ../.env
+    environment:
+      PLAYWRIGHT_ENABLED: "true"
+      PLAYWRIGHT_CONTEXT_POOL_SIZE: "1"
+      PLAYWRIGHT_PERSISTENT_CONTEXT: "true"
+    volumes:
+      - playwright-data:/app/.scarper
+    restart: unless-stopped
+    networks:
+      - scarper
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.frontend
+      args:
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY}
+        VITE_NEON_UPLOAD_ENABLED: ${VITE_NEON_UPLOAD_ENABLED:-true}
+        VITE_CLERK_JWT_TEMPLATE: ${VITE_CLERK_JWT_TEMPLATE:-}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - scarper
+
+volumes:
+  playwright-data:
+
+networks:
+  scarper:

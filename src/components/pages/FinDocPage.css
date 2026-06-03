@@ -1,0 +1,328 @@
+.findoc-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #05060c;
+}
+
+.findoc-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.findoc-head {
+  flex-shrink: 0;
+  padding: 14px clamp(16px, 3vw, 28px) 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.findoc-head__title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.findoc-workspace {
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.findoc-pane {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.findoc-pane--left {
+  flex: 0 0 var(--findoc-left-pct, 40%);
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;
+  container-name: findoc-left;
+}
+
+.findoc-pane--right {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.findoc-splitter {
+  flex: 0 0 6px;
+  position: relative;
+  margin: 0 -2px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+  z-index: 2;
+}
+
+.findoc-splitter::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.15s ease, width 0.15s ease;
+}
+
+.findoc-splitter:hover::before,
+.findoc-splitter.is-dragging::before {
+  width: 2px;
+  background: rgba(34, 211, 238, 0.45);
+}
+
+.findoc-splitter:focus-visible {
+  outline: none;
+}
+
+.findoc-splitter:focus-visible::before {
+  width: 2px;
+  background: rgba(34, 211, 238, 0.55);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+}
+
+body.findoc-split-dragging {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body.findoc-split-dragging * {
+  cursor: col-resize !important;
+}
+
+.findoc-left-toolbar {
+  --findoc-control-h: 2.25rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.875rem 1rem;
+  padding: 0.875rem clamp(0.75rem, 2cqi, 1.25rem) 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 10, 18, 0.35);
+}
+
+.findoc-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 0;
+}
+
+.findoc-field__label {
+  flex-shrink: 0;
+  width: 4.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.findoc-left-toolbar .lang-select-control,
+.findoc-select,
+.findoc-task-trigger {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  height: var(--findoc-control-h);
+  min-height: var(--findoc-control-h);
+  padding: 0 1.625rem 0 0.625rem;
+  font-size: 0.9375rem;
+  line-height: 1.25;
+  border-radius: 0.5rem;
+  background-position: right 0.5rem center;
+  background-size: 1rem 1rem;
+}
+
+.findoc-field--project {
+  flex: 1 1 48%;
+  min-width: min(100%, 11rem);
+}
+
+.findoc-field--task {
+  flex: 1 1 32%;
+  min-width: min(100%, 9rem);
+}
+
+.findoc-task-trigger {
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-inline: 0.625rem;
+}
+
+.findoc-task-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@container findoc-left (max-width: 20rem) {
+  .findoc-field--project,
+  .findoc-field--task {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+}
+
+@container findoc-left (max-width: 28rem) {
+  .findoc-field--project,
+  .findoc-field--task {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: min(100%, 9rem);
+  }
+}
+
+.findoc-left-editor,
+.findoc-right-editor {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.findoc-prompt-head {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem clamp(0.75rem, 2cqi, 1.25rem) 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.findoc-prompt-head__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.findoc-prompt-head__hint {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #64748b;
+}
+
+.findoc-prompt-textarea {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.findoc-editor-textarea {
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  padding: clamp(12px, 2vw, 18px);
+  border: none;
+  border-radius: 0;
+  background: rgba(8, 10, 18, 0.4);
+  color: #cbd5e1;
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.findoc-editor-textarea:focus {
+  background: rgba(8, 10, 18, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.18);
+}
+
+.findoc-editor-textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.findoc-editor-textarea::placeholder {
+  color: #64748b;
+}
+
+.findoc-pane-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-height: 3.375rem;
+  box-sizing: border-box;
+  padding: 0.625rem clamp(0.75rem, 2cqi, 1.25rem);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 10, 18, 0.35);
+}
+
+.findoc-pane-footer__status {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8125rem;
+  color: #22d3ee;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.findoc-pane-footer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.findoc-output-view-toggle.is-active {
+  border-color: rgba(34, 211, 238, 0.35);
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.findoc-right-editor {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.findoc-right-editor .findoc-editor-textarea,
+.findoc-right-editor .findoc-styled-output {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.findoc-pane-footer__actions .project-btn,
+.findoc-pane-footer__actions .text-input-save {
+  padding: 0.375rem 1rem;
+  font-size: 0.875rem;
+  min-height: 2.125rem;
+}

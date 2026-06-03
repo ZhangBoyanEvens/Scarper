@@ -10,10 +10,8 @@ export default defineConfig(({ mode }) => {
   const backendTarget =
     env.VITE_BACKEND_URL || 'http://127.0.0.1:8000'
 
-  const proxy: Record<string, object> = {
-    '/api/extract': { target: backendTarget, changeOrigin: true },
-    '/api/health': { target: backendTarget, changeOrigin: true },
-  }
+  const backendProxy = { target: backendTarget, changeOrigin: true }
+  const proxy: Record<string, object> = {}
 
   if (apiKey) {
     proxy['/api/deepseek'] = {
@@ -28,8 +26,15 @@ export default defineConfig(({ mode }) => {
     }
   }
 
+  /** 其余 /api/* → Python（health、diagnostics、neon、extract 等） */
+  proxy['/api'] = backendProxy
+
   return {
     plugins: [react()],
-    server: { proxy },
+    server: {
+      host: '127.0.0.1',
+      port: 5173,
+      proxy,
+    },
   }
 })

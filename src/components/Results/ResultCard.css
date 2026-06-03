@@ -16,6 +16,56 @@
   color: #f87171;
 }
 
+.result-error-stage {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.result-error-stage span {
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.result-error-message {
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.result-recovery-note {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.result-diagnosis {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.result-diagnosis h4 {
+  margin: 0 0 8px;
+  color: #22d3ee;
+}
+
+.result-diagnosis p {
+  margin: 0;
+  color: #cbd5e1;
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.result-suggested-action {
+  margin: 8px 0 0;
+  font-size: 0.88rem;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
 .result-card-badge {
   display: inline-block;
   margin-bottom: 8px;
@@ -42,13 +92,25 @@
   color: #64748b;
 }
 
-.result-card .results-meta a {
+.result-card .results-meta a,
+.results-meta__link {
   color: #22d3ee;
   text-decoration: none;
 }
 
-.result-card .results-meta a:hover {
+.result-card .results-meta a:hover,
+.results-meta__link:hover {
   text-decoration: underline;
+}
+
+.results-meta--sources {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.results-meta--sources > span {
+  margin-top: 2px;
 }
 
 .result-card section {
@@ -84,8 +146,49 @@
   font-size: 0.9rem;
   line-height: 1.5;
   color: #94a3b8;
-  max-height: 200px;
-  overflow: auto;
+}
+
+.result-card--editable .result-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.result-field__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.result-field__input,
+.result-field__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding: 8px 10px;
+  outline: none;
+  resize: none;
+  overflow-y: hidden;
+  max-height: none;
+}
+
+.result-field__input:focus,
+.result-field__textarea:focus {
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.12);
+}
+
+.result-field__textarea--body {
+  min-height: 8.5em;
 }
 
 .result-card .results-url {

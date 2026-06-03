@@ -1,0 +1,16 @@
+-- Neon 两层 schema 结构（应用会自动建表，此处供查阅）
+--
+-- 1) 用户目录：u_<user_id>
+--    projects — 项目登记（id, name, description, data_schema, ...）
+--    findoc_templates — FinDoc 模板库（id, name, content, created_at, updated_at）
+--
+-- 2) 每个 Project 独立库：u_<user_id>_p_<project_uuid>
+--    scrape_upload_batches — Scrape 上传批次（source='scrape'）
+--      列：results JSONB、editor_text TEXT（Dashboard 保存的正文）
+--    （后续可在此 schema 增加更多业务表）
+--
+-- 示例：
+-- CREATE SCHEMA u_user_2abc;
+-- CREATE TABLE u_user_2abc.projects (...);
+-- CREATE SCHEMA u_user_2abc_p_a1b2c3d4e5f6;
+-- CREATE TABLE u_user_2abc_p_a1b2c3d4e5f6.scrape_upload_batches (...);

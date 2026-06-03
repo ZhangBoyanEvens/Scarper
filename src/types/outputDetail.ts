@@ -1,11 +1,26 @@
 export type OutputDetail = 'detailed' | 'concise'
 
-export const OUTPUT_DETAIL_OPTIONS: {
+export interface OutputDetailOption {
   value: OutputDetail
   label: string
-}[] = [
-  { value: 'detailed', label: '详细' },
-  { value: 'concise', label: '精简' },
+  description: string
+}
+
+export const OUTPUT_DETAIL_OPTIONS: OutputDetailOption[] = [
+  {
+    value: 'concise',
+    label: 'Concise',
+    description: 'Shorter summaries; faster extraction',
+  },
+  {
+    value: 'detailed',
+    label: 'Detailed',
+    description: 'More key points and structure; better for long articles',
+  },
 ]
 
 export const DEFAULT_OUTPUT_DETAIL: OutputDetail = 'concise'
+
+export function getOutputDetailLabel(detail: OutputDetail): string {
+  return OUTPUT_DETAIL_OPTIONS.find((o) => o.value === detail)?.label ?? 'Concise'
+}

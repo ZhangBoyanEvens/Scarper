@@ -1,0 +1,59 @@
+.new-record-modal {
+  max-width: 420px;
+}
+
+.new-record-modal__mode {
+  margin: 0 0 14px;
+  padding: 0;
+  border: none;
+}
+
+.new-record-modal__mode .project-modal__label {
+  margin-bottom: 8px;
+}
+
+.new-record-modal__mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-record-modal__mode-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.35);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.new-record-modal__mode-option:has(input:checked) {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: rgba(34, 211, 238, 0.08);
+}
+
+.new-record-modal__mode-option input {
+  grid-row: 1 / span 2;
+  margin-top: 3px;
+  accent-color: #22d3ee;
+}
+
+.new-record-modal__mode-option span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #f1f5f9;
+}
+
+.new-record-modal__mode-option small {
+  grid-column: 2;
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.35;
+}

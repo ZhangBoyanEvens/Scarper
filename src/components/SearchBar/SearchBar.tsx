@@ -4,14 +4,19 @@ import {
   URL_BATCH_SEPARATOR,
   urlValidationMessage,
 } from '../../utils/urlValidation'
-import '../../styles/panel.css'
+import { UrlTaskPanel } from './UrlTaskPanel'
 import './SearchBar.css'
 
 export interface SearchBarProps {
-  onSearch?: (urls: string[]) => void
+  /** toolbar = 顶部横条；panel = 左侧大面板（原处理指令框尺寸） */
+  layout?: 'toolbar' | 'panel'
+  onSearch?: (
+    urls: string[],
+    options?: { aiIntegrate?: boolean },
+  ) => void
 }
 
-export function SearchBar({ onSearch }: SearchBarProps) {
+export function SearchBar({ layout = 'toolbar', onSearch }: SearchBarProps) {
   const [value, setValue] = useState('')
   const [focused, setFocused] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,6 +39,10 @@ export function SearchBar({ onSearch }: SearchBarProps) {
   const handleChange = (next: string) => {
     setValue(next)
     if (error) setError(urlValidationMessage(next))
+  }
+
+  if (layout === 'panel') {
+    return <UrlTaskPanel onSearch={onSearch} />
   }
 
   return (
@@ -75,7 +84,7 @@ export function SearchBar({ onSearch }: SearchBarProps) {
             type="submit"
             className="search-go"
             disabled={!value.trim()}
-            aria-label="抓取并分析"
+            aria-label="Scrape and analyze"
           >
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path

@@ -1,7 +1,9 @@
 import type { OutputDetail } from '../../types/outputDetail'
 import type { OutputLanguage } from '../../types/outputLanguage'
-import { SearchBar } from '../SearchBar/SearchBar'
+import { getOutputDetailLabel } from '../../types/outputDetail'
+import { getOutputLanguageLabel } from '../../types/outputLanguage'
 import { OutputLanguageSelect } from './OutputLanguageSelect'
+import { TextInputSection } from './TextInputSection'
 import '../../styles/layout.css'
 import './TopToolbar.css'
 
@@ -10,7 +12,6 @@ interface TopToolbarProps {
   outputDetail: OutputDetail
   onOutputLanguageChange: (lang: OutputLanguage) => void
   onOutputDetailChange: (detail: OutputDetail) => void
-  onSearch: (urls: string[]) => void
 }
 
 export function TopToolbar({
@@ -18,21 +19,26 @@ export function TopToolbar({
   outputDetail,
   onOutputLanguageChange,
   onOutputDetailChange,
-  onSearch,
 }: TopToolbarProps) {
   return (
     <header className="top-toolbar">
       <div className="page-split top-toolbar-split">
         <div className="page-col top-toolbar-left">
-          <SearchBar onSearch={onSearch} />
+          <TextInputSection layout="toolbar" />
         </div>
         <div className="page-col top-toolbar-right">
-          <OutputLanguageSelect
-            language={outputLanguage}
-            detail={outputDetail}
-            onLanguageChange={onOutputLanguageChange}
-            onDetailChange={onOutputDetailChange}
-          />
+          <div className="top-toolbar-lang">
+            <OutputLanguageSelect
+              language={outputLanguage}
+              detail={outputDetail}
+              onLanguageChange={onOutputLanguageChange}
+              onDetailChange={onOutputDetailChange}
+            />
+            <p className="top-toolbar-lang__hint" title="Synced with Settings → Language global preset">
+              Global: {getOutputLanguageLabel(outputLanguage)} ·{' '}
+              {getOutputDetailLabel(outputDetail)}
+            </p>
+          </div>
         </div>
       </div>
     </header>

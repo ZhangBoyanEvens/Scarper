@@ -1,0 +1,71 @@
+/* 简约创意滚动条 — 紫青渐变细轨，无默认灰条 */
+
+.scarper-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(34, 211, 238, 0.55) transparent;
+}
+
+.scarper-scrollbar::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+.scarper-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 10px 4px;
+}
+
+.scarper-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(124, 58, 237, 0.55) 0%,
+    rgba(6, 182, 212, 0.7) 100%
+  );
+  box-shadow:
+    0 0 10px rgba(6, 182, 212, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(8, 10, 18, 0.4);
+}
+
+.scarper-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(167, 139, 250, 0.85) 0%,
+    rgba(34, 211, 238, 0.9) 100%
+  );
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.35);
+}
+
+.scarper-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(
+    180deg,
+    rgba(124, 58, 237, 0.95) 0%,
+    rgba(6, 182, 212, 1) 100%
+  );
+}
+
+.scarper-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 编辑区：右侧留一条极淡参考线，替代灰底轨道 */
+.scarper-scrollbar--editor {
+  scrollbar-gutter: stable;
+}
+
+.scarper-scrollbar--editor::-webkit-scrollbar-track {
+  background: linear-gradient(
+    to left,
+    transparent 0%,
+    transparent calc(100% - 1px),
+    rgba(34, 211, 238, 0.08) calc(100% - 1px),
+    rgba(34, 211, 238, 0.08) 100%
+  );
+  border-radius: 0;
+  margin: 14px 2px;
+}
+
+html.reduce-motion .scarper-scrollbar::-webkit-scrollbar-thumb {
+  transition: none;
+}

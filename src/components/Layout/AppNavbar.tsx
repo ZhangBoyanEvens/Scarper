@@ -4,10 +4,23 @@ import {
   useUserProfile,
 } from '../../contexts/UserProfileContext'
 import { isClerkConfigured } from '../../config/clerk'
+import { APP_NAV_ITEMS, isToolsFamilyView, type AppView } from '../../types/appView'
 import { BrandMark } from '../Brand/BrandMark'
 import './AppNavbar.css'
 
-export function AppNavbar() {
+interface AppNavbarProps {
+  activeView: AppView
+  scrapeRunning?: boolean
+  navItems?: typeof APP_NAV_ITEMS
+  onNavigate: (view: AppView) => void
+}
+
+export function AppNavbar({
+  activeView,
+  scrapeRunning = false,
+  navItems = APP_NAV_ITEMS,
+  onNavigate,
+}: AppNavbarProps) {
   const { user, isLoaded } = useUser()
   const { profile } = useUserProfile()
 
@@ -24,17 +37,41 @@ export function AppNavbar() {
           <BrandMark size="sm" />
         </div>
 
+        <div className="app-navbar-nav" role="navigation" aria-label="应用页面">
+          {navItems.map((item) => {
+            const isActive =
+              activeView === item.id ||
+              (item.id === 'tools' && isToolsFamilyView(activeView))
+            const isScrapeBusy = item.id === 'tools' && scrapeRunning
+
+            return (
+            <button
+              key={item.id}
+              type="button"
+              className={`app-navbar-link${isActive ? ' app-navbar-link--active' : ''}${isScrapeBusy ? ' app-navbar-link--busy' : ''}`}
+              aria-current={isActive ? 'page' : undefined}
+              onClick={() => onNavigate(item.id)}
+            >
+              {item.label}
+              {isScrapeBusy && (
+                <span className="app-navbar-link__dot" aria-label="Scrape in progress" />
+              )}
+            </button>
+            )
+          })}
+        </div>
+
         {isClerkConfigured && isLoaded && user && (
           <div className="app-navbar-user">
             <div className="app-navbar-stats">
               <div className="navbar-stat">
-                <span className="navbar-stat-label">今日抓取</span>
+                <span className="navbar-stat-label">Today</span>
                 <span className="navbar-stat-value navbar-stat-value--quota">
                   {quotaText}
                 </span>
               </div>
               <div className="navbar-stat">
-                <span className="navbar-stat-label">计划</span>
+                <span className="navbar-stat-label">Plan</span>
                 <span className="navbar-stat-value">{planLabel}</span>
               </div>
             </div>

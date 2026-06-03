@@ -19,7 +19,7 @@ def extract_structured(cleaned_html: str, base_url: str) -> StructuredPage:
     title = _extract_title(soup)
     description = _extract_description(soup)
 
-    # Readability-style main text via trafilatura
+    # Readability-style main text via trafilatura (precision first, recall fallback for SPA)
     main_text = trafilatura.extract(
         cleaned_html,
         url=base_url,
@@ -27,6 +27,19 @@ def extract_structured(cleaned_html: str, base_url: str) -> StructuredPage:
         include_tables=True,
         favor_precision=True,
     )
+    if not (main_text or "").strip():
+        main_text = trafilatura.extract(
+            cleaned_html,
+            url=base_url,
+            include_comments=False,
+            include_tables=True,
+            favor_precision=False,
+        )
+    if not (main_text or "").strip():
+        main_text = _fallback_body_text(soup)
+    else:
+        main_text = _prefer_richer_extraction(main_text, soup)
+
     main_text = scrub_text_for_llm(main_text or "")
 
     if len(main_text) > settings.max_content_chars:
@@ -58,6 +71,29 @@ def structured_to_llm_payload(page: StructuredPage) -> str:
         payload["tables"] = []
         text = json.dumps(payload, ensure_ascii=False)
     return text
+
+
+def _fallback_body_text(soup: BeautifulSoup) -> str:
+    """When trafilatura fails on SPA/Vue DOM, use visible body text."""
+    for sel in ("main", "article", "[role='main']", "#app", "#root"):
+        node = soup.select_one(sel)
+        if node:
+            t = node.get_text("\n", strip=True)
+            if len(t) >= 80:
+                return t
+    body = soup.body or soup
+    return body.get_text("\n", strip=True)
+
+
+def _prefer_richer_extraction(trafilatura_text: str, soup: BeautifulSoup) -> str:
+    """Trafilatura can miss card grids; prefer body text when it is much richer."""
+    trimmed = (trafilatura_text or "").strip()
+    if len(trimmed) >= 400:
+        return trimmed
+    fallback = _fallback_body_text(soup)
+    if len(fallback) >= 200 and len(fallback) > len(trimmed) * 1.4:
+        return fallback
+    return trimmed
 
 
 def _extract_title(soup: BeautifulSoup) -> str:

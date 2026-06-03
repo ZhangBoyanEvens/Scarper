@@ -1,0 +1,67 @@
+.dashboard-file-upload {
+  flex-shrink: 0;
+  margin: 12px clamp(16px, 3vw, 28px) 0;
+  padding: 14px 16px;
+  border: 1px dashed rgba(34, 211, 238, 0.35);
+  border-radius: 12px;
+  background: rgba(34, 211, 238, 0.05);
+}
+
+.dashboard-file-upload__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.dashboard-file-upload__title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.dashboard-file-upload__subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.dashboard-file-upload__hint {
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.dashboard-file-upload__input {
+  display: none;
+}
+
+.dashboard-file-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dashboard-file-upload__upload {
+  min-width: 5.5rem;
+}
+
+.dashboard-file-upload__file,
+.dashboard-file-upload__empty {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.dashboard-file-upload__file span:first-of-type {
+  color: #a5f3fc;
+}
+
+.dashboard-file-upload__size {
+  margin-left: 6px;
+  color: #64748b;
+}

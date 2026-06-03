@@ -53,11 +53,11 @@ export function parseUrlBatch(input: string): string[] {
 
 export function urlValidationMessage(input: string): string | null {
   const trimmed = input.trim()
-  if (!trimmed) return '请输入网址'
+  if (!trimmed) return 'Enter a URL'
 
   const rawParts = trimmed.split(URL_BATCH_SEPARATOR)
   if (rawParts.every((p) => !p.trim())) {
-    return '请输入网址'
+    return 'Enter a URL'
   }
 
   const invalidIndexes: number[] = []
@@ -67,13 +67,13 @@ export function urlValidationMessage(input: string): string | null {
   })
 
   if (invalidIndexes.length > 0) {
-    return `第 ${invalidIndexes.join('、')} 个网址无效，请使用 http/https 链接`
+    return `URL #${invalidIndexes.join(', #')} is invalid — use http/https links`
   }
 
   const urls = parseUrlBatch(trimmed)
-  if (urls.length === 0) return '请输入有效的 http/https 网址'
+  if (urls.length === 0) return 'Enter a valid http/https URL'
   if (urls.length > MAX_URLS_PER_BATCH) {
-    return `单次最多 ${MAX_URLS_PER_BATCH} 个网址，请减少后重试`
+    return `At most ${MAX_URLS_PER_BATCH} URLs per batch — remove some and try again`
   }
 
   return null

@@ -26,9 +26,19 @@ dist-ssr
 *.sln
 *.sw?
 
+# Playwright persistent state
+.scarper/
+
+# Benchmark reports
+backend/reports/
+
 # Python backend
 backend/.venv
 backend/__pycache__
 **/__pycache__
 *.pyc
 .pytest_cache
+
+# One-click launcher build output
+Start-Scarper.exe
+build/launcher
