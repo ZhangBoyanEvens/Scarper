@@ -7,15 +7,14 @@
   min-height: 0;
   max-height: 100%;
   overflow: hidden;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(8, 10, 18, 0.72);
-  backdrop-filter: blur(12px);
+  border-right: 1px solid var(--sc-divider);
+  background: #ffffff;
 }
 
 .vetra-outreach-collab__head {
   flex-shrink: 0;
   padding: 18px 16px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--sc-divider);
 }
 
 .vetra-outreach-collab__head-row {
@@ -38,7 +37,7 @@
   margin: 8px 0 0;
   font-size: 0.75rem;
   line-height: 1.4;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-outreach-collab__title {
@@ -47,7 +46,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-outreach-collab__selected-count {
@@ -55,7 +54,7 @@
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: #818cf8;
+  color: var(--sc-accent);
 }
 
 .vetra-outreach-collab__pair {
@@ -81,7 +80,7 @@
   margin: 0;
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-outreach-collab__hint {
@@ -101,7 +100,7 @@
   padding: 14px 16px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.45);
+  background: #ffffff;
 }
 
 .vetra-outreach-collab__score-value {
@@ -110,7 +109,7 @@
   font-size: 2rem;
   font-weight: 700;
   line-height: 1;
-  color: #e2e8f0;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .vetra-outreach-collab__score--high .vetra-outreach-collab__score-value {
@@ -122,7 +121,7 @@
 }
 
 .vetra-outreach-collab__score--low .vetra-outreach-collab__score-value {
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-outreach-collab__score-meta {
@@ -135,14 +134,14 @@
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-outreach-collab__score-summary {
   margin: 6px 0 0;
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-outreach-collab__list {
@@ -162,7 +161,7 @@
   padding: 12px 14px;
   border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.35);
+  background: #fafafa;
   cursor: pointer;
   text-align: left;
   font: inherit;
@@ -174,13 +173,13 @@
 }
 
 .vetra-outreach-collab__item:hover {
-  border-color: rgba(99, 102, 241, 0.35);
+  border-color: rgba(52, 211, 153, 0.35);
 }
 
 .vetra-outreach-collab__item--selected {
-  border-color: rgba(99, 102, 241, 0.55);
+  border-color: rgba(52, 211, 153, 0.55);
   background: rgba(49, 46, 129, 0.28);
-  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25);
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.25);
 }
 
 .vetra-outreach-collab__item-check {
@@ -196,13 +195,13 @@
   font-size: 0.72rem;
   font-weight: 700;
   line-height: 1;
-  color: #c7d2fe;
-  background: rgba(15, 23, 42, 0.6);
+  color: var(--sc-primary);
+  background: #ffffff;
 }
 
 .vetra-outreach-collab__item--selected .vetra-outreach-collab__item-check {
   border-color: rgba(129, 140, 248, 0.75);
-  background: rgba(99, 102, 241, 0.35);
+  background: rgba(52, 211, 153, 0.35);
 }
 
 .vetra-outreach-collab__item-body {
@@ -215,14 +214,14 @@
 .vetra-outreach-collab__item-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: rgba(0, 0, 0, 0.88);
   line-height: 1.4;
 }
 
 .vetra-outreach-collab__item-desc {
   font-size: 0.78rem;
   line-height: 1.55;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 @media (max-width: 900px) {
@@ -231,6 +230,6 @@
     min-height: 0;
     max-height: none;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid var(--sc-divider);
   }
 }

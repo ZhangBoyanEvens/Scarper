@@ -1,62 +1,63 @@
 .language-preset__summary {
-  margin-bottom: 1.25rem;
-  padding: 1rem 1.1rem;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--color-border, #333) 80%, transparent);
-  background: color-mix(in srgb, var(--color-surface-elevated, #1a1a1f) 92%, transparent);
+  margin-bottom: var(--sc-space-4);
+  padding: var(--sc-space-3);
+  border-radius: var(--sc-radius-md);
+  border: 1px solid var(--sc-border);
+  background: var(--sc-gray-100);
 }
 
 .language-preset__summary-label {
-  margin: 0 0 0.35rem;
-  font-size: 0.75rem;
+  margin: 0 0 var(--sc-space-1);
+  font-size: var(--sc-font-size-caption);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  opacity: 0.65;
+  color: var(--sc-text-muted);
 }
 
 .language-preset__summary-value {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: var(--sc-font-size-title);
+  font-weight: var(--sc-font-weight-medium);
+  color: var(--sc-text);
 }
 
 .language-preset__summary-sep {
-  margin: 0 0.35rem;
-  opacity: 0.45;
-  font-weight: 400;
+  margin: 0 var(--sc-space-1);
+  color: var(--sc-text-muted);
+  font-weight: var(--sc-font-weight-regular);
 }
 
 .language-preset__summary-hint {
-  margin: 0.5rem 0 0;
-  font-size: 0.8125rem;
-  opacity: 0.7;
+  margin: var(--sc-space-2) 0 0;
+  font-size: var(--sc-font-size-sm);
+  color: var(--sc-text-muted);
 }
 
 .language-preset__option-descs {
-  margin: 0.65rem 0 0;
+  margin: var(--sc-space-3) 0 0;
   padding: 0;
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--sc-space-1);
 }
 
 .language-preset__option-desc {
   margin: 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  opacity: 0.55;
-  transition: opacity 0.15s ease;
+  font-size: var(--sc-font-size-sm);
+  line-height: var(--sc-line-height-body);
+  color: var(--sc-text-muted);
+  transition: color 0.15s ease;
 }
 
 .language-preset__option-desc.is-active {
-  opacity: 1;
+  color: var(--sc-text);
 }
 
 .language-preset__option-desc strong {
-  font-weight: 600;
+  font-weight: var(--sc-font-weight-medium);
 }
 
 .language-preset__scope {
-  margin-top: 1.25rem;
+  margin-top: var(--sc-space-4);
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useI18n } from '../../contexts/I18nContext'
 import { analyzeTemplateStructure } from '../../services/findocTemplateAnalysis'
 
 import {
@@ -34,15 +35,8 @@ import './FinDocTemplateSetupPage.css'
 
 
 
-export interface FinDocTemplateSetupPageProps {
-
-  onBack?: () => void
-
-}
-
-
-
-export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps) {
+export function FinDocTemplateSetupPage() {
+  const { t } = useI18n()
 
   const [templates, setTemplates] = useState<FindocTemplate[]>([])
 
@@ -118,11 +112,11 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
       setContent(draft)
 
-      setStatus('Loaded draft from FinDoc output')
+      setStatus(t('findocTemplates.loadedDraft'))
 
     }
 
-  }, [])
+  }, [t])
 
 
 
@@ -176,7 +170,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     if (!trimmedName) {
 
-      setStatus('Enter a template name')
+      setStatus(t('findocTemplates.enterName'))
 
       return
 
@@ -184,7 +178,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     if (editingBuiltin) {
 
-      setStatus('Built-in templates are read-only — use Save as copy')
+      setStatus(t('findocTemplates.readOnlyBuiltin'))
 
       return
 
@@ -216,11 +210,11 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
       void refreshTemplates()
 
-      setStatus('Template saved to library')
+      setStatus(t('findocTemplates.saved'))
 
     } catch (err) {
 
-      setStatus(err instanceof Error ? err.message : 'Save failed')
+      setStatus(err instanceof Error ? err.message : t('findocTemplates.saveFailed'))
 
     } finally {
 
@@ -242,7 +236,9 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     try {
 
-      const copyName = name.trim() ? `${name.trim()} copy` : undefined
+      const copyName = name.trim()
+        ? `${name.trim()}${t('findocTemplates.copySuffix')}`
+        : undefined
 
       const saved = await duplicateBuiltinAsCustom(selectedId, copyName)
 
@@ -250,11 +246,11 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
       void refreshTemplates()
 
-      setStatus('Saved as custom template')
+      setStatus(t('findocTemplates.savedCopy'))
 
     } catch (err) {
 
-      setStatus(err instanceof Error ? err.message : 'Save as copy failed')
+      setStatus(err instanceof Error ? err.message : t('findocTemplates.saveCopyFailed'))
 
     } finally {
 
@@ -272,7 +268,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     if (!trimmed) {
 
-      setStatus('Paste or enter an article first')
+      setStatus(t('findocTemplates.pasteFirst'))
 
       return
 
@@ -292,7 +288,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     setAnalyzing(true)
 
-    setStatus('AI analyzing structure…')
+    setStatus(t('findocTemplates.aiAnalyzing'))
 
 
 
@@ -308,13 +304,13 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
       setContent(result)
 
-      setStatus('Analysis complete — click Save to keep, or Cancel to restore')
+      setStatus(t('findocTemplates.analysisComplete'))
 
     } catch (err) {
 
       if (err instanceof Error && err.name === 'AbortError') return
 
-      setStatus(err instanceof Error ? err.message : 'AI analysis failed')
+      setStatus(err instanceof Error ? err.message : t('findocTemplates.analysisFailed'))
 
     } finally {
 
@@ -340,7 +336,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     clearAnalysisSnapshot()
 
-    setStatus('Restored content from before analysis')
+    setStatus(t('findocTemplates.restored'))
 
   }
 
@@ -354,7 +350,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
     if (!id || isBuiltinTemplate(id) || (templateId == null && isNew)) return
 
-    if (!window.confirm(`Delete template “${label}”?`)) return
+    if (!window.confirm(t('findocTemplates.deleteConfirm', { name: label }))) return
 
 
 
@@ -374,11 +370,11 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
       void refreshTemplates()
 
-      setStatus('Template deleted')
+      setStatus(t('findocTemplates.deleted'))
 
     } catch (err) {
 
-      setStatus(err instanceof Error ? err.message : 'Delete failed')
+      setStatus(err instanceof Error ? err.message : t('findocTemplates.deleteFailed'))
 
     } finally {
 
@@ -395,50 +391,19 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
     <main className="app-main findoc-template-setup-page">
 
       <div className="findoc-template-setup-shell">
-
-        <header className="findoc-template-setup-head">
-
-          <div className="findoc-template-setup-head__row">
-
-            <h2 className="findoc-template-setup-head__title">Template Setup</h2>
-
-            {onBack ? (
-
-              <button
-
-                type="button"
-
-                className="findoc-template-setup-back"
-
-                onClick={onBack}
-
-              >
-
-                ← FinDoc
-
-              </button>
-
-            ) : null}
-
-          </div>
-
-        </header>
-
-
-
-        <section className="findoc-template-setup-workspace" aria-label="Template management">
+        <section className="findoc-template-setup-workspace" aria-label={t('findocTemplates.managementAria')}>
 
           <aside
 
             className="findoc-template-setup-list-pane"
 
-            aria-label="Template list"
+            aria-label={t('findocTemplates.listAria')}
 
           >
 
             <div className="findoc-template-setup-list__head">
 
-              <span className="findoc-template-setup-list__title">Templates</span>
+              <span className="findoc-template-setup-list__title">{t('findocTemplates.title')}</span>
 
               <button
 
@@ -450,7 +415,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
               >
 
-                New
+                {t('findocTemplates.new')}
 
               </button>
 
@@ -470,19 +435,23 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                   <li key={template.id}>
 
-                    <div className="findoc-template-setup-list__row">
+                    <div
+                      className={`findoc-template-setup-list__row${active ? ' is-active' : ''}${deleting ? ' is-disabled' : ''}`}
+                      role="button"
+                      tabIndex={deleting ? -1 : 0}
+                      onClick={() => {
+                        if (!deleting) loadTemplate(template)
+                      }}
+                      onKeyDown={(event) => {
+                        if (deleting) return
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          loadTemplate(template)
+                        }
+                      }}
+                    >
 
-                      <button
-
-                        type="button"
-
-                        className={`findoc-template-setup-list__item${active ? ' is-active' : ''}`}
-
-                        disabled={deleting}
-
-                        onClick={() => loadTemplate(template)}
-
-                      >
+                      <div className="findoc-template-setup-list__item">
 
                         <span className="findoc-template-setup-list__name">
 
@@ -492,11 +461,11 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                         <span className="findoc-template-setup-list__meta">
 
-                          {builtin ? 'Built-in' : 'Custom'}
+                          {builtin ? t('findocTemplates.builtIn') : t('findocTemplates.custom')}
 
                         </span>
 
-                      </button>
+                      </div>
 
                       {!builtin ? (
 
@@ -506,11 +475,14 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                           className="findoc-template-setup-list__delete"
 
-                          aria-label={`Delete ${template.name}`}
+                          aria-label={t('findocTemplates.deleteAria', { name: template.name })}
 
                           disabled={deleting || saving || analyzing}
 
-                          onClick={() => void handleDelete(template.id, template.name)}
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            void handleDelete(template.id, template.name)
+                          }}
 
                         >
 
@@ -534,13 +506,13 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
 
 
-          <div className="findoc-template-setup-editor-pane" aria-label="Template editor">
+          <div className="findoc-template-setup-editor-pane" aria-label={t('findocTemplates.editorAria')}>
 
             <section className="findoc-template-setup-toolbar">
 
               <label className="findoc-template-setup-field">
 
-                <span className="findoc-template-setup-field__label">Name</span>
+                <span className="findoc-template-setup-field__label">{t('findocTemplates.nameLabel')}</span>
 
                 <input
 
@@ -550,7 +522,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                   value={name}
 
-                  placeholder="Template name"
+                  placeholder={t('findocTemplates.namePlaceholder')}
 
                   maxLength={80}
 
@@ -570,15 +542,15 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
               {editingBuiltin ? (
 
-                <span className="findoc-template-setup-hint">Built-in template (read-only)</span>
+                <span className="findoc-template-setup-hint">{t('findocTemplates.builtInReadOnly')}</span>
 
               ) : isNew ? (
 
-                <span className="findoc-template-setup-hint">New template</span>
+                <span className="findoc-template-setup-hint">{t('findocTemplates.newTemplate')}</span>
 
               ) : (
 
-                <span className="findoc-template-setup-hint">Editing custom template</span>
+                <span className="findoc-template-setup-hint">{t('findocTemplates.editingCustom')}</span>
 
               )}
 
@@ -586,7 +558,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
 
 
-            <section className="findoc-template-setup-editor" aria-label="Template content">
+            <section className="findoc-template-setup-editor" aria-label={t('findocTemplates.contentAria')}>
 
               <textarea
 
@@ -596,7 +568,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                 readOnly={editingBuiltin}
 
-                placeholder="Paste a sample article and click AI Analysis to extract structure; or write ### Title / Summary / Key points / Body sections directly…"
+                placeholder={t('findocTemplates.contentPlaceholderLong')}
 
                 onChange={(e) => {
 
@@ -640,7 +612,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                   >
 
-                    Save as copy
+                    {t('findocTemplates.saveAsCopy')}
 
                   </button>
 
@@ -662,7 +634,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                       >
 
-                        Delete
+                        {t('findocTemplates.delete')}
 
                       </button>
 
@@ -684,7 +656,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                     >
 
-                      {analyzing ? 'Analyzing…' : 'AI Analysis'}
+                      {analyzing ? t('findocTemplates.analyzing') : t('findocTemplates.aiAnalysis')}
 
                     </button>
 
@@ -702,7 +674,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                       >
 
-                        Cancel
+                        {t('common.cancel')}
 
                       </button>
 
@@ -720,7 +692,7 @@ export function FinDocTemplateSetupPage({ onBack }: FinDocTemplateSetupPageProps
 
                     >
 
-                      {saving ? 'Saving…' : 'Save'}
+                      {saving ? t('findocTemplates.saving') : t('findocTemplates.save')}
 
                     </button>
 

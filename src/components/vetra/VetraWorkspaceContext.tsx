@@ -36,7 +36,3 @@ export function useVetraTemplateWorkspaceContext() {
   return useVetraWorkspaceContext().templates
 }
 
-/** @deprecated Use useVetraCompanyWorkspaceContext for companies. */
-export function useVetraWorkspace() {
-  return useVetraCompanyWorkspaceContext()
-}

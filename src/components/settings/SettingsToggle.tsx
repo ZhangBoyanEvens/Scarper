@@ -1,4 +1,4 @@
-import './SettingsToggle.css'
+import { Switch } from 'antd'
 
 interface SettingsToggleProps {
   id: string
@@ -18,26 +18,32 @@ export function SettingsToggle({
   disabled,
 }: SettingsToggleProps) {
   return (
-    <div className="settings-toggle">
-      <div className="settings-toggle__text">
-        <label htmlFor={id} className="settings-toggle__label">
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        justifyContent: 'space-between',
+        gap: 16,
+        padding: '12px 0',
+        borderBottom: '1px solid rgba(5, 5, 5, 0.06)',
+      }}
+    >
+      <div style={{ minWidth: 0 }}>
+        <label htmlFor={id} style={{ fontWeight: 500, color: 'rgba(0,0,0,0.88)' }}>
           {label}
         </label>
-        {description && (
-          <p className="settings-toggle__desc">{description}</p>
-        )}
+        {description ? (
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'rgba(0,0,0,0.45)' }}>
+            {description}
+          </p>
+        ) : null}
       </div>
-      <button
+      <Switch
         id={id}
-        type="button"
-        role="switch"
-        aria-checked={checked}
+        checked={checked}
         disabled={disabled}
-        className={`settings-switch${checked ? ' settings-switch--on' : ''}`}
-        onClick={() => onChange(!checked)}
-      >
-        <span className="settings-switch__thumb" />
-      </button>
+        onChange={onChange}
+      />
     </div>
   )
 }

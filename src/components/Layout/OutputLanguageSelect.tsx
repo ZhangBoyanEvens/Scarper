@@ -1,14 +1,12 @@
+import { Flex, Select } from 'antd'
+import type { OutputDetail } from '../../types/outputDetail'
+import type { OutputLanguage } from '../../types/outputLanguage'
+import { useI18n } from '../../contexts/I18nContext'
 import {
-  DEFAULT_OUTPUT_DETAIL,
-  OUTPUT_DETAIL_OPTIONS,
-  type OutputDetail,
-} from '../../types/outputDetail'
-import {
-  DEFAULT_OUTPUT_LANGUAGE,
-  OUTPUT_LANGUAGE_OPTIONS,
-  type OutputLanguage,
-} from '../../types/outputLanguage'
-import '../../styles/panel.css'
+  getLocalizedOutputDetailOptions,
+  getLocalizedOutputLanguageOptions,
+} from '../../i18n/outputOptions'
+import { scarperSelectPopup } from '../common/scarperForm'
 import './OutputLanguageSelect.css'
 
 interface OutputLanguageSelectProps {
@@ -24,42 +22,34 @@ export function OutputLanguageSelect({
   onLanguageChange,
   onDetailChange,
 }: OutputLanguageSelectProps) {
-  return (
-    <div className="lang-select-wrap">
-      <div className="panel-shell lang-select-shell">
-        <div className="panel-inner lang-select-inner lang-select-inner--dual">
-          <label className="lang-select-item">
-       
-            <select
-              className="lang-select-control"
-              value={language}
-              onChange={(e) => onLanguageChange(e.target.value as OutputLanguage)}
-            >
-              {OUTPUT_LANGUAGE_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="lang-select-item">
+  const { t } = useI18n()
+  const languageOptions = getLocalizedOutputLanguageOptions(t)
+  const detailOptions = getLocalizedOutputDetailOptions(t)
 
-            <select
-              className="lang-select-control"
-              value={detail}
-              onChange={(e) => onDetailChange(e.target.value as OutputDetail)}
-            >
-              {OUTPUT_DETAIL_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </div>
-    </div>
+  return (
+    <Flex className="lang-select-wrap" gap={10} align="center">
+      <Select
+        className="lang-select-control"
+        size="middle"
+        value={language}
+        getPopupContainer={scarperSelectPopup}
+        options={languageOptions.map((opt) => ({
+          value: opt.value,
+          label: opt.label,
+        }))}
+        onChange={onLanguageChange}
+      />
+      <Select
+        className="lang-select-control"
+        size="middle"
+        value={detail}
+        getPopupContainer={scarperSelectPopup}
+        options={detailOptions.map((opt) => ({
+          value: opt.value,
+          label: opt.label,
+        }))}
+        onChange={onDetailChange}
+      />
+    </Flex>
   )
 }
-
-export { DEFAULT_OUTPUT_LANGUAGE, DEFAULT_OUTPUT_DETAIL }

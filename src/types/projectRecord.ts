@@ -23,6 +23,7 @@ export interface ProjectDataRecordListResponse {
     result_count: number
     success_count: number
     source: string
+    title?: string
   }>
   storage: NeonStorageMode
 }

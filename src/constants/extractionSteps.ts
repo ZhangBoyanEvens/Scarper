@@ -28,7 +28,4 @@ export const EXTRACTION_STEPS: readonly ExtractionStep[] = [
 
 export const EXTRACTION_DONE_LABEL = 'Done'
 
-/** @deprecated Use each step’s durationMs in EXTRACTION_STEPS */
-export const EXTRACTION_STEP_LABELS = EXTRACTION_STEPS.map((s) => s.label)
-
 export const EXTRACTION_STEP_INTERVAL_MS = 2200

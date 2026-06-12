@@ -1,4 +1,6 @@
+import { Progress, Typography, theme } from 'antd'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import {
   fetchNeonStorage,
   isNeonUploadPreferred,
@@ -6,9 +8,12 @@ import {
 import type { NeonStorageResponse } from '../../types/neon'
 import { formatBytes } from '../../utils/formatBytes'
 
+const { Text } = Typography
 const REFRESH_DEBOUNCE_MS = 2500
 
 export function ProjectStorageBar() {
+  const { t } = useI18n()
+  const { token } = theme.useToken()
   const [storage, setStorage] = useState<NeonStorageResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [hidden, setHidden] = useState(false)
@@ -38,7 +43,7 @@ export function ProjectStorageBar() {
       setHidden(false)
       setStorage(data)
     } catch {
-      /* 保留上次用量，避免闪烁 */
+      /* keep last usage */
     } finally {
       inFlightRef.current = false
       if (isFirst) setLoading(false)
@@ -79,47 +84,36 @@ export function ProjectStorageBar() {
 
   return (
     <div
-      className={[
-        'project-storage',
-        loading && hasShownRef.current ? 'project-storage--refreshing' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      aria-label="Neon 云存储用量"
+      className="project-storage"
+      style={{
+        borderBottom: `1px solid ${token.colorBorderSecondary}`,
+        background: token.colorFillAlter,
+      }}
+      aria-label={t('project.storage.aria')}
       aria-busy={loading}
     >
       <div className="project-storage__labels">
-        <span className="project-storage__title">云存储</span>
-        <span className="project-storage__nums">
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          {t('project.storage.label')}
+        </Text>
+        <Text type="secondary" style={{ fontSize: 12 }}>
           {showInitialLoading
-            ? '统计中…'
+            ? t('project.storage.calculating')
             : `${formatBytes(used)} / ${formatBytes(quota)}`}
-        </span>
+        </Text>
       </div>
-      <div
-        className="project-storage__track"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={quota}
-        aria-valuenow={showInitialLoading ? undefined : used}
-        aria-valuetext={
-          showInitialLoading ? undefined : `已用 ${percent.toFixed(1)}%`
-        }
-      >
-        <div
-          className={[
-            'project-storage__fill',
-            nearFull ? 'project-storage__fill--warn' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')}
-          style={{
-            width: showInitialLoading ? '0%' : `${Math.min(100, percent)}%`,
-          }}
-        />
-      </div>
+      <Progress
+        percent={showInitialLoading ? 0 : Math.min(100, percent)}
+        showInfo={false}
+        strokeColor={nearFull ? token.colorWarning : token.colorPrimary}
+        trailColor={token.colorFillSecondary}
+        size="small"
+        aria-label={t('project.storage.aria')}
+      />
       {!showInitialLoading && nearFull ? (
-        <p className="project-storage__hint">存储即将用尽，请删除旧记录或精简正文</p>
+        <Text type="warning" style={{ fontSize: 12, display: 'block', marginTop: 8 }}>
+          {t('project.storage.almostFull')}
+        </Text>
       ) : null}
     </div>
   )

@@ -1,3 +1,4 @@
+import { ScarperWordmark } from './ScarperWordmark'
 import './BrandMark.css'
 
 interface BrandMarkProps {
@@ -12,8 +13,6 @@ export function BrandMark({
   tagline,
   className = '',
 }: BrandMarkProps) {
-  const TitleTag = size === 'lg' ? 'h1' : 'span'
-
   return (
     <div
       className={`brand-mark brand-mark--${size}${tagline ? ' brand-mark--stacked' : ''} ${className}`.trim()}
@@ -27,7 +26,7 @@ export function BrandMark({
           height={size === 'lg' ? 48 : 32}
           decoding="async"
         />
-        <TitleTag className="brand-mark__title">Scarper</TitleTag>
+        <ScarperWordmark size={size} />
       </div>
       {tagline && <p className="brand-mark__tagline">{tagline}</p>}
     </div>

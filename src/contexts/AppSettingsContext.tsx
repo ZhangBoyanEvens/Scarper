@@ -18,6 +18,7 @@ import {
   type UiSettings,
 } from '../storage/settingsStorage'
 import type { CostCurrencyCode } from '../config/currency'
+import { I18nProvider } from './I18nContext'
 import type { OutputDetail } from '../types/outputDetail'
 import type { OutputLanguage } from '../types/outputLanguage'
 
@@ -55,14 +56,9 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
   }, [settings.ui.reduceMotion, settings.ui.compactMode])
 
   useEffect(() => {
-    const htmlLang =
-      settings.outputLanguage === 'en'
-        ? 'en'
-        : settings.outputLanguage === 'zh'
-          ? 'zh-CN'
-          : 'en'
-    document.documentElement.lang = htmlLang
-  }, [settings.outputLanguage])
+    document.documentElement.lang =
+      settings.ui.locale === 'zh' ? 'zh-CN' : 'en'
+  }, [settings.ui.locale])
 
   const setOutputLanguage = useCallback((outputLanguage: OutputLanguage) => {
     setSettings((prev) => persist({ ...prev, outputLanguage }))
@@ -136,7 +132,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppSettingsContext.Provider value={value}>
-      {children}
+      <I18nProvider>{children}</I18nProvider>
     </AppSettingsContext.Provider>
   )
 }

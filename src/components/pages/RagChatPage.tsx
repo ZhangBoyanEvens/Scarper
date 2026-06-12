@@ -1,4 +1,11 @@
+import { FileSearchOutlined } from '@ant-design/icons'
+import { Flex, Input, Select, Spin, Tag, theme } from 'antd'
+import type { TextAreaRef } from 'antd/es/input/TextArea'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
+import { formatLocaleShortDateTime } from '../../i18n/localeFormat'
+import { ScarperToolbarField } from '../common/ScarperToolbarField'
+import { scarperSelectProps } from '../common/scarperForm'
 import { useLoadingVisible } from '../../hooks/useLoadingVisible'
 import { DashboardChatDrawer } from '../dashboard/DashboardChatDrawer'
 import { listProjects, peekProjects } from '../../services/projectService'
@@ -13,28 +20,24 @@ import {
 import { buildRagCorpus, type DashboardRagCorpus } from '../../utils/dashboardRag'
 import type { Project } from '../../types/project'
 import type { ProjectDataRecord } from '../../types/projectRecord'
-import '../Layout/OutputLanguageSelect.css'
 import '../dashboard/DashboardEditor.css'
 import '../pages/DashboardPage.css'
 import '../../styles/scrollbar.css'
 import './RagChatPage.css'
 
-function formatTaskLabel(record: ProjectDataRecord, index: number): string {
-  let when = record.uploadedAt
-  try {
-    when = new Date(record.uploadedAt).toLocaleString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    /* keep raw */
-  }
-  return `#${index + 1} ${when} · ${record.resultCount} items`
+function formatTaskLabel(
+  record: ProjectDataRecord,
+  index: number,
+  t: (path: string, params?: Record<string, string | number>) => string,
+  locale: 'en' | 'zh',
+): string {
+  const when = formatLocaleShortDateTime(record.uploadedAt, locale)
+  return `#${index + 1} ${when} · ${t('ragChat.taskItems', { count: record.resultCount })}`
 }
 
 export function RagChatPage() {
+  const { t, locale } = useI18n()
+  const { token } = theme.useToken()
   const initialProjects = peekProjects()
   const [projects, setProjects] = useState<Project[]>(initialProjects)
   const [records, setRecords] = useState<ProjectDataRecord[]>([])
@@ -48,7 +51,7 @@ export function RagChatPage() {
   const [loadingTask, setLoadingTask] = useState(false)
   const [ragCorpus, setRagCorpus] = useState<DashboardRagCorpus | null>(null)
   const [ragLoading, setRagLoading] = useState(false)
-  const contentRef = useRef<HTMLTextAreaElement>(null)
+  const contentRef = useRef<TextAreaRef>(null)
 
   const showProjectsLoading = useLoadingVisible(
     loadingProjects && projects.length === 0,
@@ -159,7 +162,7 @@ export function RagChatPage() {
   const taskIndex = records.findIndex((r) => r.id === taskId)
   const chatContextHint =
     projectName && taskId
-      ? `${projectName}${taskIndex >= 0 ? ` · ${formatTaskLabel(records[taskIndex], taskIndex)}` : ''}`
+      ? `${projectName}${taskIndex >= 0 ? ` · ${formatTaskLabel(records[taskIndex], taskIndex, t, locale)}` : ''}`
       : projectName || ''
 
   const refreshRagCorpus = useCallback(async () => {
@@ -202,7 +205,8 @@ export function RagChatPage() {
   }, [projectId, taskId, refreshRagCorpus])
 
   const syncSelection = useCallback(() => {
-    const root = contentRef.current
+    const root =
+      contentRef.current?.resizableTextArea?.textArea ?? null
     const sel = window.getSelection()
     if (!root || !sel || sel.rangeCount === 0) {
       setSelectedText('')
@@ -227,86 +231,83 @@ export function RagChatPage() {
       <div className="dashboard-shell">
         <div className="dashboard-panel__body">
           <div className="dashboard-main">
-            <header className="dashboard-head">
-              <h2 className="dashboard-head__title">RAG Chat</h2>
-              <p className="rag-chat-head__desc">
-                Select a Project and Task, highlight text, then ask AI — answers are grounded in your database
-              </p>
-            </header>
-
             <section className="dashboard-toolbar" aria-label="Project and task selection">
-              <div className="dashboard-toolbar__fields">
-                <label className="dashboard-field">
-                  <span className="dashboard-field__label">Project</span>
-                  <select
-                    className="lang-select-control dashboard-select"
-                    value={projectId}
+              <Flex wrap="wrap" gap={12} align="center" className="dashboard-toolbar__fields">
+                <ScarperToolbarField label={t('fields.project')}>
+                  <Select
+                    {...scarperSelectProps()}
+                    value={projectId || undefined}
+                    placeholder={
+                      showProjectsLoading
+                        ? t('ragChat.loadingProjects')
+                        : projects.length === 0
+                          ? t('ragChat.noProjects')
+                          : t('ragChat.selectProject')
+                    }
                     disabled={loadingProjects || projects.length === 0}
-                    onChange={(e) => handleProjectChange(e.target.value)}
-                  >
-                    {showProjectsLoading ? (
-                      <option value="">Loading…</option>
-                    ) : projects.length === 0 ? (
-                      <option value="">No projects</option>
-                    ) : (
-                      projects.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </label>
+                    options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                    onChange={handleProjectChange}
+                  />
+                </ScarperToolbarField>
 
-                <label className="dashboard-field">
-                  <span className="dashboard-field__label">Task</span>
-                  <select
-                    className="lang-select-control dashboard-select"
-                    value={taskId}
+                <ScarperToolbarField label={t('fields.task')}>
+                  <Select
+                    {...scarperSelectProps({ minWidth: 200, maxWidth: 320 })}
+                    value={taskId || undefined}
+                    placeholder={
+                      !projectId
+                        ? t('ragChat.selectProjectFirst')
+                        : records.length === 0
+                          ? t('ragChat.noRecords')
+                          : t('ragChat.selectTask')
+                    }
                     disabled={!projectId || records.length === 0}
-                    onChange={(e) => {
-                      setTaskId(e.target.value)
+                    options={records.map((r, i) => ({
+                      value: r.id,
+                      label: formatTaskLabel(r, i, t, locale),
+                    }))}
+                    onChange={(id) => {
+                      setTaskId(id)
                       setSelectedText('')
                     }}
-                  >
-                    {!projectId ? (
-                      <option value="">Select a Project first</option>
-                    ) : records.length === 0 ? (
-                      <option value="">No records</option>
-                    ) : (
-                      records.map((r, i) => (
-                        <option key={r.id} value={r.id}>
-                          {formatTaskLabel(r, i)}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </label>
-              </div>
-              {selectedText ? (
-                <span className="rag-chat-selection-badge" role="status">
-                  {selectedText.length} characters selected
-                </span>
-              ) : null}
+                  />
+                </ScarperToolbarField>
+
+                {selectedText ? (
+                  <Tag icon={<FileSearchOutlined />} color="processing">
+                    {selectedText.length} characters selected
+                  </Tag>
+                ) : null}
+              </Flex>
             </section>
 
             <section className="rag-chat-content" aria-label="Task body">
               {showTaskLoading ? (
-                <p className="dashboard-editor-placeholder">Loading task content…</p>
+                <Flex align="center" justify="center" style={{ flex: 1, minHeight: 200 }}>
+                  <Spin tip={t('ragChat.loadingTask')} />
+                </Flex>
               ) : (
-                <textarea
+                <Input.TextArea
                   ref={contentRef}
                   className="rag-chat-content__textarea scarper-scrollbar scarper-scrollbar--editor"
                   readOnly
                   value={documentText}
                   placeholder={
                     taskId
-                      ? 'This Task has no body yet — edit in Dashboard or upload from Scrape'
-                      : 'Select a Project and Task'
+                      ? t('ragChat.noBody')
+                      : t('ragChat.selectProjectTask')
                   }
                   onMouseUp={syncSelection}
                   onKeyUp={syncSelection}
                   onSelect={syncSelection}
+                  style={{
+                    flex: 1,
+                    minHeight: 200,
+                    resize: 'none',
+                    background: token.colorBgContainer,
+                    color: token.colorText,
+                    borderColor: token.colorBorder,
+                  }}
                 />
               )}
             </section>

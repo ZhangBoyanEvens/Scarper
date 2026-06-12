@@ -2,6 +2,7 @@ import { useAuth } from '@clerk/clerk-react'
 import { useCallback, useMemo, useState } from 'react'
 import { envApiBase, resolveApiBase } from '../../config/api'
 import { clerkPublishableKey, isClerkConfigured } from '../../config/clerk'
+import { useI18n } from '../../contexts/I18nContext'
 import {
   fetchDiagnostics,
   pingBackendHealth,
@@ -12,6 +13,9 @@ import type {
   DiagnosticCheckStatus,
   DiagnosticsResponse,
 } from '../../types/diagnostics'
+import type { TranslateParams } from '../../i18n/types'
+
+type TranslateFn = (path: string, params?: TranslateParams) => string
 
 function statusIconClass(status: DiagnosticCheckStatus): string {
   return `settings-diag-dot is-${status}`
@@ -22,181 +26,198 @@ function checksFromDiagnostics(
   data: DiagnosticsResponse | null,
   clerkSignedIn: boolean,
   userMeOk: boolean | null,
+  t: TranslateFn,
 ): DiagnosticCheck[] {
   const rows: DiagnosticCheck[] = []
+  const c = (key: string, params?: TranslateParams) =>
+    t(`settings.diagnostics.checks.${key}`, params)
 
   rows.push({
     id: 'backend',
-    label: 'Python 后端',
+    label: c('backend.label'),
     status: health.ok ? 'ok' : 'fail',
     message: health.ok
-      ? `运行中 · ${health.via}`
-      : `未连接 · ${health.error ?? '无法访问 /api/health'}`,
+      ? c('backend.running', { via: health.via })
+      : c('backend.fail', {
+          error: health.error ?? 'Cannot reach /api/health',
+        }),
     detail: data
-      ? `Python ${data.python_version} · API v${data.app_version}`
+      ? c('backend.detail', {
+          version: data.python_version,
+          apiVersion: data.app_version,
+        })
       : undefined,
   })
 
   const apiBase = resolveApiBase()
   rows.push({
     id: 'api-base',
-    label: 'API 地址',
+    label: c('apiBase.label'),
     status: health.ok ? 'ok' : 'warn',
-    message: apiBase || envApiBase || '（同源 / Vite 代理）',
+    message:
+      apiBase || envApiBase || c('apiBase.sameOrigin'),
     detail: envApiBase
-      ? `环境变量 VITE_BACKEND_URL=${envApiBase}`
-      : '未设置 VITE_BACKEND_URL，依赖开发代理',
+      ? c('apiBase.detailEnv', { url: envApiBase })
+      : c('apiBase.detailProxy'),
   })
 
   rows.push({
     id: 'clerk-frontend',
-    label: 'Clerk 前端',
+    label: c('clerkFrontend.label'),
     status: isClerkConfigured ? 'ok' : 'warn',
     message: isClerkConfigured
-      ? `已配置 · ${(clerkPublishableKey ?? '').slice(0, 12)}…`
-      : '未配置 VITE_CLERK_PUBLISHABLE_KEY',
-    detail: clerkSignedIn ? '当前已登录' : '当前未登录',
+      ? c('clerkFrontend.configured', {
+          key: (clerkPublishableKey ?? '').slice(0, 12),
+        })
+      : c('clerkFrontend.notConfigured'),
+    detail: clerkSignedIn
+      ? c('clerkFrontend.signedIn')
+      : c('clerkFrontend.notSignedIn'),
   })
 
   if (!data) {
     rows.push({
       id: 'diagnostics-api',
-      label: '诊断接口',
+      label: c('diagnosticsApi.label'),
       status: 'fail',
       message: health.ok
-        ? 'GET /api/diagnostics 失败（常见：Vite 未代理该路径，需重启 npm run dev）'
-        : '无法拉取 /api/diagnostics（请先确保 Python 后端已启动）',
+        ? c('diagnosticsApi.proxyFail')
+        : c('diagnosticsApi.backendDown'),
     })
     return rows
   }
 
-  const c = data.clerk
-  if (!c.enabled) {
+  const clerk = data.clerk
+  if (!clerk.enabled) {
     rows.push({
       id: 'clerk-backend',
-      label: 'Clerk 后端',
+      label: c('clerkBackend.label'),
       status: 'skip',
-      message: '未配置 CLERK_SECRET_KEY / CLERK_JWT_ISSUER（匿名模式）',
+      message: c('clerkBackend.disabled'),
     })
   } else {
-    const jwksOk = c.jwks_reachable === true
-    const jwksFail = c.jwks_reachable === false
+    const jwksOk = clerk.jwks_reachable === true
+    const jwksFail = clerk.jwks_reachable === false
     rows.push({
       id: 'clerk-backend',
-      label: 'Clerk 后端',
+      label: c('clerkBackend.label'),
       status: jwksOk ? 'ok' : jwksFail ? 'fail' : 'warn',
       message: [
-        'JWT 校验已启用',
-        c.require_auth ? '· 抓取须登录' : '· 抓取可匿名',
+        c('clerkBackend.jwtEnabled'),
+        clerk.require_auth
+          ? c('clerkBackend.requireAuth')
+          : c('clerkBackend.allowAnonymous'),
       ].join(' '),
       detail: jwksFail
-        ? `JWKS 不可达：${c.jwks_error ?? '未知'}`
-        : c.issuer_configured
-          ? 'Issuer 已配置'
-          : '缺少 CLERK_JWT_ISSUER',
+        ? c('clerkBackend.jwksFail', {
+            error: clerk.jwks_error ?? 'unknown',
+          })
+        : clerk.issuer_configured
+          ? c('clerkBackend.issuerOk')
+          : c('clerkBackend.issuerMissing'),
     })
   }
 
   const auth = data.auth
-  if (!c.enabled) {
+  if (!clerk.enabled) {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'skip',
-      message: '后端未启用 Clerk，跳过令牌校验',
+      message: c('authToken.backendDisabled'),
     })
   } else if (!isClerkConfigured) {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'warn',
-      message: '前端未配置 Clerk，无法获取 Bearer Token',
+      message: c('authToken.frontendDisabled'),
     })
   } else if (!clerkSignedIn) {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'warn',
-      message: '未登录，请在账号页登录后重试',
+      message: c('authToken.notSignedIn'),
     })
   } else if (!auth.token_present) {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'fail',
-      message: '已登录但未向后端发送 Authorization 头',
+      message: c('authToken.missingHeader'),
     })
   } else if (auth.token_valid === false) {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'fail',
-      message: auth.error ?? 'JWT 校验失败',
+      message: auth.error ?? 'JWT verification failed',
     })
   } else if (auth.token_valid === true) {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'ok',
-      message: `JWT 有效 · ${auth.user_id ?? '—'}`,
+      message: c('authToken.jwtValid', { userId: auth.user_id ?? '—' }),
       detail: auth.email ?? undefined,
     })
   } else {
     rows.push({
       id: 'auth-token',
-      label: '登录令牌',
+      label: c('authToken.label'),
       status: 'warn',
-      message: '令牌状态未知',
+      message: c('authToken.unknown'),
     })
   }
 
   rows.push({
     id: 'user-me',
-    label: '用户 API',
+    label: c('userMe.label'),
     status:
       userMeOk === true ? 'ok' : userMeOk === false ? 'fail' : 'skip',
     message:
       userMeOk === true
-        ? 'GET /api/user/me 正常'
+        ? c('userMe.ok')
         : userMeOk === false
-          ? 'GET /api/user/me 失败（401 或未配置 Clerk）'
-          : '跳过（未登录或后端未启用 Clerk）',
+          ? c('userMe.fail')
+          : c('userMe.skip'),
   })
 
   const neon = data.neon
   if (!neon.enabled) {
     rows.push({
       id: 'neon',
-      label: 'Neon 数据库',
+      label: c('neon.label'),
       status: 'skip',
-      message: 'NEON_ENABLED=false，使用浏览器 localStorage',
+      message: c('neon.disabled'),
     })
   } else if (!neon.configured) {
     rows.push({
       id: 'neon',
-      label: 'Neon 数据库',
+      label: c('neon.label'),
       status: 'warn',
-      message: '已启用但未配置 NEON_DATABASE_URL',
+      message: c('neon.notConfigured'),
     })
   } else {
     rows.push({
       id: 'neon',
-      label: 'Neon 数据库',
+      label: c('neon.label'),
       status: neon.connected ? 'ok' : 'fail',
       message: neon.connected
-        ? `已连接 · 模式 ${neon.mode}`
-        : '已配置但 ping 失败',
+        ? c('neon.connected', { mode: neon.mode })
+        : c('neon.pingFail'),
     })
   }
 
   const ds = data.deepseek
   rows.push({
     id: 'deepseek',
-    label: 'DeepSeek AI',
+    label: c('deepseek.label'),
     status: ds.configured ? 'ok' : 'fail',
     message: ds.configured
-      ? `已配置 · ${ds.model}`
-      : '未配置 DEEPSEEK_API_KEY（无法摘要）',
+      ? c('deepseek.configured', { model: ds.model })
+      : c('deepseek.notConfigured'),
     detail: ds.api_base,
   })
 
@@ -204,47 +225,55 @@ function checksFromDiagnostics(
   if (!pw.enabled) {
     rows.push({
       id: 'playwright',
-      label: 'Playwright 爬虫',
+      label: c('playwright.label'),
       status: 'skip',
-      message: 'PLAYWRIGHT_ENABLED=false，仅 HTTP 抓取',
+      message: c('playwright.disabled'),
     })
   } else if (!pw.import_ok) {
     rows.push({
       id: 'playwright',
-      label: 'Playwright 爬虫',
+      label: c('playwright.label'),
       status: 'fail',
-      message: '已启用但未安装 playwright 包',
+      message: c('playwright.notInstalled'),
     })
   } else {
     rows.push({
       id: 'playwright',
-      label: 'Playwright 爬虫',
+      label: c('playwright.label'),
       status: pw.browser_connected ? 'ok' : 'warn',
       message: pw.browser_connected
-        ? 'Chromium 已连接（池已预热）'
-        : '包已安装，浏览器尚未启动（首次抓取时会启动）',
+        ? c('playwright.connected')
+        : c('playwright.idle'),
     })
   }
 
   const cr = data.crawler
   rows.push({
     id: 'crawler',
-    label: '抓取流水线',
+    label: c('crawler.label'),
     status: 'ok',
-    message: `HTTP ${cr.fetch_timeout_sec}s · 全流程 ${cr.extract_timeout_sec}s`,
-    detail: `缓存 TTL ${cr.cache_ttl_sec}s · Playwright ${cr.playwright_enabled ? '开' : '关'}`,
+    message: c('crawler.message', {
+      fetch: cr.fetch_timeout_sec,
+      extract: cr.extract_timeout_sec,
+    }),
+    detail: c('crawler.detail', {
+      ttl: cr.cache_ttl_sec,
+      pw: cr.playwright_enabled
+        ? c('crawler.pwOn')
+        : c('crawler.pwOff'),
+    }),
   })
 
   rows.push({
     id: 'overall',
-    label: '综合状态',
+    label: c('overall.label'),
     status: data.status === 'ok' ? 'ok' : 'warn',
     message:
-      data.status === 'ok'
-        ? '关键服务正常'
-        : '部分服务降级（见上方失败/警告项）',
+      data.status === 'ok' ? c('overall.ok') : c('overall.degraded'),
     detail: data.checked_at
-      ? `检测时间 ${new Date(data.checked_at).toLocaleString('zh-CN')}`
+      ? t('settings.diagnostics.checkedAt', {
+          time: new Date(data.checked_at).toLocaleString(),
+        })
       : undefined,
   })
 
@@ -252,9 +281,12 @@ function checksFromDiagnostics(
 }
 
 function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
+  const { t, locale } = useI18n()
   const [running, setRunning] = useState(false)
   const [checks, setChecks] = useState<DiagnosticCheck[]>([])
   const [lastRun, setLastRun] = useState<string | null>(null)
+
+  const dateLocale = locale === 'zh' ? 'zh-CN' : 'en-US'
 
   const summary = useMemo(() => {
     if (checks.length === 0) return null
@@ -264,14 +296,31 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
     return { fail, warn, ok }
   }, [checks])
 
+  const statusLabel = (status: DiagnosticCheckStatus) => {
+    switch (status) {
+      case 'ok':
+        return t('settings.diagnostics.statusOk')
+      case 'warn':
+        return t('settings.diagnostics.statusWarn')
+      case 'fail':
+        return t('settings.diagnostics.statusFail')
+      case 'skip':
+        return t('settings.diagnostics.statusSkip')
+      case 'checking':
+        return t('settings.diagnostics.statusChecking')
+      default:
+        return t('settings.diagnostics.statusIdle')
+    }
+  }
+
   const runDiagnostics = useCallback(async () => {
     setRunning(true)
     setChecks([
       {
         id: 'backend',
-        label: 'Python 后端',
+        label: t('settings.diagnostics.checks.backend.label'),
         status: 'checking',
-        message: '检测中…',
+        message: t('common.checking'),
       },
     ])
 
@@ -284,7 +333,7 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
       } catch (e) {
         data = null
         diagnosticsError =
-          e instanceof Error ? e.message : '无法拉取 /api/diagnostics'
+          e instanceof Error ? e.message : 'Cannot fetch /api/diagnostics'
       }
     }
 
@@ -298,7 +347,13 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
       }
     }
 
-    const next = checksFromDiagnostics(health, data, clerkSignedIn, userMeOk)
+    const next = checksFromDiagnostics(
+      health,
+      data,
+      clerkSignedIn,
+      userMeOk,
+      t,
+    )
     if (diagnosticsError && health.ok) {
       const idx = next.findIndex((c) => c.id === 'diagnostics-api')
       if (idx >= 0) {
@@ -310,9 +365,9 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
       }
     }
     setChecks(next)
-    setLastRun(new Date().toLocaleString('zh-CN'))
+    setLastRun(new Date().toLocaleString(dateLocale))
     setRunning(false)
-  }, [clerkSignedIn])
+  }, [clerkSignedIn, dateLocale, t])
 
   return (
     <section className="settings-panel">
@@ -324,21 +379,31 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
             disabled={running}
             onClick={() => void runDiagnostics()}
           >
-            {running ? '检测中…' : '运行全部检测'}
+            {running ? t('common.checking') : t('settings.diagnostics.runAll')}
           </button>
           {summary && (
             <p className="settings-diag-summary" role="status">
-              <span className="settings-diag-summary__ok">{summary.ok} 通过</span>
+              <span className="settings-diag-summary__ok">
+                {t('settings.diagnostics.summaryPassed', {
+                  count: summary.ok,
+                })}
+              </span>
               {summary.warn > 0 && (
                 <span className="settings-diag-summary__warn">
                   {' '}
-                  · {summary.warn} 警告
+                  ·{' '}
+                  {t('settings.diagnostics.summaryWarnings', {
+                    count: summary.warn,
+                  })}
                 </span>
               )}
               {summary.fail > 0 && (
                 <span className="settings-diag-summary__fail">
                   {' '}
-                  · {summary.fail} 失败
+                  ·{' '}
+                  {t('settings.diagnostics.summaryFailed', {
+                    count: summary.fail,
+                  })}
                 </span>
               )}
               {lastRun && (
@@ -349,13 +414,12 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
         </div>
 
         <p className="settings-muted settings-diag-intro">
-          检测 Python 后端、Vite 代理、Clerk 登录、Neon 数据库、DeepSeek 与
-          Playwright 爬虫等连接状态。修改 .env 后需重启后端再检测。
+          {t('settings.diagnostics.intro')}
         </p>
 
         {checks.length === 0 ? (
           <div className="settings-callout">
-            <p>尚未运行检测。点击上方按钮开始。</p>
+            <p>{t('settings.diagnostics.empty')}</p>
           </div>
         ) : (
           <ul className="settings-diag-list">
@@ -373,12 +437,7 @@ function DiagnosticsSectionBody({ clerkSignedIn }: { clerkSignedIn: boolean }) {
                     <span
                       className={`settings-diag-row__badge is-${check.status}`}
                     >
-                      {check.status === 'ok' && '正常'}
-                      {check.status === 'warn' && '警告'}
-                      {check.status === 'fail' && '失败'}
-                      {check.status === 'skip' && '跳过'}
-                      {check.status === 'checking' && '…'}
-                      {check.status === 'idle' && '—'}
+                      {statusLabel(check.status)}
                     </span>
                   </div>
                   <p className="settings-diag-row__message">{check.message}</p>

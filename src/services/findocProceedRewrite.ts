@@ -20,23 +20,23 @@ function buildSystemPrompt(
 ): string {
   const langRule = outputLanguageInstruction(outputLanguage)
   const adjustmentRule = hasAdjustmentPrompt
-    ? '- 用户会提供额外改写指令：在不破坏 Template 分区标题与顺序的前提下，优先落实这些要求\n'
+    ? '- The user may provide extra rewrite instructions: honor them without breaking Template section headings or order\n'
     : ''
-  return `你是 FinDoc 文档格式化与改写专家。
+  return `You are a FinDoc document formatting and rewrite expert.
 
-你会收到：Template（格式样板）和 Task（真实素材）。
+You receive a Template (format sample) and Task (source material).
 
-步骤：
-1. 阅读 Task，提取事实、数字、名称、结论
-2. 按 Template 的分区标题与顺序，用 Task 的信息重写每一节
-3. Template 里的示例句、占位符、[方括号] 内容必须全部替换，不能保留
+Steps:
+1. Read the Task and extract facts, figures, names, and conclusions
+2. Rewrite each section using Task content, following Template headings and order
+3. Replace all sample sentences, placeholders, and [bracketed] text from the Template
 
-输出要求：
-- 分区标题行与 Template 一致（### 标题 等）
-- 正文必须来自 Task，不得留 Template 示例原文
-- 去掉 Task 的 URL 分块与抓取格式
-- 只输出成品文档，不要解释
-- 输出语言：${langRule}，不要用代码块包裹
+Output rules:
+- Section heading lines must match the Template (e.g. ### Title)
+- Body text must come from the Task, not Template examples
+- Remove URL blocks and scrape formatting from the Task
+- Output the finished document only; no commentary
+- Output language: ${langRule}; do not wrap in code fences
 ${adjustmentRule}
 ${FINDOC_TYPOGRAPHY_RULES}`
 }
@@ -49,7 +49,7 @@ function stripCodeFence(text: string): string {
 
 function truncateTaskInput(text: string): string {
   if (text.length <= MAX_TASK_INPUT_CHARS) return text
-  return `${text.slice(0, MAX_TASK_INPUT_CHARS)}\n\n[内容过长，已截断]`
+  return `${text.slice(0, MAX_TASK_INPUT_CHARS)}\n\n[Content truncated — too long]`
 }
 
 function taskSnippet(taskContent: string): string {
@@ -70,19 +70,19 @@ function buildUserPrompt(
   const adjustmentBlock = adjustment
     ? `
 
-【用户改写指令 — 在满足 Template 结构与 Task 事实的前提下务必遵守】
+[User rewrite instructions — follow while preserving Template structure and Task facts]
 ${adjustment}`
     : ''
 
   return `${formatSpec}
 
-【Task 素材 — 输出正文必须体现以下信息（可改写，不可忽略）】
+[Task material — output must reflect this content (rewrite allowed, do not omit)]
 ${tasks}
 
-【Task 关键片段（务必在输出中体现）】
+[Task key excerpt — must appear in output]
 ${taskSnippet(taskContent)}
 
-【Template — 只学格式，不要复制下面示例文字】
+[Template — learn format only; do not copy sample text below]
 ${template.trim()}${retryNote ?? ''}${adjustmentBlock}`
 }
 
@@ -92,19 +92,19 @@ function validateRewriteResult(
   taskContent: string,
 ): string | null {
   if (looksLikeRawTaskDump(result)) {
-    return '仍保留网页 URL 分块，请按 Template 合并成一份文档'
+    return 'Output still contains raw URL blocks; merge into one document per Template'
   }
   if (!outputMatchesTemplateHeadings(result, template)) {
-    return '缺少 Template 要求的分区标题'
+    return 'Missing required Template section headings'
   }
   if (
     isOutputCopiedFromTemplate(result, template) &&
     !outputReflectsTaskContent(result, taskContent)
   ) {
-    return '正文仍是 Template 示例文字，未写入 Task 内容'
+    return 'Body still matches Template examples; Task content was not written in'
   }
   if (!outputReflectsTaskContent(result, taskContent)) {
-    return '输出与 Task 素材关联度太低，请确认 Task 中有可读正文'
+    return 'Output does not reflect Task material; ensure Task has readable body text'
   }
   return null
 }
@@ -112,9 +112,9 @@ function validateRewriteResult(
 function buildRetryNote(issue: string, taskContent: string): string {
   return `
 
-【上次生成不合格：${issue}】
-请重新生成：保留 Template 分区标题，但每一节正文必须改写为 Task 中的实质内容。
-Task 关键片段：${taskSnippet(taskContent)}`
+[Previous output failed: ${issue}]
+Regenerate: keep Template section headings, but rewrite every section body from Task content.
+Task key excerpt: ${taskSnippet(taskContent)}`
 }
 
 async function callRewriteStream(
@@ -175,7 +175,7 @@ export async function rewriteTasksWithTemplate(
   taskContent: string,
   handlers: FindocRewriteHandlers,
   signal?: AbortSignal,
-  outputLanguage: OutputLanguage = 'zh',
+  outputLanguage: OutputLanguage = 'en',
   adjustmentPrompt?: string,
 ): Promise<string> {
   const { onDelta, onRetry } = handlers
@@ -189,16 +189,10 @@ export async function rewriteTasksWithTemplate(
     throw new Error('Selected Tasks have no usable content')
   }
 
-  let streamed = ''
-  const pushDelta = (chunk: string) => {
-    streamed += chunk
-    onDelta(chunk)
-  }
-
   let result = await callRewriteStream(
     trimmedTemplate,
     trimmedTasks,
-    pushDelta,
+    onDelta,
     undefined,
     outputLanguage,
     trimmedAdjustment || undefined,
@@ -207,15 +201,11 @@ export async function rewriteTasksWithTemplate(
   let issue = validateRewriteResult(result, trimmedTemplate, trimmedTasks)
 
   if (issue) {
-    streamed = ''
     onRetry?.()
     result = await callRewriteStream(
       trimmedTemplate,
       trimmedTasks,
-      (chunk) => {
-        streamed += chunk
-        onDelta(chunk)
-      },
+      onDelta,
       buildRetryNote(issue, trimmedTasks),
       outputLanguage,
       trimmedAdjustment || undefined,
@@ -224,7 +214,7 @@ export async function rewriteTasksWithTemplate(
     issue = validateRewriteResult(result, trimmedTemplate, trimmedTasks)
     if (issue) {
       throw new Error(
-        `Rewrite incomplete: ${issue}. Ensure Tasks have substantive body text in Dashboard, or try another Template`,
+        `Rewrite incomplete: ${issue}. Ensure Tasks have substantive body text from Scrape uploads, or try another Template`,
       )
     }
   }

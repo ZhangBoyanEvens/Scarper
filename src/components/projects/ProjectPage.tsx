@@ -1,6 +1,26 @@
 import { useAuth } from '@clerk/clerk-react'
+import {
+  DeleteOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons'
+import {
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Empty,
+  List,
+  Row,
+  Spin,
+  Typography,
+  theme,
+} from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { isClerkConfigured } from '../../config/clerk'
+import { useI18n } from '../../contexts/I18nContext'
+import { formatLocaleDateTime } from '../../i18n/localeFormat'
 import { useLoadingVisible } from '../../hooks/useLoadingVisible'
 import {
   createProject,
@@ -9,38 +29,24 @@ import {
   peekProjects,
 } from '../../services/projectService'
 import type { Project } from '../../types/project'
-import '../../styles/layout.css'
-import '../Layout/TextInputSection.css'
-import '../../styles/panel.css'
-import { GlowPanel } from '../Layout/GlowPanel'
 import { ProjectDetailRecords } from './ProjectDetailRecords'
 import { ProjectStorageBar } from './ProjectStorageBar'
 import { NewProjectModal } from './NewProjectModal'
 import './ProjectPage.css'
+
+const { Text, Paragraph } = Typography
 
 interface ProjectPageContentProps {
   clerkReady: boolean
   onOpenFindocRecord?: (projectId: string, recordId: string) => void
 }
 
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return iso
-  }
-}
-
 function ProjectPageContent({
   clerkReady,
   onOpenFindocRecord,
 }: ProjectPageContentProps) {
+  const { t, locale } = useI18n()
+  const { token } = theme.useToken()
   const initial = peekProjects()
   const [projects, setProjects] = useState<Project[]>(initial)
   const [modalOpen, setModalOpen] = useState(false)
@@ -50,6 +56,8 @@ function ProjectPageContent({
   const [loading, setLoading] = useState(initial.length === 0)
   const [loadError, setLoadError] = useState<string | null>(null)
   const showLoading = useLoadingVisible(loading && projects.length === 0)
+
+  const formatDate = (iso: string) => formatLocaleDateTime(iso, locale)
 
   const refresh = useCallback(async () => {
     setLoadError(null)
@@ -73,13 +81,13 @@ function ProjectPageContent({
       if (cached.length === 0) {
         setProjects([])
         setLoadError(
-          err instanceof Error ? err.message : '加载项目列表失败，请稍后重试',
+          err instanceof Error ? err.message : t('project.loadFailed'),
         )
       }
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (!clerkReady) return
@@ -98,156 +106,180 @@ function ProjectPageContent({
         await refresh()
       } catch (err) {
         window.alert(
-          err instanceof Error ? err.message : '创建项目失败，请稍后重试',
+          err instanceof Error ? err.message : t('project.createFailed'),
         )
       }
     },
-    [refresh],
+    [refresh, t],
   )
 
   const handleDelete = useCallback(
     async (id: string, name: string) => {
-      if (!window.confirm(`确定删除项目「${name}」？`)) return
+      if (!window.confirm(t('project.deleteConfirm', { name }))) return
       try {
         await deleteProject(id)
         setSelectedId((prev) => (prev === id ? null : prev))
         await refresh()
       } catch (err) {
         window.alert(
-          err instanceof Error ? err.message : '删除项目失败，请稍后重试',
+          err instanceof Error ? err.message : t('project.deleteFailed'),
         )
       }
     },
-    [refresh],
+    [refresh, t],
   )
 
   const selected = projects.find((p) => p.id === selectedId) ?? null
 
-  const newProjectButton = (
-    <button
-      type="button"
-      className="text-input-save project-new-btn"
+  const listCardExtra = (
+    <Button
+      type="primary"
+      size="small"
+      icon={<PlusOutlined />}
       onClick={() => setModalOpen(true)}
     >
-      新建 Project
-    </button>
+      {t('project.newProject')}
+    </Button>
   )
 
   return (
     <main className="app-main project-page">
-      <div className="page-split project-page-split">
-        <section
-          className="page-col page-col--left project-page__col"
-          aria-label="项目列表"
-        >
-          <GlowPanel
-            title="Project"
-            headerAction={newProjectButton}
-            bodyClassName="panel-body--project"
-            className="project-panel"
+      <Row gutter={[16, 16]} className="project-page-split">
+        <Col xs={24} lg={7} className="project-page__col">
+          <Card
+            title={t('project.title')}
+            extra={listCardExtra}
+            className="project-panel project-panel--list"
+            styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', minHeight: 0 } }}
           >
             <ProjectStorageBar />
             {!clerkReady || showLoading ? (
-              <p className="project-empty-hint">加载项目列表…</p>
+              <div className="project-page__center">
+                <Spin tip={t('project.loading')} />
+              </div>
             ) : loadError ? (
-              <div className="project-load-error">
-                <p className="project-empty-hint project-empty-hint--error" role="alert">
-                  {loadError}
-                </p>
-                <button
-                  type="button"
-                  className="project-btn project-btn--ghost"
+              <div className="project-page__center project-page__center--stack">
+                <Text type="danger">{loadError}</Text>
+                <Button
+                  icon={<ReloadOutlined />}
                   onClick={() => {
                     setLoading(true)
                     void refresh()
                   }}
                 >
-                  重试
-                </button>
+                  {t('project.retry')}
+                </Button>
               </div>
             ) : projects.length === 0 ? (
-              <p className="project-empty-hint">
-                还没有项目。点击右上角「新建 Project」创建第一个分组。
-              </p>
+              <Empty
+                className="project-page__empty"
+                description={t('project.emptyList')}
+              />
             ) : (
-              <ul className="project-list" aria-label="项目列表">
-                {projects.map((project, index) => (
-                  <li key={project.id}>
-                    <div
-                      className={[
-                        'project-list__item',
-                        selectedId === project.id ? 'project-list__item--active' : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
+              <List
+                className="project-list"
+                dataSource={projects}
+                renderItem={(project, index) => {
+                  const active = selectedId === project.id
+                  return (
+                    <List.Item
+                      className={`project-list__item${active ? ' project-list__item--active' : ''}`}
+                      style={{
+                        cursor: 'pointer',
+                        ...(active
+                          ? {
+                              background: token.colorPrimaryBg,
+                              borderInlineStart: `3px solid ${token.colorPrimary}`,
+                            }
+                          : undefined),
+                      }}
+                      onClick={() => setSelectedId(project.id)}
                     >
-                      <button
-                        type="button"
-                        className="project-list__main"
-                        onClick={() => setSelectedId(project.id)}
-                      >
-                        <span className="project-list__index">{index + 1}</span>
-                        <span className="project-list__content">
-                          <span className="project-list__name">{project.name}</span>
-                          {project.description ? (
-                            <span className="project-list__desc">{project.description}</span>
-                          ) : (
-                            <span className="project-list__desc project-list__desc--muted">
-                              无备注
-                            </span>
-                          )}
-                          <span className="project-list__meta">
-                            更新于 {formatDate(project.updatedAt)}
-                          </span>
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        className="project-list__delete"
-                        aria-label={`删除 ${project.name}`}
-                        onClick={() => handleDelete(project.id, project.name)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                      <List.Item.Meta
+                        avatar={
+                          <Avatar
+                            size="small"
+                            style={{
+                              backgroundColor: active
+                                ? token.colorPrimary
+                                : token.colorFillSecondary,
+                              color: active ? '#fff' : token.colorTextSecondary,
+                            }}
+                          >
+                            {index + 1}
+                          </Avatar>
+                        }
+                        title={project.name}
+                        description={
+                          <>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              {project.description || t('project.noNotes')}
+                            </Text>
+                            <br />
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              {t('project.updated', {
+                                date: formatDate(project.updatedAt),
+                              })}
+                            </Text>
+                          </>
+                        }
+                      />
+                      <Button
+                        type="text"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        aria-label={t('project.deleteProject', { name: project.name })}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          void handleDelete(project.id, project.name)
+                        }}
+                      />
+                    </List.Item>
+                  )
+                }}
+              />
             )}
-          </GlowPanel>
-        </section>
-        <section
-          className="page-col page-col--right project-page__col"
-          aria-label="项目详情"
-        >
-          <GlowPanel title="详情" bodyClassName="panel-body--project-detail" className="project-panel">
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={17} className="project-page__col">
+          <Card title={t('project.details')} className="project-panel project-panel--detail">
             {selected ? (
-              <div className="project-detail">
-                <h3 className="project-detail__name">{selected.name}</h3>
-                <p className="project-detail__desc">
-                  {selected.description || '暂无备注'}
-                </p>
-                <dl className="project-detail__meta">
-                  <div>
-                    <dt>创建时间</dt>
-                    <dd>{formatDate(selected.createdAt)}</dd>
-                  </div>
-                  <div>
-                    <dt>最近更新</dt>
-                    <dd>{formatDate(selected.updatedAt)}</dd>
-                  </div>
-                </dl>
+              <>
+                <Typography.Title level={4} style={{ marginTop: 0 }}>
+                  {selected.name}
+                </Typography.Title>
+                <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+                  {selected.description || t('project.noNotes')}
+                </Paragraph>
+                <Descriptions
+                  column={{ xs: 1, sm: 2 }}
+                  size="small"
+                  items={[
+                    {
+                      key: 'created',
+                      label: t('project.created'),
+                      children: formatDate(selected.createdAt),
+                    },
+                    {
+                      key: 'updated',
+                      label: t('project.lastUpdated'),
+                      children: formatDate(selected.updatedAt),
+                    },
+                  ]}
+                />
                 <ProjectDetailRecords
                   projectId={selected.id}
                   onOpenFindocRecord={onOpenFindocRecord}
                 />
-              </div>
+              </>
             ) : (
-              <p className="panel-placeholder">在左侧选择一个项目查看详情</p>
+              <Empty description={t('project.selectHint')} />
             )}
-          </GlowPanel>
-        </section>
-      </div>
+          </Card>
+        </Col>
+      </Row>
 
       <NewProjectModal
         open={modalOpen}

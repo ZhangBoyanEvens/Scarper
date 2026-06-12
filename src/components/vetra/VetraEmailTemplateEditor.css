@@ -16,13 +16,13 @@
   min-height: 0;
 }
 
-.vetra-email-editor__panel.panel-shell {
-  height: 100%;
+.vetra-email-editor__panel.scarper-panel,
+.vetra-email-editor__panel.scarper-panel .ant-card-body {
+  background: var(--sc-bg-container);
 }
 
-.vetra-email-editor__panel .panel-inner.panel-fill {
-  flex: 1 1 0;
-  min-height: 0;
+.vetra-email-editor__panel.scarper-panel {
+  height: 100%;
 }
 
 .vetra-email-editor__form {
@@ -30,6 +30,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  background: var(--sc-bg-container);
 }
 
 .vetra-email-editor__subject-row {
@@ -38,7 +39,7 @@
   align-items: center;
   gap: 10px;
   padding: 14px 16px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--sc-divider);
 }
 
 .vetra-email-editor__label,
@@ -47,7 +48,7 @@
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--sc-text-muted);
 }
 
 .vetra-email-editor__body-label {
@@ -58,14 +59,15 @@
   position: relative;
   min-width: 0;
   min-height: 42px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 10px;
+  border: 1px solid var(--sc-border);
+  border-radius: var(--sc-radius-sm, 8px);
   overflow: hidden;
-  background: rgba(2, 6, 23, 0.35);
+  background: var(--sc-bg-container);
 }
 
 .vetra-email-editor__subject-wrap--focus {
-  border-color: rgba(99, 102, 241, 0.45);
+  border-color: var(--sc-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.12);
 }
 
 .vetra-email-subject-highlight,
@@ -87,7 +89,7 @@
 .vetra-email-subject-highlight {
   position: relative;
   z-index: 0;
-  color: #e2e8f0;
+  color: var(--sc-text-strong);
   pointer-events: none;
 }
 
@@ -97,7 +99,7 @@
   z-index: 1;
   width: 100%;
   color: transparent;
-  caret-color: #f1f5f9;
+  caret-color: var(--sc-text-strong);
   background: transparent;
 }
 
@@ -106,14 +108,15 @@
   flex: 1 1 0;
   min-height: 180px;
   margin: 0 16px;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  border-radius: 12px;
+  border: 1px solid var(--sc-border);
+  border-radius: var(--sc-radius-md, 12px);
   overflow: hidden;
-  background: rgba(2, 6, 23, 0.35);
+  background: var(--sc-bg-container);
 }
 
 .vetra-email-editor__body-wrap--focus {
-  border-color: rgba(99, 102, 241, 0.45);
+  border-color: var(--sc-primary);
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.12);
 }
 
 .vetra-email-body-highlight,
@@ -135,38 +138,38 @@
 }
 
 .vetra-email-body-highlight {
-  color: #e2e8f0;
+  color: var(--sc-text-strong);
   pointer-events: none;
 }
 
 .vetra-email-highlight__placeholder {
-  color: #64748b;
+  color: var(--sc-text-muted);
 }
 
 .vetra-email-highlight__slot {
   padding: 0;
   border-radius: 2px;
-  color: #fffbeb;
-  background: rgba(250, 204, 21, 0.38);
+  color: #92400e;
+  background: rgba(249, 171, 0, 0.22);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.28);
+  box-shadow: 0 0 0 1px rgba(249, 171, 0, 0.35);
 }
 
 .vetra-email-highlight__locked {
   padding: 0;
   border-radius: 2px;
-  color: #fee2e2;
-  background: rgba(248, 113, 113, 0.34);
+  color: #991b1b;
+  background: rgba(217, 48, 37, 0.12);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.28);
+  box-shadow: 0 0 0 1px rgba(217, 48, 37, 0.2);
 }
 
 .vetra-email-editor__body {
   resize: none;
   color: transparent;
-  caret-color: #f1f5f9;
+  caret-color: var(--sc-text-strong);
   background: transparent;
 }
 
@@ -178,7 +181,7 @@
   margin: 10px 16px 0;
   font-size: 0.75rem;
   line-height: 1.45;
-  color: #64748b;
+  color: var(--sc-text-muted);
 }
 
 .vetra-email-editor__hint-item {
@@ -195,30 +198,31 @@
 }
 
 .vetra-email-editor__swatch--locked {
-  background: rgba(248, 113, 113, 0.42);
-  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.35);
+  background: rgba(217, 48, 37, 0.28);
+  box-shadow: 0 0 0 1px rgba(217, 48, 37, 0.25);
 }
 
 .vetra-email-editor__swatch--plain {
-  background: rgba(148, 163, 184, 0.18);
-  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.22);
+  background: var(--sc-gray-100);
+  box-shadow: 0 0 0 1px var(--sc-border);
 }
 
 .vetra-email-editor__swatch--slot {
-  background: rgba(250, 204, 21, 0.45);
-  box-shadow: 0 0 0 1px rgba(250, 204, 21, 0.35);
+  background: rgba(249, 171, 0, 0.35);
+  box-shadow: 0 0 0 1px rgba(249, 171, 0, 0.35);
 }
 
 .vetra-email-editor__footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid var(--sc-divider);
+  background: var(--sc-bg-container);
 }
 
 .vetra-email-editor__status {
   margin-right: auto;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--sc-text-muted);
 }
 
 .vetra-email-editor__status--error {
-  color: #f87171;
+  color: var(--sc-error);
 }

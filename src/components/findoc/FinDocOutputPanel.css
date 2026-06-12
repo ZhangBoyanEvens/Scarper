@@ -4,7 +4,7 @@
   min-height: 0;
   overflow: auto;
   padding: clamp(14px, 2.2vw, 22px) clamp(16px, 2.5vw, 28px);
-  background: rgba(8, 10, 18, 0.4);
+  background: #ffffff;
   box-sizing: border-box;
 }
 
@@ -14,13 +14,13 @@
 
 .findoc-styled-output__placeholder {
   margin: 0;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
   font-size: 0.92rem;
   line-height: 1.55;
 }
 
 .findoc-styled-doc {
-  color: #cbd5e1;
+  color: rgba(0, 0, 0, 0.88);
   font-size: 0.95rem;
   line-height: 1.65;
 }
@@ -31,7 +31,7 @@
   font-weight: 700;
   line-height: 1.35;
   letter-spacing: 0.02em;
-  color: #f1f5f9;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .findoc-styled-doc__heading {
@@ -39,7 +39,7 @@
   font-size: clamp(1.15rem, 2vw, 1.35rem);
   font-weight: 600;
   line-height: 1.4;
-  color: #e2e8f0;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .findoc-styled-doc__section {
@@ -47,7 +47,7 @@
   font-size: clamp(1.05rem, 1.6vw, 1.2rem);
   font-weight: 600;
   line-height: 1.45;
-  color: #22d3ee;
+  color: var(--sc-primary);
 }
 
 .findoc-styled-doc__sub {
@@ -55,14 +55,14 @@
   font-size: 1rem;
   font-weight: 600;
   line-height: 1.45;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.65);
 }
 
 .findoc-styled-doc__p {
   margin: 0 0 0.85rem;
   font-size: 0.95rem;
   line-height: 1.65;
-  color: #cbd5e1;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .findoc-styled-doc__p:last-child {
@@ -72,12 +72,12 @@
 .findoc-styled-doc__emphasis {
   font-size: 1.05em;
   font-weight: 700;
-  color: #f8fafc;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .findoc-styled-doc__em {
   font-style: italic;
-  color: #e2e8f0;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .findoc-styled-doc__list {
@@ -98,10 +98,6 @@
   content: '•';
   position: absolute;
   left: -1rem;
-  color: #22d3ee;
+  color: var(--sc-primary);
   font-weight: 700;
-}
-
-.findoc-output-view-toggle {
-  flex-shrink: 0;
 }

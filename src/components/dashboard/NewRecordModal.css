@@ -48,12 +48,12 @@
 .new-record-modal__mode-option span {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #f1f5f9;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .new-record-modal__mode-option small {
   grid-column: 2;
   font-size: 0.72rem;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
   line-height: 1.35;
 }

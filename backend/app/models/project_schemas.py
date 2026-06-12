@@ -50,6 +50,7 @@ class ProjectUploadListItem(BaseModel):
     result_count: int
     success_count: int = 0
     source: str = "scrape"
+    title: str = ""
 
 
 class ProjectUploadDeleteResponse(BaseModel):
@@ -154,6 +155,25 @@ class FindocTemplateDeleteResponse(BaseModel):
 class FindocProjectSaveRequest(BaseModel):
     editor_text: str = Field(min_length=1, max_length=500_000)
     title: str = Field(default="", max_length=200)
+    upload_id: str | None = Field(default=None, max_length=64)
+    template_id: str | None = Field(default=None, max_length=128)
+    task_ids: list[str] | None = Field(default=None, max_length=50)
+    adjustment_prompt: str = Field(default="", max_length=20_000)
+
+
+class FindocProjectMatchRequest(BaseModel):
+    template_id: str = Field(min_length=1, max_length=128)
+    task_ids: list[str] = Field(min_length=1, max_length=50)
+    adjustment_prompt: str = Field(default="", max_length=20_000)
+
+
+class FindocProjectMatchResponse(BaseModel):
+    matched: bool
+    id: str | None = None
+    editor_text: str | None = None
+    title: str | None = None
+    uploaded_at: str | None = None
+    storage: Literal["neon", "local"] = "neon"
 
 
 class VetraCompanySaveRequest(BaseModel):

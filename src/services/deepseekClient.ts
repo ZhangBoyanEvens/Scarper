@@ -13,11 +13,11 @@ function chatUrl(): string {
 function wrapNetworkError(err: unknown): Error {
   if (err instanceof TypeError && err.message === 'Failed to fetch') {
     return new Error(
-      '无法连接 AI 服务（Failed to fetch）。请确认后端已启动（http://127.0.0.1:8000），并检查网络与 API 配置。',
+      'Cannot reach AI service (Failed to fetch). Ensure the backend is running (http://127.0.0.1:8000) and check network/API settings.',
     )
   }
   if (err instanceof Error) return err
-  return new Error('AI 请求失败')
+  return new Error('AI request failed')
 }
 
 async function parseError(res: Response): Promise<string> {
@@ -78,7 +78,7 @@ export async function streamChatCompletion(
   }
 
   if (!res.body) {
-    throw new Error('响应体为空，无法读取流')
+    throw new Error('Empty response body; cannot read stream')
   }
 
   const reader = res.body.getReader()

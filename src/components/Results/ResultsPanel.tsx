@@ -1,3 +1,4 @@
+import { useI18n } from '../../contexts/I18nContext'
 import type { ExtractResponse } from '../../types/extraction'
 import { aggregateTokenUsage } from '../../utils/tokenUsage'
 import { GlowPanel } from '../Layout/GlowPanel'
@@ -29,19 +30,16 @@ interface ResultsPanelProps {
 }
 
 export function ResultsPanel({ state, onResultChange }: ResultsPanelProps) {
+  const { t } = useI18n()
   const tokenUsage =
     state.kind === 'done' ? aggregateTokenUsage(state.results) : null
 
   return (
-    <GlowPanel title="Results" bodyClassName="panel-body--results">
+    <GlowPanel title={t('scrape.results.title')} bodyClassName="panel-body--results">
       <div className="results-panel-scroll">
         {tokenUsage && <TokenUsageBar usage={tokenUsage} />}
 
-        {state.kind === 'idle' && (
-          <p className="results-placeholder">
-            Add links and scrape — results will appear here
-          </p>
-        )}
+
 
         {state.kind === 'loading' && (
           <div className="results-loading">

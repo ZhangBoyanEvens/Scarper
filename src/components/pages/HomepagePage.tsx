@@ -4,6 +4,7 @@ import { HomepageClerkSignIn } from '../homepage/HomepageClerkSignIn'
 import { HomepageStartButton } from '../homepage/HomepageStartButton'
 import { HomepageTutorialButton } from '../homepage/HomepageTutorialButton'
 import { isClerkConfigured } from '../../config/clerk'
+import { useI18n } from '../../contexts/I18nContext'
 import './HomepagePage.css'
 
 export interface HomepagePageProps {
@@ -29,14 +30,7 @@ function HomepageSignedInActions({
 }
 
 export function HomepagePage({ onStart, onTutorial }: HomepagePageProps) {
-  const handleStart = () => {
-    onStart?.()
-  }
-
-  const handleTutorial = () => {
-    onTutorial?.()
-  }
-
+  const { t } = useI18n()
   return (
     <main className="app-main homepage-page">
       <div className="homepage-shell">
@@ -45,9 +39,9 @@ export function HomepagePage({ onStart, onTutorial }: HomepagePageProps) {
             <AHoleEffect />
           </div>
         </section>
-        <aside className="homepage-side" aria-label="登录与品牌">
+        <aside className="homepage-side" aria-label={t('homepage.signInBrand')}>
           <div className="homepage-side__content">
-            <h1 className="homepage-title">SCARPER</h1>
+            <h1 className="homepage-title">{t('homepage.brand')}</h1>
             {isClerkConfigured ? (
               <>
                 <SignedOut>
@@ -55,15 +49,15 @@ export function HomepagePage({ onStart, onTutorial }: HomepagePageProps) {
                 </SignedOut>
                 <SignedIn>
                   <HomepageSignedInActions
-                    onStart={handleStart}
-                    onTutorial={handleTutorial}
+                    onStart={() => onStart?.()}
+                    onTutorial={() => onTutorial?.()}
                   />
                 </SignedIn>
               </>
             ) : (
               <HomepageSignedInActions
-                onStart={handleStart}
-                onTutorial={handleTutorial}
+                onStart={() => onStart?.()}
+                onTutorial={() => onTutorial?.()}
               />
             )}
           </div>

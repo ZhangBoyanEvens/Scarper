@@ -1,3 +1,4 @@
+import { useI18n } from '../../contexts/I18nContext'
 import '../../styles/panel.css'
 import { VETRA_NAV_ITEMS, type VetraNavId } from './vetraNav'
 import { VetraNavIcon } from './VetraNavIcons'
@@ -9,6 +10,7 @@ interface VetraSideNavbarProps {
 }
 
 export function VetraSideNavbar({ activeId, onNavigate }: VetraSideNavbarProps) {
+  const { t } = useI18n()
   return (
     <aside className="vetra-side-navbar" aria-label="Vetra navigation">
       <div className="vetra-side-navbar__hover-area">
@@ -17,7 +19,7 @@ export function VetraSideNavbar({ activeId, onNavigate }: VetraSideNavbarProps) 
           <div className="panel-shell vetra-side-navbar__shell">
             <div className="panel-inner vetra-side-navbar__inner">
               <header className="vetra-side-navbar__head">
-                <h2 className="vetra-side-navbar__title">Vetra</h2>
+                <h2 className="vetra-side-navbar__title">{t('vetra.title')}</h2>
               </header>
               <nav className="vetra-side-navbar__nav" aria-label="Vetra sections">
                 {VETRA_NAV_ITEMS.map((item) => (
@@ -31,7 +33,7 @@ export function VetraSideNavbar({ activeId, onNavigate }: VetraSideNavbarProps) 
                     onClick={() => onNavigate(item.id)}
                   >
                     <VetraNavIcon name={item.id} />
-                    <span className="vetra-side-navbar__label">{item.label}</span>
+                    <span className="vetra-side-navbar__label">{t(item.labelKey)}</span>
                   </button>
                 ))}
               </nav>

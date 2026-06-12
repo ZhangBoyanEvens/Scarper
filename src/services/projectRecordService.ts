@@ -33,7 +33,14 @@ function localEntriesToRecords(projectId: string): ProjectDataRecord[] {
     successCount: entry.results.filter(isExtractSuccess).length,
     source: entry.source ?? entry.uploadMethod ?? 'scrape',
     storage: 'local' as const,
-    title: entry.title,
+    title:
+      entry.title?.trim() ||
+      (() => {
+        const hit = entry.results.find(
+          (r) => isExtractSuccess(r) && Boolean(r.title?.trim()),
+        )
+        return hit && isExtractSuccess(hit) ? hit.title.trim() : undefined
+      })(),
   }))
 }
 
@@ -361,7 +368,9 @@ export async function saveTaskEditorText(
   }
 
   if (!saved) {
-    throw new Error('无法保存：请确认已登录且 Neon 已配置，或记录存在于本机')
+    throw new Error(
+      'Could not save. Sign in with Neon configured, or ensure the record exists locally.',
+    )
   }
 
   cacheSet(taskTextCacheKey(projectId, recordId), text)
@@ -484,8 +493,3 @@ export async function deleteProjectDataRecord(
   notifyProjectRecordsChanged()
 }
 
-/** @deprecated 使用 saveTaskEditorText */
-export const saveTaskEditorDraft = saveTaskEditorText
-
-/** @deprecated 使用 revertTaskEditorText */
-export const revertTaskEditorDraft = revertTaskEditorText

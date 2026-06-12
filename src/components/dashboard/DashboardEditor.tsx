@@ -49,7 +49,7 @@ export const DashboardEditor = forwardRef<
 ) {
   if (loading) {
     return (
-      <p className="dashboard-editor-placeholder">加载任务内容…</p>
+      <p className="dashboard-editor-placeholder">Loading task content…</p>
     )
   }
 
@@ -63,7 +63,7 @@ export const DashboardEditor = forwardRef<
       <div className="dashboard-editor-wrap">
         <div className="dashboard-edit-banner" role="status">
           <div className="dashboard-edit-banner__text">
-            <span className="dashboard-edit-banner__title">AI 建议修改</span>
+            <span className="dashboard-edit-banner__title">Suggested AI revision</span>
             {pending.note ? (
               <span className="dashboard-edit-banner__note">
                 {pending.note}
@@ -76,20 +76,20 @@ export const DashboardEditor = forwardRef<
               className="project-btn project-btn--ghost"
               onClick={onRejectPending}
             >
-              放弃
+              Discard
             </button>
             <button
               type="button"
               className="text-input-save dashboard-edit-banner__accept"
               onClick={onAcceptPending}
             >
-              采纳
+              Accept
             </button>
           </div>
         </div>
         <div
           className="dashboard-editor-preview scarper-scrollbar scarper-scrollbar--editor"
-          aria-label="待确认的修改预览，黄色为变更内容"
+          aria-label="Pending revision preview; yellow marks changes"
         >
           {lines.map((line, i) => (
             <span

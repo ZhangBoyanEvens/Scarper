@@ -1,27 +1,32 @@
+import { AlignLeftOutlined } from '@ant-design/icons'
+import { Button, Flex, Input, Typography } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
 import { useAppSettingsOptional } from '../../contexts/AppSettingsContext'
+import { useI18n } from '../../contexts/I18nContext'
 import { loadSavedPrompt, savePromptToStorage } from '../../storage/promptStorage'
-import '../SearchBar/SearchBar.css'
 import { GlowPanel } from './GlowPanel'
 import './TextInputSection.css'
 
+const { Text } = Typography
+
 export interface TextInputSectionProps {
-  /** panel = 左侧大面板；toolbar = 顶部横条（原 URL 搜索框尺寸） */
   layout?: 'panel' | 'toolbar'
   placeholder?: string
-  /** 保存成功后回调 */
   onPromptSaved?: (prompt: string) => void
 }
 
 export function TextInputSection({
   layout = 'panel',
-  placeholder = 'Processing prompt, e.g. extract key insights and list action items…',
+  placeholder,
   onPromptSaved,
 }: TextInputSectionProps) {
+  const { t } = useI18n()
   const appSettings = useAppSettingsOptional()
   const [draft, setDraft] = useState('')
   const [savedPrompt, setSavedPrompt] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const resolvedPlaceholder =
+    placeholder ?? t('settings.workflow.promptPlaceholder')
 
   useEffect(() => {
     const fromSettings = appSettings?.settings.processingPrompt
@@ -45,88 +50,59 @@ export function TextInputSection({
   }, [appSettings, draft, onPromptSaved])
 
   const saveLabel =
-    savedPrompt !== null && !isDirty ? 'Saved' : savedPrompt !== null ? 'Save changes' : 'Save'
-
-  const [focused, setFocused] = useState(false)
+    savedPrompt !== null && !isDirty
+      ? t('common.saved')
+      : savedPrompt !== null
+        ? t('scrape.saveChanges')
+        : t('common.save')
 
   if (layout === 'toolbar') {
     return (
-      <div className="search-bar prompt-toolbar">
-        <div
-          className={`panel-shell search-shell ${focused ? 'search-shell--focus' : ''}`}
-          role="group"
-          aria-label="Processing prompt"
-        >
-          <label className="panel-inner search-field">
-            <span className="search-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M4 6h16M4 12h10M4 18h14"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-            <input
-              type="text"
-              className="search-input"
-              value={draft}
-              placeholder={placeholder}
-              spellCheck={false}
-              onChange={(e) => setDraft(e.target.value)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-            />
-            <button
-              type="button"
-              className="search-go"
-              disabled={!canSave}
-              aria-label={saveLabel}
-              title={saveLabel}
-              onClick={handleSave}
-            >
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="M5 13l4 4L19 7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </label>
-        </div>
-        {savedPrompt !== null && isDirty && (
-          <p className="search-error prompt-toolbar-hint">Edited — not saved</p>
-        )}
-      </div>
+      <Flex vertical gap={6} style={{ width: '100%' }}>
+        <Flex gap={8} align="center" style={{ width: '100%' }}>
+          <Input
+            size="middle"
+            prefix={<AlignLeftOutlined style={{ color: 'rgba(0,0,0,0.35)' }} />}
+            value={draft}
+            placeholder={resolvedPlaceholder}
+            spellCheck={false}
+            onChange={(e) => setDraft(e.target.value)}
+            onPressEnter={() => {
+              if (canSave) handleSave()
+            }}
+          />
+          <Button type="primary" size="middle" disabled={!canSave} onClick={handleSave}>
+            {saveLabel}
+          </Button>
+        </Flex>
+        {savedPrompt !== null && isDirty ? (
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            {t('scrape.editedNotSaved')}
+          </Text>
+        ) : null}
+      </Flex>
     )
   }
 
   return (
-    <GlowPanel title="Processing prompt" bodyClassName="panel-body--input">
+    <GlowPanel title={t('scrape.processingPrompt')} bodyClassName="panel-body--input">
       <div className="text-input-wrap">
-        <textarea
+        <Input.TextArea
           className="panel-textarea"
           value={draft}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           spellCheck={false}
           onChange={(e) => setDraft(e.target.value)}
         />
         <div className="text-input-footer">
-          {savedPrompt !== null && isDirty && (
-            <span className="text-input-status">Edited — not saved</span>
-          )}
-          <button
-            type="button"
-            className="text-input-save"
-            disabled={!canSave}
-            onClick={handleSave}
-          >
+          {savedPrompt !== null && isDirty ? (
+            <Text type="secondary" className="text-input-status">
+              {t('scrape.editedNotSaved')}
+            </Text>
+          ) : null}
+          <Button type="primary" size="middle" disabled={!canSave} onClick={handleSave}>
             {saveLabel}
-          </button>
+          </Button>
         </div>
       </div>
     </GlowPanel>

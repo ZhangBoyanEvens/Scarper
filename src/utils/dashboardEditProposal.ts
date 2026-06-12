@@ -139,8 +139,8 @@ export function augmentUserMessageForEdit(
     return userText
   }
   const extra = options.continuing
-    ? '[续改] 用户在已采纳/预览过修改后再次提出编辑要求。你必须基于系统消息里【当前编辑器正文】输出新的完整 scarper-edit（不可只聊天不改）。'
-    : '[编辑] 用户要求修改左侧编辑器正文。你必须输出完整 scarper-edit 块（见系统说明），revision 为整篇新正文。'
+    ? '[Follow-up edit] The user requested another edit after accepting or previewing changes. You must output a new full scarper-edit based on [Current editor body] in the system message (do not chat without editing).'
+    : '[Edit] The user wants to revise the left editor body. You must output a full scarper-edit block (see system instructions); revision is the complete new body.'
   return `${userText}\n\n${extra}`
 }
 
@@ -152,38 +152,38 @@ export function buildEditorSystemPrompt(
   const trimmed = editorContext.trim().slice(0, 12_000)
   const hint = contextHint.trim()
   const parts = [
-    '你是 Scarper Dashboard 的写作助手，可直接修改用户左侧编辑器中的任务正文。',
-    '修改需用户点击「采纳」才生效。用户可多次迭代：每次编辑请求都必须重新输出 scarper-edit，即使之前已改过。',
+    'You are the Scarper Dashboard writing assistant and can directly revise task body text in the user\'s left editor.',
+    'Changes take effect only when the user clicks Accept. Users may iterate: every edit request must output a new scarper-edit, even after prior edits.',
     '',
-    '规则：',
-    '1. 用户要求改稿、续改、追问「再详细/再改/继续」等 → 必须输出 scarper-edit，不能只回复文字说明。',
-    '2. 纯问答、不改正文时：不要输出 scarper-edit。',
-    '3. revision 必须是【当前请求的完整正文】，基于下方「当前编辑器正文」修改，不是 diff。',
-    '4. 聊天里 1～3 句说明即可，不要把全文贴在聊天里。',
+    'Rules:',
+    '1. When the user asks to revise, follow up, or says "more detail / revise again / continue" → you must output scarper-edit; do not reply with text only.',
+    '2. For pure Q&A without changing body text: do not output scarper-edit.',
+    '3. revision must be the full body for this request, based on "Current editor body" below — not a diff.',
+    '4. Keep chat replies to 1–3 sentences; do not paste the full body in chat.',
     '',
-    'scarper-edit 格式（正文很长时必须用此格式，勿把正文塞进 JSON 引号）：',
+    'scarper-edit format (required for long bodies; do not put body inside JSON quotes):',
     '```scarper-edit',
-    'note: 一句话摘要',
+    'note: one-line summary',
     '---REVISION---',
-    '（此处开始为完整正文，可多行）',
+    '(full body starts here; may span multiple lines)',
     '---END REVISION---',
     '```',
   ]
   if (options?.editSession) {
     parts.push(
       '',
-      '当前处于连续改稿会话：用户的下一条追问默认也是改稿，除非明确说不用改编辑器。',
+      'Continuous edit session: the user\'s next message is treated as another edit unless they clearly say not to change the editor.',
     )
   }
-  if (hint) parts.push('', `当前上下文：${hint}`)
+  if (hint) parts.push('', `Current context: ${hint}`)
   if (trimmed) {
     parts.push(
       '',
-      '--- 当前编辑器正文（本次 revision 必须在此基础上修改）---',
+      '--- Current editor body (revision must build on this) ---',
       trimmed,
     )
   } else {
-    parts.push('', '（编辑器当前为空。）')
+    parts.push('', '(Editor is currently empty.)')
   }
   return parts.join('\n')
 }

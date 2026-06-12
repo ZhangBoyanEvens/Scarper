@@ -19,20 +19,20 @@
   margin: 0;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .dashboard-file-upload__subtitle {
   margin: 0;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .dashboard-file-upload__hint {
   margin: 0 0 12px;
   font-size: 0.75rem;
   line-height: 1.45;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .dashboard-file-upload__input {
@@ -54,7 +54,7 @@
 .dashboard-file-upload__empty {
   margin: 0;
   font-size: 0.78rem;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .dashboard-file-upload__file span:first-of-type {
@@ -63,5 +63,5 @@
 
 .dashboard-file-upload__size {
   margin-left: 6px;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import type { VetraCompany } from './companiesData'
 import './VetraCompaniesView.css'
 
@@ -71,6 +72,17 @@ function CompanyCard({
       className={`vetra-company-card${isActive ? ' vetra-company-card--active' : ''}${
         isEditing ? ' vetra-company-card--editing' : ''
       }`}
+      tabIndex={isEditing ? -1 : 0}
+      onClick={() => {
+        if (!isEditing) onSelect()
+      }}
+      onKeyDown={(event) => {
+        if (isEditing) return
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onSelect()
+        }
+      }}
     >
       {isEditing ? (
         <input
@@ -86,18 +98,16 @@ function CompanyCard({
         />
       ) : (
         <div className="vetra-company-card__row">
-          <button
-            type="button"
-            className="vetra-company-card__button"
-            aria-pressed={isActive}
-            onClick={onSelect}
+          <span
+            className="vetra-company-card__name"
             onDoubleClick={(event) => {
               event.preventDefault()
+              event.stopPropagation()
               onStartEdit()
             }}
           >
-            <span className="vetra-company-card__name">{company.name}</span>
-          </button>
+            {company.name}
+          </span>
           {canDelete ? (
             <button
               type="button"
@@ -157,7 +167,7 @@ export function VetraCompanyListPanel({
   saving = false,
   onSelect,
   onCreate,
-  importLabel = 'Import from Task',
+  importLabel,
   onImport,
   importing = false,
   onStartEdit,
@@ -168,6 +178,8 @@ export function VetraCompanyListPanel({
   statusMessage = null,
   statusIsError = false,
 }: VetraCompanyListPanelProps) {
+  const { t } = useI18n()
+  const resolvedImportLabel = importLabel ?? t('vetra.companies.importFromTask')
   const canDelete = companies.length > 0
   return (
     <aside className="vetra-companies-list" aria-label={listLabel}>
@@ -179,8 +191,8 @@ export function VetraCompanyListPanel({
             <button
               type="button"
               className="vetra-companies-list__import"
-              aria-label={importLabel}
-              title={importLabel}
+              aria-label={resolvedImportLabel}
+              title={resolvedImportLabel}
               disabled={saving || importing}
               onClick={onImport}
             >

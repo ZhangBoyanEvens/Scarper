@@ -30,10 +30,6 @@ export function normalizeUrl(input: string): string | null {
   }
 }
 
-export function isValidUrl(input: string): boolean {
-  return normalizeUrl(input) !== null
-}
-
 /** 按 ??? 拆分并规范化，去重、去空 */
 export function parseUrlBatch(input: string): string[] {
   const parts = input.split(URL_BATCH_SEPARATOR)

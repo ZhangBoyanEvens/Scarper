@@ -20,39 +20,39 @@ const BUILTIN_TEMPLATES: FindocTemplate[] = [
   {
     id: 'financial-summary',
     name: 'Financial summary',
-    content: `### 标题
-财务摘要报告
+    content: `### Title
+Financial summary report
 
-### 摘要
-报告期间、主体与核心结论概述。
+### Summary
+Reporting period, entity, and headline conclusions.
 
-### 要点
-• 收入与成本变动
-• 现金流与流动性
-• 主要风险与后续行动
+### Key points
+• Revenue and cost changes
+• Cash flow and liquidity
+• Key risks and follow-up actions
 
-### 正文
-在此填写详细财务分析、同比环比说明及数据来源。`,
+### Body
+Add detailed financial analysis, period-over-period notes, and data sources here.`,
     source: 'builtin',
   },
   {
     id: 'monthly-reconciliation',
     name: 'Monthly reconciliation',
-    content: `### 标题
-月度对账记录
+    content: `### Title
+Monthly reconciliation record
 
-### 摘要
-对账月份、账户范围与总体差异说明。
+### Summary
+Reconciliation month, account scope, and overall variance summary.
 
-### 要点
-• 期初余额
-• 本期发生额
-• 期末余额与差异项
+### Key points
+• Opening balance
+• Period activity
+• Closing balance and variance items
 
-### 正文
-| 项目 | 账面金额 | 外部金额 | 差异 | 备注 |
-|------|----------|----------|------|------|
-|      |          |          |      |      |`,
+### Body
+| Item | Book amount | External amount | Variance | Notes |
+|------|-------------|-----------------|----------|-------|
+|      |             |                 |          |       |`,
     source: 'builtin',
   },
 ]

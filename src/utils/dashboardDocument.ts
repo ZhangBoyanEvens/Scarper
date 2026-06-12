@@ -42,7 +42,7 @@ export interface DashboardArticle {
 }
 
 const SECTION_HEADING =
-  /^###\s*(标题|摘要|要点|正文)\s*$/i
+  /^###\s*(标题|摘要|要点|正文|Title|Summary|Key points|Body)\s*$/i
 
 function parseSectionedBody(
   lines: string[],
@@ -80,9 +80,10 @@ function parseSectionedBody(
     if (m) {
       flush()
       const label = m[1]
-      if (label === '标题') section = 'title'
-      else if (label === '摘要') section = 'summary'
-      else if (label === '要点') section = 'points'
+      const lower = label.toLowerCase()
+      if (label === '标题' || lower === 'title') section = 'title'
+      else if (label === '摘要' || lower === 'summary') section = 'summary'
+      else if (label === '要点' || lower === 'key points') section = 'points'
       else section = 'body'
       continue
     }
@@ -202,14 +203,14 @@ function serializeArticle(a: DashboardArticle, labeled: boolean): string {
   const parts: string[] = [`## ${a.url}`]
 
   if (labeled) {
-    if (a.title.trim()) parts.push(`### 标题\n${a.title.trim()}`)
-    if (a.summary.trim()) parts.push(`### 摘要\n${a.summary.trim()}`)
+    if (a.title.trim()) parts.push(`### Title\n${a.title.trim()}`)
+    if (a.summary.trim()) parts.push(`### Summary\n${a.summary.trim()}`)
     if (a.keyPoints.length > 0) {
       parts.push(
-        `### 要点\n${a.keyPoints.map((p) => `• ${p}`).join('\n')}`,
+        `### Key points\n${a.keyPoints.map((p) => `• ${p}`).join('\n')}`,
       )
     }
-    if (a.body.trim()) parts.push(`### 正文\n${a.body.trim()}`)
+    if (a.body.trim()) parts.push(`### Body\n${a.body.trim()}`)
   } else {
     if (a.title.trim()) parts.push(a.title.trim())
     if (a.summary.trim()) parts.push(a.summary.trim())

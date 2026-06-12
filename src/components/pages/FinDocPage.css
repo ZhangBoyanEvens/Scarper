@@ -5,7 +5,7 @@
   min-height: 0;
   padding: 0;
   overflow: hidden;
-  background: #05060c;
+  background: var(--sc-bg-layout);
 }
 
 .findoc-shell {
@@ -15,21 +15,6 @@
   min-height: 0;
   width: 100%;
   overflow: hidden;
-}
-
-.findoc-head {
-  flex-shrink: 0;
-  padding: 14px clamp(16px, 3vw, 28px) 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.findoc-head__title {
-  margin: 0;
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #94a3b8;
 }
 
 .findoc-workspace {
@@ -81,14 +66,14 @@
   left: 50%;
   width: 1px;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--sc-divider);
   transition: background 0.15s ease, width 0.15s ease;
 }
 
 .findoc-splitter:hover::before,
 .findoc-splitter.is-dragging::before {
   width: 2px;
-  background: rgba(34, 211, 238, 0.45);
+  background: rgba(22, 119, 255, 0.45);
 }
 
 .findoc-splitter:focus-visible {
@@ -97,8 +82,8 @@
 
 .findoc-splitter:focus-visible::before {
   width: 2px;
-  background: rgba(34, 211, 238, 0.55);
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.2);
+  background: rgba(22, 119, 255, 0.55);
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.15);
 }
 
 body.findoc-split-dragging {
@@ -118,8 +103,8 @@ body.findoc-split-dragging * {
   align-items: center;
   gap: 0.875rem 1rem;
   padding: 0.875rem clamp(0.75rem, 2cqi, 1.25rem) 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(8, 10, 18, 0.35);
+  border-bottom: 1px solid var(--sc-divider);
+  background: #ffffff;
 }
 
 .findoc-field {
@@ -137,7 +122,7 @@ body.findoc-split-dragging * {
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.45);
   white-space: nowrap;
 }
 
@@ -212,21 +197,21 @@ body.findoc-split-dragging * {
   flex-direction: column;
   gap: 0.25rem;
   padding: 0.625rem clamp(0.75rem, 2cqi, 1.25rem) 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--sc-divider);
 }
 
 .findoc-prompt-head__label {
   font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #94a3b8;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .findoc-prompt-head__hint {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .findoc-prompt-textarea {
@@ -243,8 +228,8 @@ body.findoc-split-dragging * {
   padding: clamp(12px, 2vw, 18px);
   border: none;
   border-radius: 0;
-  background: rgba(8, 10, 18, 0.4);
-  color: #cbd5e1;
+  background: #ffffff;
+  color: rgba(0, 0, 0, 0.88);
   font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.55;
@@ -254,8 +239,8 @@ body.findoc-split-dragging * {
 }
 
 .findoc-editor-textarea:focus {
-  background: rgba(8, 10, 18, 0.55);
-  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.18);
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(22, 119, 255, 0.25);
 }
 
 .findoc-editor-textarea:disabled {
@@ -264,7 +249,7 @@ body.findoc-split-dragging * {
 }
 
 .findoc-editor-textarea::placeholder {
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .findoc-pane-footer {
@@ -276,15 +261,15 @@ body.findoc-split-dragging * {
   min-height: 3.375rem;
   box-sizing: border-box;
   padding: 0.625rem clamp(0.75rem, 2cqi, 1.25rem);
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(8, 10, 18, 0.35);
+  border-top: 1px solid var(--sc-divider);
+  background: #ffffff;
 }
 
 .findoc-pane-footer__status {
   flex: 1 1 auto;
   min-width: 0;
   font-size: 0.8125rem;
-  color: #22d3ee;
+  color: var(--sc-primary);
   letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
@@ -300,10 +285,8 @@ body.findoc-split-dragging * {
   flex-shrink: 0;
 }
 
-.findoc-output-view-toggle.is-active {
-  border-color: rgba(34, 211, 238, 0.35);
-  color: #22d3ee;
-  background: rgba(34, 211, 238, 0.08);
+.findoc-output-view-toggle {
+  flex-shrink: 0;
 }
 
 .findoc-right-editor {

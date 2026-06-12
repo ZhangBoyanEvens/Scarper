@@ -1,16 +1,16 @@
 import { useAppSettings } from '../../contexts/AppSettingsContext'
+import { useI18n } from '../../contexts/I18nContext'
 import {
-  getOutputDetailLabel,
-  OUTPUT_DETAIL_OPTIONS,
-} from '../../types/outputDetail'
-import {
-  getOutputLanguageLabel,
-  OUTPUT_LANGUAGE_OPTIONS,
-} from '../../types/outputLanguage'
+  getLocalizedOutputDetailLabel,
+  getLocalizedOutputDetailOptions,
+  getLocalizedOutputLanguageLabel,
+  getLocalizedOutputLanguageOptions,
+} from '../../i18n/outputOptions'
 import { SegmentedControl } from './SegmentedControl'
 import './LanguagePresetSection.css'
 
 export function LanguagePresetSection() {
+  const { t } = useI18n()
   const {
     settings: { outputLanguage, outputDetail },
     setOutputLanguage,
@@ -20,36 +20,40 @@ export function LanguagePresetSection() {
   return (
     <section className="settings-panel language-preset">
       <div className="language-preset__summary" role="status">
-        <p className="language-preset__summary-label">当前全局预设</p>
+        <p className="language-preset__summary-label">
+          {t('settings.languagePreset.current')}
+        </p>
         <p className="language-preset__summary-value">
-          {getOutputLanguageLabel(outputLanguage)}
+          {getLocalizedOutputLanguageLabel(t, outputLanguage)}
           <span className="language-preset__summary-sep">·</span>
-          {getOutputDetailLabel(outputDetail)}
+          {getLocalizedOutputDetailLabel(t, outputDetail)}
         </p>
         <p className="language-preset__summary-hint">
-          保存后立即生效，Scrape 页工具栏会与此同步
+          {t('settings.languagePreset.syncHint')}
         </p>
       </div>
 
       <div className="settings-list">
         <div className="settings-list__row settings-list__row--stack">
           <div className="settings-list__text">
-            <span className="settings-list__label">输出语言</span>
+            <span className="settings-list__label">
+              {t('settings.languagePreset.outputLanguage')}
+            </span>
             <span className="settings-list__hint">
-              抓取摘要、AI 整合与 FinDoc 改写的默认语言
+              {t('settings.languagePreset.outputLanguageHint')}
             </span>
           </div>
           <SegmentedControl
-            ariaLabel="全局输出语言"
+            ariaLabel={t('settings.languagePreset.outputLanguage')}
             value={outputLanguage}
-            options={OUTPUT_LANGUAGE_OPTIONS.map((o) => ({
+            options={getLocalizedOutputLanguageOptions(t).map((o) => ({
               value: o.value,
               label: o.label,
             }))}
             onChange={setOutputLanguage}
           />
           <ul className="language-preset__option-descs">
-            {OUTPUT_LANGUAGE_OPTIONS.map((o) => (
+            {getLocalizedOutputLanguageOptions(t).map((o) => (
               <li
                 key={o.value}
                 className={
@@ -66,22 +70,24 @@ export function LanguagePresetSection() {
 
         <div className="settings-list__row settings-list__row--stack">
           <div className="settings-list__text">
-            <span className="settings-list__label">详细程度</span>
+            <span className="settings-list__label">
+              {t('settings.languagePreset.detail')}
+            </span>
             <span className="settings-list__hint">
-              控制 AI 摘要长度与要点数量
+              {t('settings.languagePreset.detailHint')}
             </span>
           </div>
           <SegmentedControl
-            ariaLabel="全局详细程度"
+            ariaLabel={t('settings.languagePreset.detail')}
             value={outputDetail}
-            options={OUTPUT_DETAIL_OPTIONS.map((o) => ({
+            options={getLocalizedOutputDetailOptions(t).map((o) => ({
               value: o.value,
               label: o.label,
             }))}
             onChange={setOutputDetail}
           />
           <ul className="language-preset__option-descs">
-            {OUTPUT_DETAIL_OPTIONS.map((o) => (
+            {getLocalizedOutputDetailOptions(t).map((o) => (
               <li
                 key={o.value}
                 className={
@@ -98,16 +104,19 @@ export function LanguagePresetSection() {
       </div>
 
       <div className="settings-callout settings-callout--info language-preset__scope">
-        <p className="settings-callout__title">预设生效范围</p>
+        <p className="settings-callout__title">
+          {t('settings.languagePreset.scopeTitle')}
+        </p>
         <ul className="settings-data-list">
           <li>
-            <strong>Scrape</strong> — 单链抓取与多 URL AI 整合
+            <strong>Scrape</strong> — {t('settings.languagePreset.scopeScrape')}
           </li>
           <li>
-            <strong>FinDoc</strong> — Proceed 模板改写输出
+            <strong>FinDoc</strong> — {t('settings.languagePreset.scopeFindoc')}
           </li>
           <li>
-            <strong>Project 上传</strong> — 抓取结果入库时的摘要语言
+            <strong>Project</strong> —{' '}
+            {t('settings.languagePreset.scopeUpload')}
           </li>
         </ul>
       </div>

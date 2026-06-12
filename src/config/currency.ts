@@ -21,13 +21,13 @@ export interface CostCurrencyOption {
 
 /** Approximate rates for UI estimates — not live FX. */
 export const COST_CURRENCIES: readonly CostCurrencyOption[] = [
-  { code: 'USD', label: '美元 USD', symbol: '$', rateFromUsd: 1, decimals: 4 },
-  { code: 'CNY', label: '人民币 CNY', symbol: '¥', rateFromUsd: 7.25, decimals: 4 },
-  { code: 'EUR', label: '欧元 EUR', symbol: '€', rateFromUsd: 0.92, decimals: 4 },
-  { code: 'GBP', label: '英镑 GBP', symbol: '£', rateFromUsd: 0.79, decimals: 4 },
-  { code: 'HKD', label: '港币 HKD', symbol: 'HK$', rateFromUsd: 7.8, decimals: 4 },
-  { code: 'TWD', label: '新台币 TWD', symbol: 'NT$', rateFromUsd: 32.5, decimals: 2 },
-  { code: 'JPY', label: '日元 JPY', symbol: '¥', rateFromUsd: 150, decimals: 2 },
+  { code: 'USD', label: 'US Dollar USD', symbol: '$', rateFromUsd: 1, decimals: 4 },
+  { code: 'CNY', label: 'Chinese Yuan CNY', symbol: '¥', rateFromUsd: 7.25, decimals: 4 },
+  { code: 'EUR', label: 'Euro EUR', symbol: '€', rateFromUsd: 0.92, decimals: 4 },
+  { code: 'GBP', label: 'British Pound GBP', symbol: '£', rateFromUsd: 0.79, decimals: 4 },
+  { code: 'HKD', label: 'Hong Kong Dollar HKD', symbol: 'HK$', rateFromUsd: 7.8, decimals: 4 },
+  { code: 'TWD', label: 'New Taiwan Dollar TWD', symbol: 'NT$', rateFromUsd: 32.5, decimals: 2 },
+  { code: 'JPY', label: 'Japanese Yen JPY', symbol: '¥', rateFromUsd: 150, decimals: 2 },
 ] as const
 
 export const DEFAULT_COST_CURRENCY: CostCurrencyCode = 'CNY'

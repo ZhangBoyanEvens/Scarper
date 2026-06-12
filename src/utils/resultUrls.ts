@@ -5,7 +5,3 @@ export function splitResultUrls(url: string): string[] {
     .map((u) => u.trim())
     .filter(Boolean)
 }
-
-export function isMultiSourceUrl(url: string): boolean {
-  return splitResultUrls(url).length > 1
-}

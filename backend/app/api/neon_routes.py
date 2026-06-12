@@ -15,6 +15,8 @@ from app.db.neon_io import neon_io
 from app.db.storage_quota import neon_user_quota_bytes
 from app.db.neon import get_neon_repository
 from app.models.project_schemas import (
+    FindocProjectMatchRequest,
+    FindocProjectMatchResponse,
     FindocProjectSaveRequest,
     FindocTemplateDeleteResponse,
     FindocTemplateItemResponse,
@@ -476,6 +478,50 @@ async def delete_vetra_template(
 
 
 @router.post(
+    "/projects/{project_id}/findoc/match",
+    response_model=FindocProjectMatchResponse,
+)
+async def match_saved_findoc(
+    project_id: str,
+    body: FindocProjectMatchRequest,
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> FindocProjectMatchResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    if not await neon_io(repo.project_exists, user_id, project_id):
+        raise HTTPException(status_code=404, detail="项目不存在")
+
+    try:
+        record = await neon_io(
+            repo.find_findoc_by_context,
+            user_id,
+            project_id=project_id,
+            template_id=body.template_id,
+            task_ids=body.task_ids,
+            adjustment_prompt=body.adjustment_prompt,
+        )
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    if not record or not record.editor_text:
+        return FindocProjectMatchResponse(matched=False, storage="neon")
+
+    return FindocProjectMatchResponse(
+        matched=True,
+        id=record.id,
+        editor_text=record.editor_text,
+        title=record.title or None,
+        uploaded_at=record.uploaded_at,
+        storage="neon",
+    )
+
+
+@router.post(
     "/projects/{project_id}/findoc",
     response_model=ProjectUploadResponse,
     status_code=201,
@@ -497,11 +543,15 @@ async def save_findoc_to_project(
 
     try:
         record = await neon_io(
-            repo.upload_findoc_document,
+            repo.save_findoc_document,
             user_id,
             project_id=project_id,
             editor_text=body.editor_text,
             title=body.title,
+            upload_id=body.upload_id,
+            template_id=body.template_id,
+            task_ids=body.task_ids,
+            adjustment_prompt=body.adjustment_prompt,
         )
         try:
             await neon_io(repo.touch_project, user_id, project_id)
@@ -681,6 +731,7 @@ async def list_project_uploads(
                 result_count=r.result_count,
                 success_count=r.success_count,
                 source=r.source,
+                title=r.title,
             )
             for r in rows
         ],

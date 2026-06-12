@@ -8,7 +8,11 @@ import {
   type ReactNode,
 } from 'react'
 import type { ResultsState } from '../components/Results/ResultsPanel'
-import { EXTRACTION_DONE_LABEL, EXTRACTION_STEPS } from '../constants/extractionSteps'
+import {
+  getExtractionDoneLabel,
+  getExtractionSteps,
+} from '../i18n/scrapeHelpers'
+import { createTranslator } from '../i18n/translator'
 import {
   DEFAULT_TASK_TIMEOUT_SEC,
   taskTimeoutMs,
@@ -45,6 +49,7 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
   const {
     settings: { outputLanguage, outputDetail, ui, scrape },
   } = useAppSettings()
+  const locale = ui.locale
   const [resultsState, setResultsState] = useState<ResultsState>({
     kind: 'idle',
   })
@@ -85,12 +90,15 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
         }, timeoutMs)
       }
 
+      const t = createTranslator(locale)
+      const extractionSteps = getExtractionSteps(t)
+      const doneLabel = getExtractionDoneLabel(t)
       const processingPrompt = getSavedPrompt()
       const usingPrompt = Boolean(processingPrompt?.trim())
       const total = urls.length
       const timeoutSec = Math.round(timeoutMs / 1000)
 
-      const initialStep = EXTRACTION_STEPS[0]
+      const initialStep = extractionSteps[0]
       setResultsState({
         kind: 'loading',
         urls,
@@ -110,11 +118,14 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
 
       const taskStepLabel = (index: number, innerLabel: string) => {
         if (total <= 1) return innerLabel
-        const prefix = `Task ${index + 1}/${total}`
-        if (innerLabel === EXTRACTION_DONE_LABEL) {
+        const prefix = t('scrape.session.taskPrefix', {
+          index: index + 1,
+          total,
+        })
+        if (innerLabel === doneLabel) {
           return index + 1 < total
-            ? `${prefix}: this item done`
-            : `${prefix}: all done`
+            ? t('scrape.session.itemDone', { index: index + 1, total })
+            : t('scrape.session.allDone', { index: index + 1, total })
         }
         return `${prefix} · ${innerLabel}`
       }
@@ -146,6 +157,8 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
             outputLanguage,
             outputDetail,
             signal: controller.signal,
+            steps: extractionSteps,
+            doneLabel,
             onProgress: (stepLabel, urlProgress, stepHint) => {
               setResultsState({
                 kind: 'loading',
@@ -172,8 +185,8 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
             usingPrompt,
             currentUrl: hasMore ? urls[i + 1] : currentUrl,
             stepLabel: hasMore
-              ? `Task ${i + 1}/${total} done — starting next…`
-              : 'All tasks complete',
+              ? t('scrape.session.taskDoneNext', { index: i + 1, total })
+              : t('scrape.session.allComplete'),
             stepHint: undefined,
             progress: overallProgress(i + 1, 0),
           })
@@ -190,7 +203,7 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
           if (didTimeout) {
             setResultsState({
               kind: 'error',
-              message: `Task timed out (${timeoutSec}s). Adjust the limit in Settings or use fewer links`,
+              message: t('scrape.session.timeout', { sec: timeoutSec }),
             })
           }
           return
@@ -211,8 +224,10 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
               total,
               usingPrompt,
               currentUrl: urls[urls.length - 1] ?? '',
-              stepLabel: 'AI merging…',
-              stepHint: `Merging ${successes.length} pages into one result`,
+              stepLabel: t('scrape.session.aiMerging'),
+              stepHint: t('scrape.session.mergingPages', {
+                count: successes.length,
+              }),
               progress: 95,
             })
             scheduleTaskTimeout()
@@ -259,7 +274,7 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
                 message:
                   mergeErr instanceof Error
                     ? mergeErr.message
-                    : 'AI merge failed',
+                    : t('scrape.session.mergeFailed'),
               })
               return
             }
@@ -279,7 +294,7 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
           if (didTimeout) {
             setResultsState({
               kind: 'error',
-              message: `Task timed out (${timeoutSec}s). Adjust the limit in Settings or use fewer links`,
+              message: t('scrape.session.timeout', { sec: timeoutSec }),
             })
           }
           return
@@ -307,6 +322,7 @@ export function ScrapeSessionProvider({ children }: { children: ReactNode }) {
       outputLanguage,
       outputDetail,
       ui.showProgressHints,
+      locale,
       userProfile,
       timeoutMs,
     ],

@@ -1,4 +1,5 @@
 import type { VetraCollaborationAnalysis } from '../../services/vetraOutreachCollaboration'
+import { useI18n } from '../../contexts/I18nContext'
 import './VetraOutreachCollaborationPanel.css'
 
 interface VetraOutreachCollaborationPanelProps {
@@ -34,16 +35,17 @@ export function VetraOutreachCollaborationPanel({
   loading = false,
   error = null,
 }: VetraOutreachCollaborationPanelProps) {
+  const { t } = useI18n()
   const selectedCount = selectedIndices.size
 
   return (
-    <aside className="vetra-outreach-collab" aria-label="Collaboration analysis">
+    <aside className="vetra-outreach-collab" aria-label={t('vetra.collab.aria')}>
       <header className="vetra-outreach-collab__head">
         <div className="vetra-outreach-collab__head-row">
-          <h2 className="vetra-outreach-collab__title">Collaboration fit</h2>
+          <h2 className="vetra-outreach-collab__title">{t('vetra.collab.title')}</h2>
           {analysis && selectedCount > 0 ? (
             <span className="vetra-outreach-collab__selected-count">
-              {selectedCount} selected
+              {t('vetra.collab.selected', { count: selectedCount })}
             </span>
           ) : null}
           <button
@@ -52,11 +54,11 @@ export function VetraOutreachCollaborationPanel({
             disabled={!canGenerate || generating}
             onClick={onGenerate}
           >
-            {generating ? 'Generating…' : 'Generate'}
+            {generating ? t('vetra.collab.generating') : t('vetra.collab.generate')}
           </button>
         </div>
         <p className="vetra-outreach-collab__pair">
-          {fromCompanyName || 'From'} → {toCompanyName || 'To'}
+          {fromCompanyName || t('vetra.outreach.from')} → {toCompanyName || t('vetra.outreach.to')}
         </p>
         {statusMessage ? (
           <p className="vetra-outreach-collab__status" role="status">
@@ -67,13 +69,12 @@ export function VetraOutreachCollaborationPanel({
 
       <div className="vetra-outreach-collab__scroll scarper-scrollbar">
         {loading ? (
-          <p className="vetra-outreach-collab__placeholder">Analyzing companies…</p>
+          <p className="vetra-outreach-collab__placeholder">{t('vetra.collab.analyzing')}</p>
         ) : error ? (
           <p className="vetra-outreach-collab__error">{error}</p>
         ) : !analysis ? (
           <p className="vetra-outreach-collab__placeholder">
-            Click Generate to analyze potential collaboration opportunities and match
-            score between the two companies.
+            {t('vetra.collab.placeholder')}
           </p>
         ) : (
           <>
@@ -86,7 +87,7 @@ export function VetraOutreachCollaborationPanel({
                 {analysis.matchScore}
               </span>
               <div className="vetra-outreach-collab__score-meta">
-                <span className="vetra-outreach-collab__score-label">Match score</span>
+                <span className="vetra-outreach-collab__score-label">{t('vetra.collab.matchScore')}</span>
                 {analysis.matchSummary ? (
                   <p className="vetra-outreach-collab__score-summary">
                     {analysis.matchSummary}
@@ -96,10 +97,10 @@ export function VetraOutreachCollaborationPanel({
             </div>
 
             <p className="vetra-outreach-collab__hint">
-              Select one or more opportunities below.
+              {t('vetra.collab.selectHint')}
             </p>
 
-            <ul className="vetra-outreach-collab__list" aria-label="Collaboration opportunities">
+            <ul className="vetra-outreach-collab__list" aria-label={t('vetra.collab.opportunitiesAria')}>
               {analysis.opportunities.map((item, index) => {
                 const selected = selectedIndices.has(index)
                 return (

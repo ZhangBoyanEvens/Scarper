@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAppSettings } from '../../contexts/AppSettingsContext'
+import { useI18n } from '../../contexts/I18nContext'
 import {
   generateCollaborationAnalysis,
   type VetraCollaborationAnalysis,
@@ -29,6 +30,7 @@ function resolveDefaultToCompanyId(
 }
 
 export function VetraOutreachView() {
+  const { t } = useI18n()
   const { settings } = useAppSettings()
   const companyWorkspace = useVetraCompanyWorkspaceContext()
   const templateWorkspace = useVetraTemplateWorkspaceContext()
@@ -124,7 +126,7 @@ export function VetraOutreachView() {
 
   const handleGenerate = () => {
     if (!isReady || !fromCompany || !toCompany) {
-      setStatusMessage('Select Company (From / To) and Template first')
+      setStatusMessage(t('vetra.outreachView.selectFirst'))
       return
     }
 
@@ -152,7 +154,7 @@ export function VetraOutreachView() {
       } catch (error) {
         if (controller.signal.aborted) return
         const message =
-          error instanceof Error ? error.message : 'Failed to generate collaboration analysis'
+          error instanceof Error ? error.message : t('vetra.outreachView.collabFailed')
         setCollabError(message)
         setCollaboration(null)
       } finally {
@@ -165,11 +167,11 @@ export function VetraOutreachView() {
 
   const handleGenerateMessage = () => {
     if (!isReady || !fromCompany || !toCompany || !collaboration) {
-      setMessageStatus('Select Company (From / To), Template, and collaboration opportunities first')
+      setMessageStatus(t('vetra.outreachView.selectForMessage'))
       return
     }
     if (selectedOpportunityIndices.size === 0) {
-      setMessageStatus('Select at least one collaboration opportunity')
+      setMessageStatus(t('vetra.outreachView.selectOpportunity'))
       return
     }
 
@@ -208,7 +210,7 @@ export function VetraOutreachView() {
       } catch (error) {
         if (controller.signal.aborted) return
         setMessageStatus(
-          error instanceof Error ? error.message : 'Failed to generate outreach message',
+          error instanceof Error ? error.message : t('vetra.outreachView.messageFailed'),
         )
       } finally {
         if (!controller.signal.aborted) {
@@ -233,7 +235,7 @@ export function VetraOutreachView() {
         onOutreachLanguageChange={setOutreachLanguage}
       />
 
-      <section className="vetra-outreach-body" aria-label="Outreach workspace">
+      <section className="vetra-outreach-body" aria-label={t('vetra.workspace.outreachAria')}>
         <VetraOutreachCollaborationPanel
           fromCompanyName={fromCompany?.name ?? ''}
           toCompanyName={toCompany?.name ?? ''}
@@ -250,19 +252,19 @@ export function VetraOutreachView() {
 
         <div className="vetra-outreach-body__panel">
           <GlowPanel
-            title="Outreach message"
+            title={t('vetra.outreach.message')}
             className="vetra-outreach-editor__panel"
             bodyClassName="panel-body--input"
           >
             <div className="vetra-outreach-editor">
               <label className="vetra-outreach-editor__subject-field" htmlFor="vetra-outreach-subject">
-                <span className="vetra-outreach-editor__field-label">Subject</span>
+                <span className="vetra-outreach-editor__field-label">{t('vetra.outreachView.subject')}</span>
                 <input
                   id="vetra-outreach-subject"
                   type="text"
                   className="vetra-outreach-editor__subject"
                   value={draftSubject}
-                  placeholder="Generated subject will appear here."
+                  placeholder={t('vetra.outreachView.subjectPh')}
                   spellCheck={false}
                   onChange={(event) => {
                     setDraftSubject(event.target.value)
@@ -272,12 +274,12 @@ export function VetraOutreachView() {
               </label>
 
               <label className="vetra-outreach-editor__body-field" htmlFor="vetra-outreach-body">
-                <span className="vetra-outreach-editor__field-label">Body</span>
+                <span className="vetra-outreach-editor__field-label">{t('vetra.outreachView.body')}</span>
                 <textarea
                   id="vetra-outreach-body"
                   className="vetra-outreach-editor__textarea scarper-scrollbar"
                   value={draftBody}
-                  placeholder="Generated outreach body will appear here."
+                  placeholder={t('vetra.outreachView.bodyPh')}
                   spellCheck={false}
                   onChange={(event) => {
                     setDraftBody(event.target.value)
@@ -300,7 +302,7 @@ export function VetraOutreachView() {
               disabled={!canGenerateMessage}
               onClick={handleGenerateMessage}
             >
-              {generatingMessage ? 'Generating…' : 'Generate'}
+              {generatingMessage ? t('vetra.outreachView.generating') : t('vetra.outreachView.generate')}
             </button>
           </footer>
         </div>

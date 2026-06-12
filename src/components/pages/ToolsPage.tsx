@@ -1,5 +1,8 @@
-import { useEffect } from 'react'
+import { ArrowRightOutlined } from '@ant-design/icons'
+import { Card, Col, Row, Typography } from 'antd'
+import { useEffect, useMemo } from 'react'
 import { isClerkConfigured } from '../../config/clerk'
+import { useI18n } from '../../contexts/I18nContext'
 import { prefetchVetraTemplateWorkspace } from '../vetra/vetraTemplateWorkspaceCache'
 import { prefetchVetraWorkspace } from '../vetra/vetraWorkspaceCache'
 import scrapeIllustration from '../../assets/Scrape.svg'
@@ -7,8 +10,9 @@ import findocIllustration from '../../assets/Findoc.svg'
 import templateIllustration from '../../assets/Template.svg'
 import ragChatIllustration from '../../assets/RAG Chat.svg'
 import vetraIllustration from '../../assets/Vetra.svg'
-import '../../styles/layout.css'
 import './ToolsPage.css'
+
+const { Paragraph, Text } = Typography
 
 export interface ToolsPageProps {
   onOpenScrape?: () => void
@@ -27,26 +31,59 @@ interface ToolCardProps {
 
 function ToolCard({ title, description, imageSrc, onClick }: ToolCardProps) {
   return (
-    <button type="button" className="tools-card" onClick={onClick}>
+    <Card
+      hoverable
+      onClick={onClick}
+      style={{ height: '100%', cursor: 'pointer' }}
+      styles={{ body: { padding: 16 } }}
+    >
       <img
         src={imageSrc}
-        alt=""
-        className="tools-card__illus"
+        alt={title}
         width={320}
-        height={200}
+        height={148}
         decoding="async"
+        className="tools-page__card-image"
       />
-      <div className="tools-card__footer">
-        <span className="tools-card__body">
-          <span className="tools-card__title">{title}</span>
-          <span className="tools-card__desc">{description}</span>
-        </span>
-        <span className="tools-card__arrow" aria-hidden>
-          →
-        </span>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <Text strong style={{ display: 'block', fontSize: 16, marginBottom: 4 }}>
+            {title}
+          </Text>
+          <Paragraph
+            type="secondary"
+            style={{ marginBottom: 0, fontSize: 13, lineHeight: 1.55 }}
+          >
+            {description}
+          </Paragraph>
+        </div>
+        <ArrowRightOutlined style={{ color: 'rgba(0,0,0,0.25)', marginTop: 4 }} />
       </div>
-    </button>
+    </Card>
   )
+}
+
+const TOOL_KEYS = [
+  'scrape',
+  'findoc',
+  'templates',
+  'rag',
+  'vetra',
+] as const
+
+const TOOL_IMAGES: Record<(typeof TOOL_KEYS)[number], string> = {
+  scrape: scrapeIllustration,
+  findoc: findocIllustration,
+  templates: templateIllustration,
+  rag: ragChatIllustration,
+  vetra: vetraIllustration,
 }
 
 export function ToolsPage({
@@ -56,6 +93,19 @@ export function ToolsPage({
   onOpenRagChat,
   onOpenVetra,
 }: ToolsPageProps) {
+  const { t } = useI18n()
+
+  const tools = useMemo(
+    () =>
+      TOOL_KEYS.map((key) => ({
+        key,
+        title: t(`toolsPage.${key}.title`),
+        description: t(`toolsPage.${key}.description`),
+        image: TOOL_IMAGES[key],
+      })),
+    [t],
+  )
+
   useEffect(() => {
     if (!isClerkConfigured) {
       void prefetchVetraWorkspace()
@@ -70,52 +120,42 @@ export function ToolsPage({
     return () => window.removeEventListener('scarper:auth-token-ready', prefetch)
   }, [])
 
+  const handlers: Record<string, (() => void) | undefined> = {
+    scrape: onOpenScrape,
+    findoc: onOpenFindoc,
+    templates: onOpenTemplates,
+    rag: onOpenRagChat,
+    vetra: onOpenVetra,
+  }
+
   return (
-    <main className="app-main tools-page">
-      <div className="tools-shell">
-        <header className="tools-head">
-          <h1 className="tools-head__title">Tools</h1>
-          <p className="tools-head__desc">
-            Pick a tool: web scraping, document generation, templates, or RAG chat
-          </p>
-        </header>
-        <div className="tools-grid">
-          <div className="tools-row tools-row--top">
-            <ToolCard
-              title="Scrape"
-              description="Enter URLs to scrape pages and generate AI summaries; upload results to a Project"
-              imageSrc={scrapeIllustration}
-              onClick={onOpenScrape}
-            />
-            <ToolCard
-              title="FinDoc"
-              description="Merge Task content into a Template structure, rewrite with AI, and save as a document"
-              imageSrc={findocIllustration}
-              onClick={onOpenFindoc}
-            />
-            <ToolCard
-              title="Templates"
-              description="Create, edit, and AI-analyze FinDoc template structures; saved to the cloud"
-              imageSrc={templateIllustration}
-              onClick={onOpenTemplates}
-            />
-          </div>
-          <div className="tools-row tools-row--bottom">
-            <ToolCard
-              title="RAG Chat"
-              description="Select Task text, highlight a passage, and ask AI—answers grounded in your project data"
-              imageSrc={ragChatIllustration}
-              onClick={onOpenRagChat}
-            />
-            <ToolCard
-              title="Vetra"
-              description="Coming soon"
-              imageSrc={vetraIllustration}
-              onClick={onOpenVetra}
-            />
-          </div>
-        </div>
+    <div className="scarper-page tools-page">
+      <div className="scarper-page__inner tools-page__inner">
+        <Row gutter={[16, 16]} justify="center" className="tools-page__grid">
+          {tools.slice(0, 3).map((tool) => (
+            <Col key={tool.key} xs={24} sm={12} md={8} className="tools-page__col">
+              <ToolCard
+                title={tool.title}
+                description={tool.description}
+                imageSrc={tool.image}
+                onClick={handlers[tool.key]}
+              />
+            </Col>
+          ))}
+        </Row>
+        <Row gutter={[16, 16]} justify="center" className="tools-page__grid">
+          {tools.slice(3).map((tool) => (
+            <Col key={tool.key} xs={24} sm={12} md={8} className="tools-page__col">
+              <ToolCard
+                title={tool.title}
+                description={tool.description}
+                imageSrc={tool.image}
+                onClick={handlers[tool.key]}
+              />
+            </Col>
+          ))}
+        </Row>
       </div>
-    </main>
+    </div>
   )
 }

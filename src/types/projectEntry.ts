@@ -13,4 +13,10 @@ export interface ProjectDatabaseEntry {
   editorText?: string
   /** Dashboard 手动新建时的记录名称 */
   title?: string
+  /** FinDoc Save 时的 Proceed 条件，用于相同条件下直接加载 */
+  findocContext?: {
+    templateId: string
+    taskIds: string[]
+    adjustmentPrompt: string
+  }
 }

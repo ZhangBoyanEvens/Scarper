@@ -63,7 +63,7 @@ function splitLongText(
     out.push({
       id: `${id}#${part}`,
       source,
-      title: `${title} (片段 ${part + 1})`,
+      title: `${title} (part ${part + 1})`,
       text: slice,
     })
     offset += MAX_CHUNK_CHARS
@@ -74,16 +74,16 @@ function splitLongText(
 
 function resultToChunks(item: ExtractResponse, index: number): RagChunk[] {
   if (!isExtractSuccess(item)) {
-    const text = `[抓取失败] ${item.error}`
+    const text = `[Scrape failed] ${item.error}`
     return splitLongText(`err-${index}`, item.url, item.url, text)
   }
   const parts = [
-    item.title?.trim() ? `标题: ${item.title.trim()}` : '',
-    item.summary?.trim() ? `摘要: ${item.summary.trim()}` : '',
+    item.title?.trim() ? `Title: ${item.title.trim()}` : '',
+    item.summary?.trim() ? `Summary: ${item.summary.trim()}` : '',
     ...(item.key_points?.length
-      ? [`要点:\n${item.key_points.map((p) => `• ${p}`).join('\n')}`]
+      ? [`Key points:\n${item.key_points.map((p) => `• ${p}`).join('\n')}`]
       : []),
-    item.content?.trim() ? `正文:\n${item.content.trim()}` : '',
+    item.content?.trim() ? `Body:\n${item.content.trim()}` : '',
   ].filter(Boolean)
 
   const body = parts.join('\n\n')
@@ -128,7 +128,7 @@ export function buildRagCorpus(
         {
           id: 'saved-doc',
           source: 'database',
-          title: taskLabel || '已保存文档',
+          title: taskLabel || 'Saved document',
           text: saved,
         },
       ],
@@ -187,17 +187,17 @@ export function buildRagGroundingSection(
 ): string {
   if (!active) {
     return corpus
-      ? '\n\n（本项目数据库已加载；当前为改稿请求，以编辑器正文为准。问答时请仅依据数据库。）'
+      ? '\n\n(Project database loaded; this turn is an edit request — use the editor body. For Q&A, ground answers in the database only.)'
       : ''
   }
 
   if (!corpus || corpus.chunks.length === 0) {
     return [
       '',
-      '--- 项目数据库（RAG）---',
-      '当前任务在数据库中无可用记录。',
-      '【问答硬性规则】用户若在提问，你必须回答：「当前文档/数据库未涉及该内容。」（或提示用户先选择已上传数据的 Task）。',
-      '不得编造或使用模型常识作答。',
+      '--- Project database (RAG) ---',
+      'No usable records for this task in the database.',
+      '[Q&A hard rule] If the user asks a question, you must answer: "This is not covered in the current document/database." (Or ask them to select a Task with uploaded data.)',
+      'Do not invent facts or use general model knowledge.',
     ].join('\n')
   }
 
@@ -207,26 +207,26 @@ export function buildRagGroundingSection(
 
   const parts = [
     '',
-    '--- 项目数据库（RAG 唯一事实来源）---',
-    `任务：${corpus.taskLabel}`,
-    `入库 ${corpus.chunkCount} 个片段，约 ${corpus.totalChars} 字。`,
+    '--- Project database (RAG — sole source of truth) ---',
+    `Task: ${corpus.taskLabel}`,
+    `Indexed ${corpus.chunkCount} chunks, ~${corpus.totalChars} characters.`,
     '',
-    '【问答硬性规则 — 必须遵守】',
-    '1. 仅可依据下方「检索片段」与「数据库全文摘录」中的文字作答。',
-    '2. 若用户问题涉及的事实、数字、名称在摘录中找不到，必须明确回答：「当前文档/数据库未涉及该内容。」',
-    '3. 禁止使用预训练常识、推测、外部知识或编造；不要引用摘录以外的信息。',
-    '4. 可标注信息来源 URL（### 来源行）。',
+    '[Q&A hard rules — mandatory]',
+    '1. Answer only from the retrieved chunks and full excerpt below.',
+    '2. If facts, figures, or names are missing from the excerpt, answer clearly: "This is not covered in the current document/database."',
+    '3. No pretrained knowledge, guesses, external facts, or fabrication; cite only the excerpt.',
+    '4. You may note source URLs (### Source lines).',
     '',
-    '【检索片段（与用户问题最相关）】',
+    '[Retrieved chunks (most relevant to the question)]',
   ]
 
   for (const c of retrieved) {
-    parts.push(`\n### 来源: ${c.source}\n标题: ${c.title}\n${c.text}`)
+    parts.push(`\n### Source: ${c.source}\nTitle: ${c.title}\n${c.text}`)
   }
 
   parts.push(
     '',
-    `【数据库全文摘录${truncated ? '（已截断）' : ''}】`,
+    `[Full database excerpt${truncated ? ' (truncated)' : ''}]`,
     excerpt,
   )
 
@@ -245,7 +245,7 @@ export interface DashboardSystemPromptOptions {
 }
 
 export function augmentUserMessageForQa(userText: string): string {
-  return `${userText}\n\n[问答] 请严格仅根据系统消息中的数据库 RAG 摘录回答；若无相关内容请回答「当前文档/数据库未涉及该内容」。`
+  return `${userText}\n\n[Q&A] Answer strictly from the RAG excerpt in the system message; if not covered, say "This is not covered in the current document/database."`
 }
 
 export function buildDashboardSystemPrompt(
@@ -262,15 +262,15 @@ export function buildDashboardSystemPrompt(
     const selectionBlock = options.selectionContext?.trim()
       ? [
           '',
-          '【用户当前选中的文本 — 请优先依据此片段回答；若问题超出选区，再结合数据库摘录】',
+          '[User selection — prioritize this excerpt; if the question is broader, also use database excerpts]',
           options.selectionContext.trim(),
         ].join('\n')
       : ''
 
     return [
-      '你是 Scarper 的 RAG 文档问答助手。',
-      '你的职责是根据项目数据库（下方 RAG 摘录）回答用户关于文档与数据的问题。',
-      '你不得修改编辑器；本回合不要输出 scarper-edit。',
+      'You are Scarper\'s RAG document Q&A assistant.',
+      'Answer questions about documents and data using the project database (RAG excerpt below).',
+      'Do not edit the editor; do not output scarper-edit this turn.',
       selectionBlock,
       ragSection,
     ].join('\n')

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Button, Layout, Menu, Typography } from 'antd'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { envApiBase, resolveApiBase } from '../../config/api'
 import { COST_CURRENCIES } from '../../config/currency'
 import {
@@ -8,16 +9,19 @@ import {
 } from '../../config/timeouts'
 import { isClerkConfigured } from '../../config/clerk'
 import { useAppSettings } from '../../contexts/AppSettingsContext'
+import { useI18n } from '../../contexts/I18nContext'
+import type { UiLocale } from '../../i18n/types'
 import { AccountSection } from './AccountSection'
 import { DataStorageSection } from './DataStorageSection'
 import { DiagnosticsSection } from './DiagnosticsSection'
 import { LanguagePresetSection } from './LanguagePresetSection'
-import { SECTION_META } from './settingsMeta'
+import { SegmentedControl } from './SegmentedControl'
 import { SETTINGS_SECTIONS, type SettingsSectionId } from './settingsTypes'
 import { SettingsToggle } from './SettingsToggle'
 import './SettingsPage.css'
 
 export function SettingsPage() {
+  const { t } = useI18n()
   const [activeSection, setActiveSection] =
     useState<SettingsSectionId>('account')
   const [apiDraft, setApiDraft] = useState('')
@@ -44,7 +48,22 @@ export function SettingsPage() {
     setPromptSaved(true)
   }, [settings.processingPrompt])
 
-  const meta = SECTION_META[activeSection]
+  const meta = useMemo(
+    () => ({
+      title: t(`settings.meta.${activeSection}.title`),
+      description: t(`settings.meta.${activeSection}.description`),
+    }),
+    [activeSection, t],
+  )
+
+  const menuItems = useMemo(
+    () =>
+      SETTINGS_SECTIONS.map((s) => ({
+        key: s.id,
+        label: t(`settings.sections.${s.id}`),
+      })),
+    [t],
+  )
 
   useEffect(() => {
     setApiDraft(settings.api.customBackendUrl)
@@ -67,54 +86,83 @@ export function SettingsPage() {
       const data = (await res.json()) as { status?: string }
       if (data.status === 'ok') {
         setHealthStatus('ok')
-        setHealthMessage(base || 'Vite 代理（本地默认）')
+        setHealthMessage(base || t('settings.api.viteProxy'))
       } else {
-        throw new Error('响应异常')
+        throw new Error('Unexpected response')
       }
     } catch (e) {
       setHealthStatus('fail')
-      setHealthMessage(e instanceof Error ? e.message : '连接失败')
+      setHealthMessage(e instanceof Error ? e.message : 'Connection failed')
     }
-  }, [apiDraft])
+  }, [apiDraft, t])
 
   const savePrompt = useCallback(() => {
     setProcessingPrompt(promptDraft)
     setPromptSaved(true)
   }, [promptDraft, setProcessingPrompt])
 
-  const effectiveBase = resolveApiBase() || '（同源 / Vite 代理）'
+  const effectiveBase =
+    resolveApiBase() || t('settings.api.sameOrigin')
 
   return (
-    <main className="app-main settings-page">
-      <aside className="settings-rail" aria-label="设置分类">
-        <div className="settings-rail__brand">Scarper</div>
-        <nav className="settings-rail__nav">
-          {SETTINGS_SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`settings-rail__link${activeSection === s.id ? ' is-active' : ''}`}
-              onClick={() => setActiveSection(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </nav>
-        <div className="settings-rail__foot">
-          <button
-            type="button"
-            className="settings-rail__reset"
-            onClick={resetToDefaults}
-          >
-            恢复默认
-          </button>
+    <Layout
+      className="settings-page"
+      style={{ flex: 1, minHeight: 0, background: 'var(--sc-bg-layout)' }}
+    >
+      <Layout.Sider
+        width={240}
+        theme="light"
+        style={{
+          background: 'var(--sc-bg-container)',
+          borderRight: '1px solid var(--sc-border)',
+        }}
+      >
+        <div
+          style={{
+            padding: '16px 16px 8px',
+            fontWeight: 500,
+            fontSize: 14,
+            color: 'var(--sc-text-muted)',
+          }}
+        >
+          {t('settings.brand')}
         </div>
-      </aside>
+        <Menu
+          mode="inline"
+          selectedKeys={[activeSection]}
+          items={menuItems}
+          onClick={({ key }) => setActiveSection(key as SettingsSectionId)}
+          style={{ borderInlineEnd: 'none' }}
+        />
+        <div style={{ padding: 12, marginTop: 'auto' }}>
+          <Button type="text" danger block onClick={resetToDefaults}>
+            {t('settings.resetDefaults')}
+          </Button>
+        </div>
+      </Layout.Sider>
 
-      <div className="settings-workspace">
-        <header className="settings-workspace__head">
-          <h1 className="settings-workspace__title">{meta.title}</h1>
-          <p className="settings-workspace__desc">{meta.description}</p>
+      <Layout.Content
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0,
+          overflow: 'hidden',
+          background: 'var(--sc-bg-layout)',
+        }}
+      >
+        <header
+          style={{
+            padding: '20px 28px 0',
+            background: 'var(--sc-bg-container)',
+            borderBottom: '1px solid var(--sc-border)',
+          }}
+        >
+          <Typography.Title level={3} style={{ marginBottom: 4 }}>
+            {meta.title}
+          </Typography.Title>
+          <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
+            {meta.description}
+          </Typography.Paragraph>
         </header>
 
         <div className="settings-workspace__body">
@@ -124,10 +172,9 @@ export function SettingsPage() {
                 <AccountSection />
               ) : (
                 <div className="settings-panel__inner settings-callout">
-                  <p>当前未启用 Clerk 登录，以匿名方式使用抓取服务。</p>
+                  <p>{t('settings.account.clerkDisabled')}</p>
                   <p className="settings-muted">
-                    在 .env 中配置 VITE_CLERK_PUBLISHABLE_KEY 与
-                    CLERK_SECRET_KEY 以启用账号体系。
+                    {t('settings.account.clerkHint')}
                   </p>
                 </div>
               )}
@@ -141,31 +188,34 @@ export function SettingsPage() {
               <div className="settings-panel__inner settings-panel__inner--stack">
                 <SettingsToggle
                   id="scrape-ai-integrate"
-                  label="默认开启 AI 整合"
-                  description="Scrape 页添加 2 个及以上链接时，默认勾选「AI整合」合并为一条结果"
+                  label={t('settings.workflow.aiMerge')}
+                  description={t('settings.workflow.aiMergeHint')}
                   checked={settings.scrape.defaultAiIntegrate}
                   onChange={(v) => patchScrape({ defaultAiIntegrate: v })}
                 />
                 <SettingsToggle
                   id="scrape-upload-body"
-                  label="上传 Project 时包含正文"
-                  description="Scrape 结果上传至 Project 时，默认勾选「含正文」"
+                  label={t('settings.workflow.uploadBody')}
+                  description={t('settings.workflow.uploadBodyHint')}
                   checked={settings.scrape.uploadIncludeBody}
                   onChange={(v) => patchScrape({ uploadIncludeBody: v })}
                 />
                 <div className="settings-field-block">
-                  <label htmlFor="processing-prompt" className="settings-field-block__label">
-                    处理指令（Prompt）
+                  <label
+                    htmlFor="processing-prompt"
+                    className="settings-field-block__label"
+                  >
+                    {t('settings.workflow.promptLabel')}
                   </label>
                   <p className="settings-muted">
-                    抓取时附加的 AI 指令，与 Scrape 页顶部工具栏同步；留空则使用默认摘要逻辑
+                    {t('settings.workflow.promptHint')}
                   </p>
                   <textarea
                     id="processing-prompt"
                     className="settings-textarea scarper-scrollbar"
                     rows={5}
                     value={promptDraft}
-                    placeholder="例如：提取核心观点并列出行动建议…"
+                    placeholder={t('settings.workflow.promptPlaceholder')}
                     spellCheck={false}
                     onChange={(e) => {
                       setPromptDraft(e.target.value)
@@ -179,7 +229,9 @@ export function SettingsPage() {
                       disabled={promptSaved}
                       onClick={savePrompt}
                     >
-                      {promptSaved ? '已保存' : '保存指令'}
+                      {promptSaved
+                        ? t('common.saved')
+                        : t('settings.workflow.savePrompt')}
                     </button>
                     {promptDraft.trim() ? (
                       <button
@@ -191,17 +243,21 @@ export function SettingsPage() {
                           setPromptSaved(true)
                         }}
                       >
-                        清空
+                        {t('common.clear')}
                       </button>
                     ) : null}
                   </div>
                 </div>
                 <div className="settings-list__row settings-list__row--field">
                   <div className="settings-list__text">
-                    <span className="settings-list__label">单任务超时</span>
+                    <span className="settings-list__label">
+                      {t('settings.workflow.timeout')}
+                    </span>
                     <span className="settings-list__hint">
-                      每个链接抓取 + AI 的最长等待（{MIN_TASK_TIMEOUT_SEC}–
-                      {MAX_TASK_TIMEOUT_SEC} 秒）。切换页面不会中断任务。
+                      {t('settings.workflow.timeoutHint', {
+                        min: MIN_TASK_TIMEOUT_SEC,
+                        max: MAX_TASK_TIMEOUT_SEC,
+                      })}
                     </span>
                   </div>
                   <div className="settings-timeout-field">
@@ -222,7 +278,9 @@ export function SettingsPage() {
                         }
                       }}
                     />
-                    <span className="settings-timeout-field__unit">秒</span>
+                    <span className="settings-timeout-field__unit">
+                      {t('common.sec')}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -236,10 +294,10 @@ export function SettingsPage() {
               <div className="settings-panel__inner">
                 <div className="settings-field-block">
                   <label htmlFor="api-base" className="settings-field-block__label">
-                    后端地址
+                    {t('settings.api.backendUrl')}
                   </label>
                   <p className="settings-muted">
-                    留空使用环境变量或本地代理。当前生效：
+                    {t('settings.api.backendHint')}{' '}
                     <code className="settings-code">{effectiveBase}</code>
                   </p>
                   <div className="settings-field-block__actions">
@@ -258,7 +316,7 @@ export function SettingsPage() {
                       className="settings-btn settings-btn--ghost"
                       onClick={saveApiUrl}
                     >
-                      保存
+                      {t('common.save')}
                     </button>
                     <button
                       type="button"
@@ -266,7 +324,9 @@ export function SettingsPage() {
                       disabled={healthStatus === 'checking'}
                       onClick={() => void testConnection()}
                     >
-                      {healthStatus === 'checking' ? '检测中…' : '测试连接'}
+                      {healthStatus === 'checking'
+                        ? t('common.checking')
+                        : t('settings.api.testConnection')}
                     </button>
                   </div>
                   {healthStatus !== 'idle' && (
@@ -274,18 +334,21 @@ export function SettingsPage() {
                       className={`settings-health is-${healthStatus}`}
                       role="status"
                     >
-                      {healthStatus === 'ok' && `已连接 · ${healthMessage}`}
+                      {healthStatus === 'ok' &&
+                        t('settings.api.connected', { msg: healthMessage })}
                       {healthStatus === 'fail' &&
-                        `连接失败 · ${healthMessage}`}
+                        t('settings.api.connectionFailed', {
+                          msg: healthMessage,
+                        })}
                     </p>
                   )}
                 </div>
                 <div className="settings-callout settings-callout--info">
-                  <p className="settings-callout__title">DeepSeek API</p>
+                  <p className="settings-callout__title">
+                    {t('settings.api.deepseekTitle')}
+                  </p>
                   <p className="settings-muted">
-                    模型密钥仅保存在服务端{' '}
-                    <code className="settings-code">.env</code> 的
-                    DEEPSEEK_API_KEY，不会写入浏览器。
+                    {t('settings.api.deepseekHint')}
                   </p>
                 </div>
               </div>
@@ -297,16 +360,37 @@ export function SettingsPage() {
           {activeSection === 'interface' && (
             <section className="settings-panel">
               <div className="settings-panel__inner settings-panel__inner--stack">
+                <div className="settings-list__row settings-list__row--stack">
+                  <div className="settings-list__text">
+                    <span className="settings-list__label">
+                      {t('settings.uiLocale.label')}
+                    </span>
+                    <span className="settings-list__hint">
+                      {t('settings.uiLocale.hint')}
+                    </span>
+                  </div>
+                  <SegmentedControl
+                    ariaLabel={t('settings.uiLocale.label')}
+                    value={settings.ui.locale}
+                    options={[
+                      { value: 'en', label: t('settings.uiLocale.en') },
+                      { value: 'zh', label: t('settings.uiLocale.zh') },
+                    ]}
+                    onChange={(v) => patchUi({ locale: v as UiLocale })}
+                  />
+                </div>
                 <div className="settings-list__row settings-list__row--field">
                   <div className="settings-list__text">
-                    <span className="settings-list__label">费用显示货币</span>
+                    <span className="settings-list__label">
+                      {t('settings.interface.currency')}
+                    </span>
                     <span className="settings-list__hint">
-                      Token 用量栏与费用估算的显示单位（按固定汇率换算）
+                      {t('settings.interface.currencyHint')}
                     </span>
                   </div>
                   <select
                     className="settings-select"
-                    aria-label="费用显示货币"
+                    aria-label={t('settings.interface.currency')}
                     value={settings.costCurrency}
                     onChange={(e) =>
                       setCostCurrency(e.target.value as typeof settings.costCurrency)
@@ -321,22 +405,22 @@ export function SettingsPage() {
                 </div>
                 <SettingsToggle
                   id="ui-compact"
-                  label="紧凑布局"
-                  description="缩小 Scrape 页间距，适合小屏或并排窗口"
+                  label={t('settings.interface.compact')}
+                  description={t('settings.interface.compactHint')}
                   checked={settings.ui.compactMode}
                   onChange={(v) => patchUi({ compactMode: v })}
                 />
                 <SettingsToggle
                   id="ui-hints"
-                  label="显示进度提示"
-                  description="抓取时展示各阶段说明文字"
+                  label={t('settings.interface.hints')}
+                  description={t('settings.interface.hintsDesc')}
                   checked={settings.ui.showProgressHints}
                   onChange={(v) => patchUi({ showProgressHints: v })}
                 />
                 <SettingsToggle
                   id="ui-motion"
-                  label="减少动效"
-                  description="关闭过渡动画，降低视觉干扰"
+                  label={t('settings.interface.motion')}
+                  description={t('settings.interface.motionHint')}
                   checked={settings.ui.reduceMotion}
                   onChange={(v) => patchUi({ reduceMotion: v })}
                 />
@@ -344,7 +428,7 @@ export function SettingsPage() {
             </section>
           )}
         </div>
-      </div>
-    </main>
+      </Layout.Content>
+    </Layout>
   )
 }

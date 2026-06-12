@@ -6,6 +6,9 @@ import {
   useState,
   type RefObject,
 } from 'react'
+import { CloseOutlined, DownOutlined, UpOutlined } from '@ant-design/icons'
+import { Button, Input, Space } from 'antd'
+import type { InputRef } from 'antd/es/input'
 import { findMatchIndices } from '../../utils/documentFind'
 import type { DashboardEditorHandle } from './DashboardEditor'
 import './DashboardFindBar.css'
@@ -23,7 +26,7 @@ export function DashboardFindBar({
 }: DashboardFindBarProps) {
   const [query, setQuery] = useState('')
   const [matchIndex, setMatchIndex] = useState(0)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<InputRef>(null)
 
   const matches = useMemo(
     () => findMatchIndices(text, query),
@@ -98,16 +101,17 @@ export function DashboardFindBar({
     <div
       className={`dashboard-find-bar${disabled ? ' is-disabled' : ''}`}
       role="search"
-      aria-label="在正文中查找"
+      aria-label="Find in document"
     >
-      <input
+      <Input
         ref={inputRef}
-        type="search"
+        size="middle"
+        allowClear
         className="dashboard-find-bar__input"
         value={query}
-        placeholder="查找"
+        placeholder="Find"
         disabled={disabled}
-        aria-label="查找关键字"
+        aria-label="Find keyword"
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={onInputKeyDown}
       />
@@ -116,56 +120,40 @@ export function DashboardFindBar({
           {countLabel}
         </span>
       ) : null}
-      <button
-        type="button"
-        className="dashboard-find-bar__nav"
-        title="上一处 (Shift+Enter)"
-        disabled={disabled || !q || matches.length === 0}
-        aria-label="上一处"
-        onClick={goPrev}
-      >
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden>
-          <path
-            d="M4 10l4-4 4 4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      <Space size={2}>
+        <Button
+          type="text"
+          size="small"
+          className="dashboard-find-bar__nav"
+          title="Previous (Shift+Enter)"
+          disabled={disabled || !q || matches.length === 0}
+          aria-label="Previous match"
+          icon={<UpOutlined />}
+          onClick={goPrev}
+        />
+        <Button
+          type="text"
+          size="small"
+          className="dashboard-find-bar__nav"
+          title="Next (Enter)"
+          disabled={disabled || !q || matches.length === 0}
+          aria-label="Next match"
+          icon={<DownOutlined />}
+          onClick={goNext}
+        />
+        {query ? (
+          <Button
+            type="text"
+            size="small"
+            className="dashboard-find-bar__clear"
+            title="Clear (Esc)"
+            disabled={disabled}
+            aria-label="Clear find"
+            icon={<CloseOutlined />}
+            onClick={clear}
           />
-        </svg>
-      </button>
-      <button
-        type="button"
-        className="dashboard-find-bar__nav"
-        title="下一处 (Enter)"
-        disabled={disabled || !q || matches.length === 0}
-        aria-label="下一处"
-        onClick={goNext}
-      >
-        <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden>
-          <path
-            d="M4 6l4 4 4-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </button>
-      {query ? (
-        <button
-          type="button"
-          className="dashboard-find-bar__clear"
-          title="清除 (Esc)"
-          disabled={disabled}
-          aria-label="清除查找"
-          onClick={clear}
-        >
-          ×
-        </button>
-      ) : null}
+        ) : null}
+      </Space>
     </div>
   )
 }

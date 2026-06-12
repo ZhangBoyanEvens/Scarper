@@ -15,7 +15,7 @@ export function estimateCostUsd(usage: ExtractTokenUsage): number {
   const model = usage.model || DEFAULT_MODEL
   const rates =
     MODEL_PRICING_USD_PER_M[model] ?? MODEL_PRICING_USD_PER_M['deepseek-chat']
-  let hit = usage.prompt_cache_hit_tokens
+  const hit = usage.prompt_cache_hit_tokens
   let miss = usage.prompt_cache_miss_tokens
   if (usage.prompt_tokens && hit === 0 && miss === 0) {
     miss = usage.prompt_tokens

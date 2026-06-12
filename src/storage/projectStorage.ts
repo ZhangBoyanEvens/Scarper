@@ -76,11 +76,6 @@ export function deleteProjectLocal(id: string): void {
   writeAll(readAll().filter((p) => p.id !== id))
 }
 
-export function deleteProject(id: string): void {
-  deleteProjectLocal(id)
-  window.dispatchEvent(new Event('scarper:projects-changed'))
-}
-
 export function touchProjectLocal(id: string): void {
   const all = readAll()
   const idx = all.findIndex((p) => p.id === id)
@@ -89,17 +84,3 @@ export function touchProjectLocal(id: string): void {
   writeAll(all)
 }
 
-export function touchProject(id: string): void {
-  touchProjectLocal(id)
-  window.dispatchEvent(new Event('scarper:projects-changed'))
-}
-
-/** @deprecated 请用 createProjectLocal */
-export function createProject(input: {
-  name: string
-  description?: string
-}): Project {
-  const p = createProjectLocal(input)
-  window.dispatchEvent(new Event('scarper:projects-changed'))
-  return p
-}

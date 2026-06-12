@@ -2,7 +2,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 20px;
+  gap: var(--sc-space-4);
 }
 
 .settings-toggle__text {
@@ -12,17 +12,17 @@
 
 .settings-toggle__label {
   display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #e2e8f0;
+  font-size: var(--sc-font-size-sm);
+  font-weight: var(--sc-font-weight-medium);
+  color: var(--sc-text);
   cursor: pointer;
 }
 
 .settings-toggle__desc {
-  margin: 6px 0 0;
-  font-size: 0.82rem;
-  line-height: 1.5;
-  color: #64748b;
+  margin: var(--sc-space-2) 0 0;
+  font-size: var(--sc-font-size-sm);
+  line-height: var(--sc-line-height-body);
+  color: var(--sc-text-muted);
 }
 
 .settings-switch {
@@ -31,9 +31,9 @@
   width: 44px;
   height: 26px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--sc-radius-pill);
   cursor: pointer;
-  background: rgba(51, 65, 85, 0.9);
+  background: var(--sc-gray-200);
   transition: background 0.2s ease;
   padding: 0;
 }
@@ -44,7 +44,7 @@
 }
 
 .settings-switch--on {
-  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  background: var(--sc-primary);
 }
 
 .settings-switch__thumb {
@@ -54,8 +54,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  background: #ffffff;
+  box-shadow: var(--sc-shadow-1);
   transition: transform 0.2s ease;
 }
 

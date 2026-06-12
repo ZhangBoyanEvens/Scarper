@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AppView } from '../../types/appView'
+import { useI18n } from '../../contexts/I18nContext'
 import { GlowPanel } from '../Layout/GlowPanel'
 import {
-  TUTORIAL_PHASES,
-  TUTORIAL_STEPS,
+  buildTutorialSteps,
+  getTutorialPhases,
+  TUTORIAL_STEP_COUNT,
   type TutorialStep,
 } from '../tutorial/tutorialSteps'
 import './TutorialPage.css'
@@ -15,12 +17,12 @@ export interface TutorialPageProps {
   onNavigate?: (view: AppView) => void
 }
 
-function readSavedIndex(): number {
+function readSavedIndex(max: number): number {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (raw == null) return 0
     const n = Number.parseInt(raw, 10)
-    if (!Number.isFinite(n) || n < 0 || n >= TUTORIAL_STEPS.length) return 0
+    if (!Number.isFinite(n) || n < 0 || n >= max) return 0
     return n
   } catch {
     return 0
@@ -28,12 +30,18 @@ function readSavedIndex(): number {
 }
 
 export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
-  const [index, setIndex] = useState(readSavedIndex)
+  const { t } = useI18n()
+  const tutorialSteps = useMemo(() => buildTutorialSteps(t), [t])
+  const tutorialPhases = useMemo(
+    () => getTutorialPhases(tutorialSteps),
+    [tutorialSteps],
+  )
+  const [index, setIndex] = useState(() => readSavedIndex(TUTORIAL_STEP_COUNT))
   const [checked, setChecked] = useState<Record<string, boolean>>({})
 
-  const step = TUTORIAL_STEPS[index]
+  const step = tutorialSteps[index]
   const isFirst = index === 0
-  const isLast = index === TUTORIAL_STEPS.length - 1
+  const isLast = index === tutorialSteps.length - 1
 
   useEffect(() => {
     try {
@@ -45,17 +53,17 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
 
   const phaseProgress = useMemo(() => {
     const map = new Map<string, { done: number; total: number }>()
-    for (const p of TUTORIAL_PHASES) {
+    for (const p of tutorialPhases) {
       map.set(p, { done: 0, total: 0 })
     }
-    TUTORIAL_STEPS.forEach((s, i) => {
+    tutorialSteps.forEach((s, i) => {
       const entry = map.get(s.phase)!
       entry.total += 1
       if (i < index) entry.done += 1
       else if (i === index) entry.done += 0.5
     })
     return map
-  }, [index])
+  }, [index, tutorialSteps, tutorialPhases])
 
   const toggleCheck = useCallback((item: string) => {
     const key = `${step.id}::${item}`
@@ -97,17 +105,17 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
       className="tutorial-back-btn"
       onClick={onBackHome}
     >
-      ← Homepage
+      {t('tutorial.backHome')}
     </button>
   ) : null
 
   return (
     <main className="app-main page-view tutorial-page">
       <div className="page-view-inner tutorial-layout">
-        <aside className="tutorial-rail" aria-label="教程步骤">
-          <p className="tutorial-rail__label">流程引导</p>
+        <aside className="tutorial-rail" aria-label="Tutorial steps">
+          <p className="tutorial-rail__label">{t('tutorial.workflowGuide')}</p>
           <ol className="tutorial-rail__list">
-            {TUTORIAL_STEPS.map((s, i) => {
+            {tutorialSteps.map((s, i) => {
               const state =
                 i < index ? 'done' : i === index ? 'current' : 'upcoming'
               return (
@@ -131,7 +139,7 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
         </aside>
 
         <GlowPanel
-          title="Tutorial"
+          title={t('tutorial.title')}
           headerAction={backButton}
           bodyClassName="tutorial-body"
           className="tutorial-panel"
@@ -139,7 +147,8 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
           <TutorialStepView
             step={step}
             index={index}
-            total={TUTORIAL_STEPS.length}
+            total={tutorialSteps.length}
+            tutorialPhases={tutorialPhases}
             phaseProgress={phaseProgress}
             checkedCount={checkedCount}
             allChecked={allChecked}
@@ -155,7 +164,7 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
                 disabled={isFirst}
                 onClick={handlePrev}
               >
-                上一步
+                {t('tutorial.previous')}
               </button>
               {!isLast && (
                 <button
@@ -163,7 +172,7 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
                   className="tutorial-btn tutorial-btn--primary"
                   onClick={handleNext}
                 >
-                  {allChecked ? '下一步' : '下一步（可先跳过勾选）'}
+                  {allChecked ? t('tutorial.next') : t('tutorial.nextOptional')}
                 </button>
               )}
               {isLast && (
@@ -172,7 +181,7 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
                   className="tutorial-btn tutorial-btn--primary"
                   onClick={onBackHome}
                 >
-                  返回 Homepage
+                  {t('tutorial.backToHome')}
                 </button>
               )}
             </div>
@@ -191,7 +200,7 @@ export function TutorialPage({ onBackHome, onNavigate }: TutorialPageProps) {
                 className="tutorial-btn tutorial-btn--ghost"
                 onClick={handleReset}
               >
-                从头开始
+                {t('tutorial.startOver')}
               </button>
             </div>
           </footer>
@@ -205,6 +214,7 @@ interface TutorialStepViewProps {
   step: TutorialStep
   index: number
   total: number
+  tutorialPhases: string[]
   phaseProgress: Map<string, { done: number; total: number }>
   checkedCount: number
   allChecked: boolean
@@ -216,12 +226,14 @@ function TutorialStepView({
   step,
   index,
   total,
+  tutorialPhases,
   phaseProgress,
   checkedCount,
   allChecked,
   isItemChecked,
   onToggleCheck,
 }: TutorialStepViewProps) {
+  const { t } = useI18n()
   const progressPct = Math.round(((index + 1) / total) * 100)
 
   return (
@@ -232,7 +244,7 @@ function TutorialStepView({
         aria-valuenow={progressPct}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label={`教程进度 ${progressPct}%`}
+        aria-label={t('tutorial.progressAria', { pct: progressPct })}
       >
         <div
           className="tutorial-progress__bar"
@@ -243,7 +255,7 @@ function TutorialStepView({
       <div className="tutorial-step-header">
         <span className="tutorial-step-header__phase">{step.phase}</span>
         <span className="tutorial-step-header__count">
-          第 {index + 1} / {total} 步
+          {t('tutorial.stepCount', { current: index + 1, total })}
         </span>
       </div>
 
@@ -251,26 +263,25 @@ function TutorialStepView({
       <p className="tutorial-step-header__summary">{step.summary}</p>
 
       {index === 0 && (
-        <div className="tutorial-flow" aria-label="工作流示意">
-          <FlowNode label="Homepage" highlight />
+        <div className="tutorial-flow" aria-label="Workflow overview">
+          <FlowNode label={t('tutorial.flow.homepage')} highlight />
           <FlowArrow />
-          <FlowNode label="Scrape" />
+          <FlowNode label={t('tutorial.flow.scrape')} />
           <FlowArrow />
-          <FlowNode label="Project" />
+          <FlowNode label={t('tutorial.flow.project')} />
           <FlowArrow />
-          <FlowNode label="Dashboard" />
-          <FlowArrow />
-          <FlowNode label="FinDoc / RAG" />
+          <FlowNode label={t('tutorial.flow.findocRag')} />
         </div>
       )}
 
       <div className="tutorial-phases">
-        {TUTORIAL_PHASES.map((phase) => {
-          const { done, total: t } = phaseProgress.get(phase) ?? {
+        {tutorialPhases.map((phase) => {
+          const { done, total: phaseTotal } = phaseProgress.get(phase) ?? {
             done: 0,
             total: 1,
           }
-          const pct = t > 0 ? Math.min(100, Math.round((done / t) * 100)) : 0
+          const pct =
+            phaseTotal > 0 ? Math.min(100, Math.round((done / phaseTotal) * 100)) : 0
           return (
             <div key={phase} className="tutorial-phase-chip">
               <span className="tutorial-phase-chip__name">{phase}</span>
@@ -286,7 +297,7 @@ function TutorialStepView({
       <section className="tutorial-checklist" aria-labelledby="tutorial-check-heading">
         <div className="tutorial-checklist__head">
           <h4 id="tutorial-check-heading" className="tutorial-checklist__title">
-            本步操作清单
+            {t('tutorial.checklistTitle')}
           </h4>
           <span
             className={`tutorial-checklist__status${allChecked ? ' tutorial-checklist__status--done' : ''}`}
@@ -318,14 +329,14 @@ function TutorialStepView({
 
       {step.tip && (
         <p className="tutorial-tip">
-          <strong>提示：</strong>
+          <strong>{t('tutorial.tip')}</strong>{' '}
           {step.tip}
         </p>
       )}
 
       {step.navigate && step.navigateLabel && (
         <p className="tutorial-try">
-          准备好后点击底部「{step.navigateLabel}」在真实页面中操作，完成后返回本页继续下一步。
+          {t('tutorial.tryNavigate', { label: step.navigateLabel })}
         </p>
       )}
     </div>

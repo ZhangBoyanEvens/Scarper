@@ -1,9 +1,14 @@
 export const VETRA_NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'companies', label: 'Companies' },
-  { id: 'outreach', label: 'Outreach' },
-  { id: 'templates', label: 'Templates' },
-  { id: 'reports', label: 'Reports' },
+
+  { id: 'companies', labelKey: 'vetra.nav.companies' },
+
+  { id: 'outreach', labelKey: 'vetra.nav.outreach' },
+
+  { id: 'templates', labelKey: 'vetra.nav.templates' },
+
 ] as const
 
+
+
 export type VetraNavId = (typeof VETRA_NAV_ITEMS)[number]['id']
+

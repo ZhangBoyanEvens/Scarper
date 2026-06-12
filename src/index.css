@@ -1,9 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap');
-
-:root {
-  color-scheme: dark;
-  --bg-deep: #03040a;
-}
+@import './styles/tokens.css';
+@import './styles/typography.css';
+@import './styles/antd-scarper.css';
 
 *,
 *::before,
@@ -13,16 +10,20 @@
 
 body {
   margin: 0;
-  font-family:
-    'Outfit',
-    system-ui,
-    -apple-system,
-    sans-serif;
-  background: var(--bg-deep);
-  color: #e2e8f0;
+  background: var(--sc-bg-layout);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
   min-height: 100svh;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--sc-primary);
+  outline-offset: 2px;
 }

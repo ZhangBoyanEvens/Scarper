@@ -2,32 +2,31 @@ import { useAppSettings } from './contexts/AppSettingsContext'
 import { useScrapeSession } from './contexts/ScrapeSessionContext'
 import { ContentSections } from './components/Layout/ContentSections'
 import { TopToolbar } from './components/Layout/TopToolbar'
+import './components/pages/ScrapePage.css'
 
 export function ScarperApp() {
   const {
-    settings: { outputLanguage, outputDetail, ui },
+    settings: { outputLanguage, outputDetail },
     setOutputLanguage,
     setOutputDetail,
   } = useAppSettings()
   const { resultsState, handleSearch, handleResultChange } = useScrapeSession()
 
-  const appMainClass = ui.compactMode ? 'app-main app-main--compact' : 'app-main'
-
   return (
-    <>
+    <div className="scrape-page">
       <TopToolbar
         outputLanguage={outputLanguage}
         outputDetail={outputDetail}
         onOutputLanguageChange={setOutputLanguage}
         onOutputDetailChange={setOutputDetail}
       />
-      <main className={appMainClass}>
+      <div className="scrape-page__body">
         <ContentSections
           resultsState={resultsState}
           onSearch={handleSearch}
           onResultChange={handleResultChange}
         />
-      </main>
-    </>
+      </div>
+    </div>
   )
 }

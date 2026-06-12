@@ -61,7 +61,7 @@ async function neonFetch(
   const ctrl = new AbortController()
   const timer = window.setTimeout(() => {
     ctrl.abort(
-      new DOMException('数据库请求超时，请稍后重试', 'TimeoutError'),
+      new DOMException('Database request timed out. Try again later.', 'TimeoutError'),
     )
   }, NEON_FETCH_TIMEOUT_MS)
   const useAuth = options.auth !== false
@@ -79,11 +79,11 @@ async function neonFetch(
       throw new Error(err.message)
     }
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error('数据库请求已取消或超时，请稍后重试')
+      throw new Error('Database request canceled or timed out. Try again later.')
     }
     if (err instanceof TypeError && err.message === 'Failed to fetch') {
       throw new Error(
-        '无法连接后端（Failed to fetch）。请确认后端已启动（http://127.0.0.1:8000）。',
+        'Cannot reach backend (Failed to fetch). Ensure the backend is running (http://127.0.0.1:8000).',
       )
     }
     throw err
@@ -181,13 +181,13 @@ export async function fetchNeonStorage(
     if (status.mode !== 'neon' || !status.connected) return null
     const res = await neonFetch('/api/neon/storage')
     if (res.status === 401) {
-      const err = new Error('需要登录')
+      const err = new Error('Sign-in required')
       err.name = 'NeonAuthError'
       throw err
     }
     if (res.status === 503) return null
     if (!res.ok) {
-      throw new Error(`拉取存储用量失败 (${res.status})`)
+      throw new Error(`Failed to fetch storage usage (${res.status})`)
     }
     const data = (await res.json()) as NeonStorageResponse
     cachedStorage = data
@@ -208,7 +208,7 @@ export async function fetchNeonProjects(): Promise<Project[]> {
   projectsPromise = (async () => {
     const res = await neonFetch('/api/neon/projects')
     if (res.status === 401) {
-      const err = new Error('需要登录')
+      const err = new Error('Sign-in required')
       err.name = 'NeonAuthError'
       throw err
     }
@@ -218,7 +218,7 @@ export async function fetchNeonProjects(): Promise<Project[]> {
       throw err
     }
     if (!res.ok) {
-      throw new Error(`拉取项目列表失败 (${res.status})`)
+      throw new Error(`Failed to fetch project list (${res.status})`)
     }
     const data = (await res.json()) as ProjectListApiResponse
     return data.items.map(apiItemToProject)
@@ -246,12 +246,12 @@ export async function createNeonProject(input: {
     body: JSON.stringify(body),
   })
   if (res.status === 401) {
-    const err = new Error('需要登录')
+    const err = new Error('Sign-in required')
     err.name = 'NeonAuthError'
     throw err
   }
   if (!res.ok) {
-    let detail = `创建项目失败 (${res.status})`
+    let detail = `Failed to create project (${res.status})`
     try {
       const payload = (await res.json()) as { detail?: unknown }
       if (typeof payload.detail === 'string') detail = payload.detail
@@ -270,13 +270,13 @@ export async function deleteNeonProject(projectId: string): Promise<void> {
     { method: 'DELETE' },
   )
   if (res.status === 401) {
-    const err = new Error('需要登录')
+    const err = new Error('Sign-in required')
     err.name = 'NeonAuthError'
     throw err
   }
   if (res.status === 404) return
   if (!res.ok) {
-    throw new Error(`删除项目失败 (${res.status})`)
+    throw new Error(`Failed to delete project (${res.status})`)
   }
   invalidateNeonStorageCache()
 }
@@ -288,7 +288,7 @@ export function clearNeonStatusCache(): void {
   invalidateNeonStorageCache()
 }
 
-export function invalidateNeonStorageCache(): void {
+function invalidateNeonStorageCache(): void {
   cachedStorage = null
   storageCachedAt = 0
   storagePromise = null
@@ -321,12 +321,12 @@ export async function createNeonManualRecord(
     throw err
   }
   if (res.status === 401) {
-    const err = new Error('需要登录后才能新建记录')
+    const err = new Error('Sign-in required to create a record')
     err.name = 'NeonAuthError'
     throw err
   }
   if (!res.ok) {
-    let detail = `新建记录失败 (${res.status})`
+    let detail = `Failed to create record (${res.status})`
     try {
       const body = (await res.json()) as { detail?: unknown }
       if (typeof body.detail === 'string') detail = body.detail
@@ -379,7 +379,7 @@ export async function uploadProjectResultsToNeon(
   }
 
   if (res.status === 401) {
-    let detail = '需要登录后才能上传到 Neon'
+    let detail = 'Sign-in required to upload to Neon'
     try {
       const body = (await res.json()) as { detail?: unknown }
       if (typeof body.detail === 'string') detail = body.detail
@@ -392,7 +392,7 @@ export async function uploadProjectResultsToNeon(
   }
 
   if (!res.ok) {
-    let detail = `Neon 上传失败 (${res.status})`
+    let detail = `Neon upload failed (${res.status})`
     try {
       const body = (await res.json()) as { detail?: unknown }
       if (typeof body.detail === 'string') {
@@ -443,6 +443,7 @@ function apiItemToDataRecord(
     successCount: item.success_count,
     source: item.source,
     storage,
+    title: item.title?.trim() || undefined,
   }
 }
 
@@ -481,7 +482,7 @@ export async function fetchNeonUploadEditor(
       `/api/neon/projects/${encodeURIComponent(projectId)}/uploads/${encodeURIComponent(uploadId)}/editor`,
     )
     if (res.status === 401) {
-      const err = new Error('需要登录')
+      const err = new Error('Sign-in required')
       err.name = 'NeonAuthError'
       throw err
     }
@@ -494,7 +495,7 @@ export async function fetchNeonUploadEditor(
       throw err
     }
     if (!res.ok) {
-      throw new Error(`拉取记录正文失败 (${res.status})`)
+      throw new Error(`Failed to fetch record body (${res.status})`)
     }
     const data = (await res.json()) as {
       results?: ExtractResponse[]
@@ -530,7 +531,7 @@ export async function fetchNeonUploadDetail(
       `/api/neon/projects/${encodeURIComponent(projectId)}/uploads/${encodeURIComponent(uploadId)}`,
     )
     if (res.status === 401) {
-      const err = new Error('需要登录')
+      const err = new Error('Sign-in required')
       err.name = 'NeonAuthError'
       throw err
     }
@@ -543,7 +544,7 @@ export async function fetchNeonUploadDetail(
       throw err
     }
     if (!res.ok) {
-      throw new Error(`拉取记录详情失败 (${res.status})`)
+      throw new Error(`Failed to fetch record details (${res.status})`)
     }
     const data = (await res.json()) as {
       results: ExtractResponse[]
@@ -580,7 +581,7 @@ export async function saveNeonUploadDocument(
     },
   )
   if (res.status === 401) {
-    const err = new Error('需要登录')
+    const err = new Error('Sign-in required')
     err.name = 'NeonAuthError'
     throw err
   }
@@ -593,7 +594,7 @@ export async function saveNeonUploadDocument(
     throw err
   }
   if (!res.ok) {
-    let message = `保存到数据库失败 (${res.status})`
+    let message = `Failed to save to database (${res.status})`
     try {
       const body = (await res.json()) as { detail?: unknown }
       if (typeof body.detail === 'string') {
@@ -626,6 +627,12 @@ export async function uploadFindocToNeonProject(
   projectId: string,
   editorText: string,
   title?: string,
+  uploadId?: string | null,
+  proceedContext?: {
+    templateId: string
+    taskIds: string[]
+    adjustmentPrompt: string
+  },
 ): Promise<ProjectUploadResult> {
   const res = await neonFetch(
     `/api/neon/projects/${encodeURIComponent(projectId)}/findoc`,
@@ -635,19 +642,25 @@ export async function uploadFindocToNeonProject(
       body: JSON.stringify({
         editor_text: editorText,
         title: title?.trim() || '',
+        upload_id: uploadId?.trim() || null,
+        template_id: proceedContext?.templateId?.trim() || null,
+        task_ids: proceedContext?.taskIds?.length
+          ? proceedContext.taskIds
+          : null,
+        adjustment_prompt: proceedContext?.adjustmentPrompt?.trim() || '',
       }),
     },
   )
   if (res.status === 401) {
-    const err = new Error('需要登录')
+    const err = new Error('Sign-in required')
     err.name = 'NeonAuthError'
     throw err
   }
   if (res.status === 404) {
-    throw new Error('项目不存在')
+    throw new Error('Project not found')
   }
   if (res.status === 413) {
-    throw new Error('存储空间已满，无法保存 FinDoc 结果')
+    throw new Error('Storage full — cannot save FinDoc result')
   }
   if (res.status === 503) {
     const err = new Error('neon_not_configured')
@@ -655,7 +668,7 @@ export async function uploadFindocToNeonProject(
     throw err
   }
   if (!res.ok) {
-    let message = `保存 FinDoc 到项目失败 (${res.status})`
+    let message = `Failed to save FinDoc to project (${res.status})`
     try {
       const body = (await res.json()) as { detail?: unknown }
       if (typeof body.detail === 'string') message = body.detail
@@ -676,6 +689,77 @@ export async function uploadFindocToNeonProject(
   }
 }
 
+interface FindocMatchApiResponse {
+  matched: boolean
+  id?: string
+  editor_text?: string
+  title?: string
+  uploaded_at?: string
+  storage?: 'neon' | 'local'
+}
+
+export async function matchSavedFindocOnNeon(
+  projectId: string,
+  context: {
+    templateId: string
+    taskIds: string[]
+    adjustmentPrompt: string
+  },
+): Promise<{
+  id: string
+  editorText: string
+  title?: string
+  uploadedAt?: string
+  storage: 'neon'
+} | null> {
+  const res = await neonFetch(
+    `/api/neon/projects/${encodeURIComponent(projectId)}/findoc/match`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        template_id: context.templateId,
+        task_ids: context.taskIds,
+        adjustment_prompt: context.adjustmentPrompt,
+      }),
+    },
+  )
+  if (res.status === 401) {
+    const err = new Error('Sign-in required')
+    err.name = 'NeonAuthError'
+    throw err
+  }
+  if (res.status === 404) {
+    throw new Error('Project not found')
+  }
+  if (res.status === 503) {
+    const err = new Error('neon_not_configured')
+    err.name = 'NeonNotConfiguredError'
+    throw err
+  }
+  if (!res.ok) {
+    let message = `Failed to match FinDoc (${res.status})`
+    try {
+      const body = (await res.json()) as { detail?: unknown }
+      if (typeof body.detail === 'string') message = body.detail
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message)
+  }
+  const data = (await res.json()) as FindocMatchApiResponse
+  if (!data.matched || !data.id || !data.editor_text?.trim()) {
+    return null
+  }
+  return {
+    id: data.id,
+    editorText: data.editor_text.trim(),
+    title: data.title,
+    uploadedAt: data.uploaded_at,
+    storage: 'neon',
+  }
+}
+
 export async function fetchNeonProjectRecords(
   projectId: string,
 ): Promise<ProjectDataRecord[]> {
@@ -683,7 +767,7 @@ export async function fetchNeonProjectRecords(
     `/api/neon/projects/${encodeURIComponent(projectId)}/uploads`,
   )
   if (res.status === 401) {
-    const err = new Error('需要登录')
+    const err = new Error('Sign-in required')
     err.name = 'NeonAuthError'
     throw err
   }
@@ -693,7 +777,7 @@ export async function fetchNeonProjectRecords(
     throw err
   }
   if (!res.ok) {
-    throw new Error(`拉取数据记录失败 (${res.status})`)
+    throw new Error(`Failed to fetch data records (${res.status})`)
   }
   const data = (await res.json()) as ProjectDataRecordListResponse
   return data.items.map((item) => apiItemToDataRecord(item, data.storage))
@@ -708,13 +792,13 @@ export async function deleteNeonProjectRecord(
     { method: 'DELETE' },
   )
   if (res.status === 401) {
-    const err = new Error('需要登录')
+    const err = new Error('Sign-in required')
     err.name = 'NeonAuthError'
     throw err
   }
   if (res.status === 404) return
   if (!res.ok) {
-    throw new Error(`删除记录失败 (${res.status})`)
+    throw new Error(`Failed to delete record (${res.status})`)
   }
   invalidateNeonStorageCache()
 }

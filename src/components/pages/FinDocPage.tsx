@@ -1,4 +1,11 @@
+import { PlusOutlined } from '@ant-design/icons'
+import { Button, Flex, Select, Typography, theme } from 'antd'
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
+import { formatLocaleShortDateTime } from '../../i18n/localeFormat'
+import { ScarperToolbarField } from '../common/ScarperToolbarField'
+import { scarperSelectProps } from '../common/scarperForm'
+import { DashboardTaskSelect } from '../dashboard/DashboardTaskSelect'
 import { useAppSettings } from '../../contexts/AppSettingsContext'
 import { useLoadingVisible } from '../../hooks/useLoadingVisible'
 import {
@@ -11,20 +18,19 @@ import {
   loadTaskContentForFinDoc,
   peekProjectRecords,
 } from '../../services/projectRecordService'
-import { saveFindocOutputToProject } from '../../services/findocProjectSave'
+import { saveFindocOutputToProject, lookupSavedFindocOutput } from '../../services/findocProjectSave'
+import type { FindocProceedContext } from '../../types/findoc'
 import { rewriteTasksWithTemplate } from '../../services/findocProceedRewrite'
-import type { FindocOpenRequest } from '../../services/findocNavigation'
+import type { FindocOpenRequest } from '../../types/findoc'
 import { listProjects, peekProjects } from '../../services/projectService'
 import type { FindocTemplate } from '../../types/findocTemplate'
 import type { Project } from '../../types/project'
 import type { ProjectDataRecord } from '../../types/projectRecord'
-import { FinDocTaskSelectModal } from '../findoc/FinDocTaskSelectModal'
 import {
   FinDocOutputPanel,
   type FinDocOutputViewMode,
 } from '../findoc/FinDocOutputPanel'
 import { exportTextAsWordDocument } from '../../utils/exportWordDocument'
-import '../Layout/OutputLanguageSelect.css'
 import '../Layout/TextInputSection.css'
 import '../projects/ProjectPage.css'
 import '../../styles/scrollbar.css'
@@ -40,15 +46,18 @@ function clampFindocSplitPct(pct: number): number {
   return Math.min(FINDOC_SPLIT_MAX_PCT, Math.max(FINDOC_SPLIT_MIN_PCT, pct))
 }
 
-function taskTriggerLabel(
-  records: ProjectDataRecord[],
-  selectedIds: string[],
+function formatFindocTaskLabel(
+  record: ProjectDataRecord,
+  index: number,
+  t: (path: string) => string,
+  locale: 'en' | 'zh',
 ): string {
-  if (records.length === 0) return 'No tasks'
-  if (selectedIds.length === records.length) {
-    return `All (${records.length})`
-  }
-  return `${selectedIds.length}/${records.length} selected`
+  const when = formatLocaleShortDateTime(record.uploadedAt, locale)
+  const kind =
+    record.source === 'findoc'
+      ? t('recordSource.findoc')
+      : t('recordSource.scrape')
+  return `#${index + 1} ${when} · ${kind}`
 }
 
 export interface FinDocPageProps {
@@ -62,6 +71,9 @@ export function FinDocPage({
   pendingOpen,
   onPendingOpenConsumed,
 }: FinDocPageProps) {
+  const { t, locale } = useI18n()
+  const { token } = theme.useToken()
+  const { Text } = Typography
   const {
     settings: { outputLanguage },
   } = useAppSettings()
@@ -89,7 +101,6 @@ export function FinDocPage({
   const [outputStatus, setOutputStatus] = useState<string | null>(null)
   const [records, setRecords] = useState<ProjectDataRecord[]>([])
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
-  const [taskModalOpen, setTaskModalOpen] = useState(false)
   const [leftPanePct, setLeftPanePct] = useState(FINDOC_SPLIT_DEFAULT_PCT)
   const [splitDragging, setSplitDragging] = useState(false)
   const workspaceRef = useRef<HTMLElement>(null)
@@ -332,9 +343,9 @@ export function FinDocPage({
         `scarper.findoc.draft.${projectId}`,
         adjustmentPrompt,
       )
-      setStatus('Prompt saved')
+      setStatus(t('findoc.promptSaved'))
     } catch {
-      setStatus('Save failed')
+      setStatus(t('findoc.saveFailed'))
     } finally {
       setSaving(false)
     }
@@ -347,14 +358,14 @@ export function FinDocPage({
 
     void (async () => {
       try {
-        setOutputStatus('Loading FinDoc document from Project…')
+        setOutputStatus(t('findoc.loadingFromProject'))
         if (targetProjectId !== projectId) {
           applyProjectContext(targetProjectId)
         }
         const text = await loadTaskContentForFinDoc(targetProjectId, recordId)
         if (cancelled) return
         if (!text.trim()) {
-          setOutputStatus('This FinDoc record has no body text')
+          setOutputStatus(t('findoc.recordNoBody'))
           return
         }
         setOutputText(text)
@@ -362,10 +373,10 @@ export function FinDocPage({
         setOutputRecordId(recordId)
         outputDraftsRef.current.set(targetProjectId, text)
         setOutputViewMode('preview')
-        setOutputStatus('Loaded from Project — Save will update this record')
+        setOutputStatus(t('findoc.loadedFromProject'))
       } catch (err) {
         if (!cancelled) {
-          setOutputStatus(err instanceof Error ? err.message : 'Load failed')
+          setOutputStatus(err instanceof Error ? err.message : t('findoc.loadFailed'))
         }
       } finally {
         if (!cancelled) onPendingOpenConsumed?.()
@@ -380,12 +391,12 @@ export function FinDocPage({
   const handleProceed = async () => {
     if (!projectId) return
     if (selectedTaskIds.length === 0) {
-      setStatus('Select at least one Task')
+      setStatus(t('findoc.selectTask'))
       return
     }
     const templateContent = getSelectedTemplateContent()
     if (!templateId || !templateContent) {
-      setStatus('Select a valid Template')
+      setStatus(t('findoc.selectValidTemplate'))
       return
     }
 
@@ -397,13 +408,40 @@ export function FinDocPage({
     promptDraftsRef.current.set(projectId, adjustmentPrompt)
     setProceeding(true)
     setOutputViewMode('preview')
-    setStatus('Loading Task content…')
+    setStatus(t('findoc.checkingSaved'))
     setOutputStatus(null)
 
     try {
       const orderedIds = records
         .map((r) => r.id)
         .filter((id) => selectedTaskIds.includes(id))
+
+      const proceedContext: FindocProceedContext = {
+        templateId,
+        taskIds: orderedIds,
+        adjustmentPrompt: adjustmentPrompt.trim(),
+      }
+
+      const saved = await lookupSavedFindocOutput(projectId, proceedContext)
+      if (saved) {
+        setOutputText(saved.editorText)
+        streamingOutputRef.current = saved.editorText
+        setOutputRecordId(saved.id)
+        outputDraftsRef.current.set(projectId, saved.editorText)
+        try {
+          localStorage.setItem(
+            `scarper.findoc.output.${projectId}`,
+            saved.editorText,
+          )
+        } catch {
+          /* ignore */
+        }
+        setStatus(null)
+        setOutputStatus(t('findoc.loadedSaved'))
+        return
+      }
+
+      setStatus(t('findoc.loadingTasks'))
 
       const texts = await Promise.all(
         orderedIds.map((id) => loadTaskContentForFinDoc(projectId, id)),
@@ -418,7 +456,7 @@ export function FinDocPage({
         .join('\n\n')
 
       if (!taskContent.trim()) {
-        setStatus('Selected Tasks have no usable content — upload or edit in Dashboard first')
+        setStatus(t('findoc.noTaskContent'))
         return
       }
 
@@ -426,7 +464,10 @@ export function FinDocPage({
       setOutputText('')
       setOutputRecordId(null)
       setStatus(
-        `Loaded ${orderedIds.length} Task(s) (${taskContent.length} chars) — AI rewriting…`,
+        t('findoc.loadedTasks', {
+          count: orderedIds.length,
+          chars: taskContent.length,
+        }),
       )
 
       const finalText = await rewriteTasksWithTemplate(
@@ -437,12 +478,12 @@ export function FinDocPage({
             streamingOutputRef.current += chunk
             const length = streamingOutputRef.current.length
             setOutputText(streamingOutputRef.current)
-            setStatus(`AI rewriting… (${length} chars generated)`)
+            setStatus(t('findoc.aiRewriting', { chars: length }))
           },
           onRetry: () => {
             streamingOutputRef.current = ''
             setOutputText('')
-            setStatus('First draft failed validation — rewriting again…')
+            setStatus(t('findoc.retryRewrite'))
           },
         },
         controller.signal,
@@ -462,12 +503,12 @@ export function FinDocPage({
         /* ignore */
       }
       setStatus(null)
-      setOutputStatus('Rewrite complete — based on Task content')
+      setOutputStatus(t('findoc.rewriteComplete'))
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return
       setOutputText(previousOutput)
       streamingOutputRef.current = previousOutput
-      setOutputStatus(err instanceof Error ? err.message : 'Rewrite failed')
+      setOutputStatus(err instanceof Error ? err.message : t('findoc.rewriteFailed'))
       setStatus(null)
     } finally {
       setProceeding(false)
@@ -480,13 +521,21 @@ export function FinDocPage({
   const handleSaveOutput = async () => {
     if (!projectId) return
     if (!outputText.trim()) {
-      setOutputStatus('Content cannot be empty')
+      setOutputStatus(t('findoc.contentEmpty'))
       return
     }
     setSavingOutput(true)
     setOutputStatus(null)
     const updatingExisting = Boolean(outputRecordId)
     outputDraftsRef.current.set(projectId, outputText)
+    const orderedIds = records
+      .map((r) => r.id)
+      .filter((id) => selectedTaskIds.includes(id))
+    const proceedContext: FindocProceedContext = {
+      templateId,
+      taskIds: orderedIds,
+      adjustmentPrompt: adjustmentPrompt.trim(),
+    }
     try {
       localStorage.setItem(
         `scarper.findoc.output.${projectId}`,
@@ -496,16 +545,17 @@ export function FinDocPage({
         projectId,
         outputText,
         outputRecordId,
+        proceedContext,
       )
       setOutputRecordId(result.id)
       void listProjectDataRecords(projectId).then(setRecords)
       if (updatingExisting) {
-        setOutputStatus('Updated FinDoc record in Project')
+        setOutputStatus(t('findoc.updatedHint'))
       } else {
-        setOutputStatus('Saved to Project — view on the Project page')
+        setOutputStatus(t('findoc.savedHint'))
       }
     } catch (err) {
-      setOutputStatus(err instanceof Error ? err.message : 'Save failed')
+      setOutputStatus(err instanceof Error ? err.message : t('findoc.saveFailed'))
     } finally {
       setSavingOutput(false)
     }
@@ -514,7 +564,7 @@ export function FinDocPage({
   const handleExportWord = () => {
     if (!projectId) return
     if (!outputText.trim()) {
-      setOutputStatus('Content cannot be empty — cannot export')
+      setOutputStatus(t('findoc.exportEmpty'))
       return
     }
     setExportingWord(true)
@@ -524,12 +574,12 @@ export function FinDocPage({
         projects.find((p) => p.id === projectId)?.name ?? 'findoc'
       const result = exportTextAsWordDocument(outputText, projectName)
       if (!result.ok) {
-        setOutputStatus('Content cannot be empty — cannot export')
+        setOutputStatus(t('findoc.exportEmpty'))
         return
       }
-      setOutputStatus(`Downloaded ${result.filename}`)
+      setOutputStatus(t('findoc.downloaded', { filename: result.filename }))
     } catch {
-      setOutputStatus('Export failed')
+      setOutputStatus(t('findoc.exportFailed'))
     } finally {
       setExportingWord(false)
     }
@@ -540,10 +590,10 @@ export function FinDocPage({
     outputDraftsRef.current.set(projectId, outputText)
     try {
       localStorage.setItem('scarper.findoc.template-draft', outputText)
-      setOutputStatus('Set as template draft')
+      setOutputStatus(t('findoc.templateDraftSet'))
       onCreateTemplate?.()
     } catch {
-      setOutputStatus('Failed to set template draft')
+      setOutputStatus(t('findoc.templateDraftFailed'))
     }
   }
 
@@ -601,9 +651,6 @@ export function FinDocPage({
   return (
     <main className="app-main findoc-page">
       <div className="findoc-shell">
-        <header className="findoc-head">
-          <h2 className="findoc-head__title">FinDoc</h2>
-        </header>
         <section
           ref={workspaceRef}
           className="findoc-workspace"
@@ -619,77 +666,68 @@ export function FinDocPage({
               className="findoc-left-toolbar"
               aria-label="Template and project selection"
             >
-              <label className="findoc-field findoc-field--template">
-                  <span className="findoc-field__label">Template</span>
-                  <select
-                    className="lang-select-control findoc-select findoc-select--template"
-                    value={templateId}
+              <Flex wrap="wrap" gap={12} align="center" style={{ width: '100%' }}>
+                <ScarperToolbarField label={t('fields.template')}>
+                  <Select
+                    {...scarperSelectProps()}
+                    value={templateId || undefined}
+                    placeholder={
+                      showTemplatesLoading
+                        ? t('findoc.loadingTemplates')
+                        : templates.length === 0
+                          ? t('findoc.noTemplates')
+                          : t('findoc.selectTemplate')
+                    }
                     disabled={loadingTemplates || templates.length === 0}
-                    onChange={(e) => handleTemplateChange(e.target.value)}
-                  >
-                    {showTemplatesLoading ? (
-                      <option value="">Loading…</option>
-                    ) : templates.length === 0 ? (
-                      <option value="">No templates</option>
-                    ) : (
-                      templates.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  className="findoc-template-new-btn project-btn project-btn--primary"
+                    options={templates.map((t) => ({ value: t.id, label: t.name }))}
+                    onChange={handleTemplateChange}
+                  />
+                </ScarperToolbarField>
+                <Button
+                  type="primary"
+                  size="middle"
+                  icon={<PlusOutlined />}
                   onClick={() => onCreateTemplate?.()}
                 >
-                  New
-                </button>
-              <label className="findoc-field findoc-field--project">
-                  <span className="findoc-field__label">Project</span>
-                  <select
-                    className="lang-select-control findoc-select findoc-select--project"
-                    value={projectId}
+                  {t('findoc.new')}
+                </Button>
+                <ScarperToolbarField label={t('fields.project')}>
+                  <Select
+                    {...scarperSelectProps()}
+                    value={projectId || undefined}
+                    placeholder={
+                      showProjectsLoading
+                        ? t('findoc.loadingProjects')
+                        : projects.length === 0
+                          ? t('findoc.noProjects')
+                          : t('findoc.selectProject')
+                    }
                     disabled={loadingProjects || projects.length === 0}
-                    onChange={(e) => handleProjectChange(e.target.value)}
-                  >
-                    {showProjectsLoading ? (
-                      <option value="">Loading…</option>
-                    ) : projects.length === 0 ? (
-                      <option value="">No projects</option>
-                    ) : (
-                      projects.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </label>
-                <div className="findoc-field findoc-field--task">
-                  <span className="findoc-field__label">Task</span>
-                  <button
-                    type="button"
-                    className="findoc-task-trigger lang-select-control"
+                    options={projects.map((p) => ({ value: p.id, label: p.name }))}
+                    onChange={handleProjectChange}
+                  />
+                </ScarperToolbarField>
+                <ScarperToolbarField label={t('fields.task')}>
+                  <DashboardTaskSelect
+                    records={records}
+                    selectedIds={selectedTaskIds}
                     disabled={!projectId}
-                    aria-haspopup="dialog"
-                    aria-expanded={taskModalOpen}
-                    onClick={() => setTaskModalOpen(true)}
-                  >
-                    {taskTriggerLabel(records, selectedTaskIds)}
-                  </button>
-              </div>
+                    formatLabel={(record, index) =>
+                      formatFindocTaskLabel(record, index, t, locale)
+                    }
+                    onChange={setSelectedTaskIds}
+                  />
+                </ScarperToolbarField>
+              </Flex>
             </section>
             <section className="findoc-left-editor" aria-label="Rewrite prompt">
               <div className="findoc-prompt-head">
-                <span className="findoc-prompt-head__label">Prompt</span>
+                <span className="findoc-prompt-head__label">{t('fields.prompt')}</span>
                 <p className="findoc-prompt-head__hint">
                   {selectedTemplateName
-                    ? `Structure follows template “${selectedTemplateName}”; `
-                    : 'Select a Template first; '}
-                  add tone, length, or focus instructions here (optional)
+                    ? t('findoc.promptHintPrefix', { name: selectedTemplateName })
+                    : t('findoc.promptHintNoTemplate')}
+                  {t('findoc.promptHintSuffix')}
                 </p>
               </div>
               <textarea
@@ -698,30 +736,30 @@ export function FinDocPage({
                 disabled={!projectId || proceeding}
                 placeholder={
                   projectId
-                    ? 'e.g. more formal tone, highlight data comparisons, max 3 paragraphs per section, avoid marketing copy…'
-                    : 'Select a Project first'
+                    ? t('findoc.promptPlaceholder')
+                    : t('findoc.selectProjectFirst')
                 }
                 onChange={(e) => handlePromptChange(e.target.value)}
               />
             </section>
             <footer className="findoc-pane-footer findoc-left-footer" aria-label="Actions">
               {status ? (
-                <span className="findoc-pane-footer__status" role="status">
+                <Text style={{ color: token.colorPrimary, fontSize: 13 }} role="status">
                   {status}
-                </span>
+                </Text>
               ) : null}
               <div className="findoc-pane-footer__actions">
-                <button
-                  type="button"
-                  className="project-btn project-btn--ghost"
+                <Button
+                  size="middle"
                   disabled={!projectId || saving}
+                  loading={saving}
                   onClick={handleSave}
                 >
-                  {saving ? 'Saving…' : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  className="text-input-save"
+                  {t('findoc.save')}
+                </Button>
+                <Button
+                  type="primary"
+                  size="middle"
                   disabled={
                     !projectId ||
                     proceeding ||
@@ -729,10 +767,11 @@ export function FinDocPage({
                     !templateId ||
                     !getSelectedTemplateContent()
                   }
+                  loading={proceeding}
                   onClick={() => void handleProceed()}
                 >
-                  {proceeding ? 'Processing…' : 'Proceed'}
-                </button>
+                  {t('findoc.proceed')}
+                </Button>
               </div>
             </footer>
           </div>
@@ -759,76 +798,65 @@ export function FinDocPage({
                 viewMode={outputViewMode}
                 placeholder={
                   projectId
-                    ? 'After Proceed, preview layout here (# title, ### sections, **emphasis**)…'
-                    : 'Select a Project first'
+                    ? t('findoc.outputPlaceholder')
+                    : t('findoc.selectProjectFirst')
                 }
                 onChange={handleOutputChange}
               />
             </section>
             <footer className="findoc-pane-footer findoc-right-footer" aria-label="Output actions">
               {outputStatus ? (
-                <span className="findoc-pane-footer__status" role="status">
+                <Text style={{ color: token.colorPrimary, fontSize: 13 }} role="status">
                   {outputStatus}
-                </span>
+                </Text>
               ) : null}
               <div className="findoc-pane-footer__actions">
-                <button
-                  type="button"
-                  className={`project-btn project-btn--ghost findoc-output-view-toggle${outputViewMode === 'preview' ? ' is-active' : ''}`}
+                <Button
+                  size="middle"
+                  type={outputViewMode === 'preview' ? 'primary' : 'default'}
                   disabled={!projectId || proceeding}
                   onClick={() => setOutputViewMode('preview')}
                 >
-                  Preview
-                </button>
-                <button
-                  type="button"
-                  className={`project-btn project-btn--ghost findoc-output-view-toggle${outputViewMode === 'source' ? ' is-active' : ''}`}
+                  {t('findoc.preview')}
+                </Button>
+                <Button
+                  size="middle"
+                  type={outputViewMode === 'source' ? 'primary' : 'default'}
                   disabled={!projectId || proceeding}
                   onClick={() => setOutputViewMode('source')}
                 >
-                  Edit source
-                </button>
-                <button
-                  type="button"
-                  className="project-btn project-btn--ghost"
+                  {t('findoc.editSource')}
+                </Button>
+                <Button
+                  size="middle"
                   disabled={!projectId || savingOutput || !outputText.trim()}
+                  loading={savingOutput}
                   onClick={() => void handleSaveOutput()}
                 >
-                  {savingOutput
-                    ? 'Saving…'
-                    : outputRecordId
-                      ? 'Update'
-                      : 'Save'}
-                </button>
-                <button
-                  type="button"
-                  className="project-btn project-btn--ghost"
+                  {outputRecordId ? t('findoc.update') : t('findoc.save')}
+                </Button>
+                <Button
+                  size="middle"
                   disabled={!projectId || exportingWord || !outputText.trim()}
+                  loading={exportingWord}
                   onClick={handleExportWord}
                 >
-                  {exportingWord ? 'Exporting…' : 'Export Word'}
-                </button>
-                <button
-                  type="button"
-                  className="text-input-save"
+                  {t('findoc.exportWord')}
+                </Button>
+                <Button
+                  type="primary"
+                  size="middle"
                   disabled={!projectId || !outputText.trim()}
                   onClick={handleSetAsTemplate}
                 >
-                  Set as Template
-                </button>
+                  {t('findoc.setAsTemplate')}
+                </Button>
               </div>
             </footer>
           </div>
         </section>
       </div>
 
-      <FinDocTaskSelectModal
-        open={taskModalOpen}
-        records={records}
-        selectedIds={selectedTaskIds}
-        onClose={() => setTaskModalOpen(false)}
-        onConfirm={setSelectedTaskIds}
-      />
     </main>
   )
 }

@@ -44,16 +44,16 @@ export function DashboardFileUpload({
   const busy = disabled || uploading
 
   return (
-    <section className="dashboard-file-upload" aria-label="文件上传">
+    <section className="dashboard-file-upload" aria-label="File upload">
       <div className="dashboard-file-upload__head">
-        <h3 className="dashboard-file-upload__title">上传文件</h3>
+        <h3 className="dashboard-file-upload__title">Upload file</h3>
         {recordName ? (
-          <p className="dashboard-file-upload__subtitle">记录：{recordName}</p>
+          <p className="dashboard-file-upload__subtitle">Record: {recordName}</p>
         ) : null}
       </div>
       <p className="dashboard-file-upload__hint">
-        支持 PDF、PNG/JPG 等图片（OCR）、PPT/PPTX、Word、纯文本。选择文件后点击 Upload
-        自动提取文字到下方编辑区。
+        Supports PDF, PNG/JPG images (OCR), PPT/PPTX, Word, and plain text. Select a file and click Upload
+        to extract text into the editor below.
       </p>
       <input
         ref={inputRef}
@@ -71,7 +71,7 @@ export function DashboardFileUpload({
           disabled={busy}
           onClick={pickFile}
         >
-          选择文件
+          Choose file
         </button>
         <button
           type="button"
@@ -79,7 +79,7 @@ export function DashboardFileUpload({
           disabled={busy || !file}
           onClick={handleUpload}
         >
-          {uploading ? '解析中…' : 'Upload'}
+          {uploading ? 'Parsing…' : 'Upload'}
         </button>
         {file ? (
           <button
@@ -88,19 +88,19 @@ export function DashboardFileUpload({
             disabled={busy}
             onClick={clearFile}
           >
-            清除
+            Clear
           </button>
         ) : null}
       </div>
       {file ? (
         <p className="dashboard-file-upload__file" role="status">
-          已选择：<span>{file.name}</span>
+          Selected: <span>{file.name}</span>
           <span className="dashboard-file-upload__size">
             ({Math.max(1, Math.round(file.size / 1024))} KB)
           </span>
         </p>
       ) : (
-        <p className="dashboard-file-upload__empty">尚未选择文件</p>
+        <p className="dashboard-file-upload__empty">No file selected</p>
       )}
     </section>
   )

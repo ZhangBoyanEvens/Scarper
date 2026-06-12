@@ -93,6 +93,7 @@ class ProjectUploadRecord:
     success_count: int
     source: str
     editor_text: str | None = None
+    title: str = ""
 
 
 class NeonRepository:
@@ -433,6 +434,11 @@ class NeonRepository:
         )
         conn.execute(
             sql.SQL(
+                "ALTER TABLE {}.{} ADD COLUMN IF NOT EXISTS findoc_context JSONB"
+            ).format(schema_id, uploads_id)
+        )
+        conn.execute(
+            sql.SQL(
                 "CREATE INDEX IF NOT EXISTS {} ON {}.{} (uploaded_at DESC)"
             ).format(
                 sql.Identifier(f"idx_{schema_name}_scrape_time"),
@@ -440,6 +446,22 @@ class NeonRepository:
                 uploads_id,
             )
         )
+
+    @staticmethod
+    def _normalize_findoc_context(
+        template_id: str | None,
+        task_ids: list[str] | None,
+        adjustment_prompt: str | None,
+    ) -> dict[str, Any] | None:
+        tid = (template_id or "").strip()
+        ids = [str(t).strip() for t in (task_ids or []) if str(t).strip()]
+        if not tid or not ids:
+            return None
+        return {
+            "template_id": tid,
+            "task_ids": ids,
+            "adjustment_prompt": (adjustment_prompt or "").strip(),
+        }
 
     def ensure_project_database(self, user_id: str, project_id: str) -> str:
         """为单个 Project 创建独立 schema 及初始数据表。"""
@@ -861,6 +883,185 @@ class NeonRepository:
             source="scrape",
         )
 
+    def _findoc_results_payload(self, doc_title: str) -> list[dict[str, Any]]:
+        title = (doc_title or "").strip() or "FinDoc 文档"
+        return [
+            {
+                "status": "success",
+                "url": "findoc://output",
+                "title": title,
+                "summary": "",
+                "content": "",
+                "key_points": [],
+            }
+        ]
+
+    def save_findoc_document(
+        self,
+        *,
+        user_id: str,
+        project_id: str,
+        editor_text: str,
+        title: str = "",
+        upload_id: str | None = None,
+        template_id: str | None = None,
+        task_ids: list[str] | None = None,
+        adjustment_prompt: str | None = None,
+    ) -> ProjectUploadRecord:
+        """FinDoc Save：写入项目库；带 upload_id 时更新已有 findoc 记录。"""
+        findoc_context = self._normalize_findoc_context(
+            template_id,
+            task_ids,
+            adjustment_prompt,
+        )
+        if upload_id:
+            return self._update_findoc_document(
+                user_id=user_id,
+                project_id=project_id,
+                upload_id=upload_id,
+                editor_text=editor_text,
+                title=title,
+                findoc_context=findoc_context,
+            )
+        return self.upload_findoc_document(
+            user_id=user_id,
+            project_id=project_id,
+            editor_text=editor_text,
+            title=title,
+            findoc_context=findoc_context,
+        )
+
+    def _update_findoc_document(
+        self,
+        *,
+        user_id: str,
+        project_id: str,
+        upload_id: str,
+        editor_text: str,
+        title: str = "",
+        findoc_context: dict[str, Any] | None = None,
+    ) -> ProjectUploadRecord:
+        if not user_id:
+            raise ValueError("user_id 必填")
+
+        text = (editor_text or "").strip()
+        if not text:
+            raise ValueError("文档内容不能为空")
+
+        meta, _ = self.get_upload_record(user_id, project_id, upload_id)
+        if meta.source != "findoc":
+            raise NeonConnectionError("该记录不是 FinDoc 文档，无法更新")
+
+        doc_title = (title or "").strip() or "FinDoc 文档"
+        results = self._findoc_results_payload(doc_title)
+        payload = json.dumps(results, ensure_ascii=False)
+
+        new_bytes = estimate_utf8_bytes(text) + estimate_json_payload_bytes(results)
+        db_schema = self.ensure_project_database(user_id, project_id)
+
+        schema_id = sql.Identifier(db_schema)
+        table_id = sql.Identifier(_SCRAPE_UPLOADS)
+        if findoc_context is not None:
+            update_sql = sql.SQL(
+                """
+                UPDATE {}.{}
+                SET results = %s::jsonb,
+                    editor_text = %s,
+                    editor_updated_at = NOW(),
+                    result_count = %s,
+                    success_count = %s,
+                    findoc_context = %s::jsonb
+                WHERE id = %s AND source = 'findoc'
+                RETURNING id, uploaded_at, body_only, source,
+                          COALESCE(
+                              result_count,
+                              jsonb_array_length(results),
+                              0
+                          ) AS result_count,
+                          COALESCE(success_count, 0) AS success_count,
+                          editor_text
+                """
+            ).format(schema_id, table_id)
+            update_params: tuple[Any, ...] = (
+                payload,
+                text,
+                len(results),
+                1,
+                json.dumps(findoc_context, ensure_ascii=False),
+                upload_id,
+            )
+        else:
+            update_sql = sql.SQL(
+                """
+                UPDATE {}.{}
+                SET results = %s::jsonb,
+                    editor_text = %s,
+                    editor_updated_at = NOW(),
+                    result_count = %s,
+                    success_count = %s
+                WHERE id = %s AND source = 'findoc'
+                RETURNING id, uploaded_at, body_only, source,
+                          COALESCE(
+                              result_count,
+                              jsonb_array_length(results),
+                              0
+                          ) AS result_count,
+                          COALESCE(success_count, 0) AS success_count,
+                          editor_text
+                """
+            ).format(schema_id, table_id)
+            update_params = (
+                payload,
+                text,
+                len(results),
+                1,
+                upload_id,
+            )
+
+        try:
+            with self._session() as conn:
+                old_bytes = self._editor_text_bytes(conn, db_schema, upload_id)
+                delta = max(0, new_bytes - old_bytes)
+                if delta > 0:
+                    self.assert_user_storage_quota(user_id, delta)
+                with conn.cursor() as cur:
+                    cur.execute(update_sql, update_params)
+                    row = cur.fetchone()
+        except NeonStorageQuotaError:
+            raise
+        except Exception as e:
+            raise NeonConnectionError(f"FinDoc 更新项目库失败: {e}") from e
+
+        if not row:
+            raise NeonConnectionError("FinDoc 记录不存在")
+
+        self.invalidate_storage_cache(user_id)
+        uploaded = row[1]
+        uploaded_str = (
+            uploaded.isoformat()
+            if hasattr(uploaded, "isoformat")
+            else str(uploaded)
+        )
+        editor_raw = row[6]
+        saved_editor = (
+            editor_raw.strip()
+            if isinstance(editor_raw, str) and editor_raw.strip()
+            else text
+        )
+
+        return ProjectUploadRecord(
+            id=str(row[0]),
+            project_id=project_id,
+            user_id=user_id,
+            uploaded_at=uploaded_str,
+            body_only=bool(row[2]),
+            result_count=int(row[4] or 0),
+            success_count=int(row[5] or 0),
+            source=str(row[3] or "findoc"),
+            editor_text=saved_editor,
+            title=doc_title,
+        )
+
     def upload_findoc_document(
         self,
         *,
@@ -868,6 +1069,7 @@ class NeonRepository:
         project_id: str,
         editor_text: str,
         title: str = "",
+        findoc_context: dict[str, Any] | None = None,
     ) -> ProjectUploadRecord:
         if not user_id:
             raise ValueError("user_id 必填")
@@ -877,16 +1079,7 @@ class NeonRepository:
             raise ValueError("文档内容不能为空")
 
         doc_title = (title or "").strip() or "FinDoc 文档"
-        results = [
-            {
-                "status": "success",
-                "url": "findoc://output",
-                "title": doc_title,
-                "summary": "",
-                "content": "",
-                "key_points": [],
-            }
-        ]
+        results = self._findoc_results_payload(doc_title)
 
         incoming = estimate_utf8_bytes(text) + estimate_json_payload_bytes(results) + 64
         self.assert_user_storage_quota(user_id, incoming)
@@ -902,11 +1095,16 @@ class NeonRepository:
             """
             INSERT INTO {}.{} (
                 id, uploaded_at, body_only, source, results, editor_text,
-                editor_updated_at, result_count, success_count
+                editor_updated_at, result_count, success_count, findoc_context
             )
-            VALUES (%s, %s, TRUE, 'findoc', %s::jsonb, %s, %s, %s, %s)
+            VALUES (%s, %s, TRUE, 'findoc', %s::jsonb, %s, %s, %s, %s, %s::jsonb)
             """
         ).format(schema_id, table_id)
+        context_payload = (
+            json.dumps(findoc_context, ensure_ascii=False)
+            if findoc_context is not None
+            else None
+        )
 
         try:
             with self._session() as conn:
@@ -921,6 +1119,7 @@ class NeonRepository:
                             uploaded_at,
                             len(results),
                             1,
+                            context_payload,
                         ),
                     )
         except NeonStorageQuotaError:
@@ -939,6 +1138,98 @@ class NeonRepository:
             success_count=1,
             source="findoc",
             editor_text=text,
+            title=doc_title,
+        )
+
+    def find_findoc_by_context(
+        self,
+        *,
+        user_id: str,
+        project_id: str,
+        template_id: str,
+        task_ids: list[str],
+        adjustment_prompt: str = "",
+    ) -> ProjectUploadRecord | None:
+        """按 Template + Tasks + Prompt 查找最近保存的 FinDoc 文档。"""
+        if not user_id:
+            raise ValueError("user_id 必填")
+
+        context = self._normalize_findoc_context(
+            template_id,
+            task_ids,
+            adjustment_prompt,
+        )
+        if context is None:
+            return None
+
+        try:
+            with self._session() as conn:
+                db_schema = self._resolve_project_data_schema(
+                    conn, user_id, project_id
+                )
+                schema_id = sql.Identifier(db_schema)
+                table_id = sql.Identifier(_SCRAPE_UPLOADS)
+                query = sql.SQL(
+                    """
+                    SELECT id, uploaded_at, body_only, source,
+                           COALESCE(
+                               result_count,
+                               jsonb_array_length(results),
+                               0
+                           ) AS result_count,
+                           COALESCE(success_count, 0) AS success_count,
+                           editor_text,
+                           COALESCE(
+                               NULLIF(TRIM(results->0->>'title'), ''),
+                               'FinDoc 文档'
+                           ) AS title
+                    FROM {}.{}
+                    WHERE source = 'findoc'
+                      AND findoc_context = %s::jsonb
+                      AND editor_text IS NOT NULL
+                      AND btrim(editor_text) <> ''
+                    ORDER BY COALESCE(editor_updated_at, uploaded_at) DESC
+                    LIMIT 1
+                    """
+                ).format(schema_id, table_id)
+                with conn.cursor() as cur:
+                    cur.execute(
+                        query,
+                        (json.dumps(context, ensure_ascii=False),),
+                    )
+                    row = cur.fetchone()
+        except Exception as e:
+            raise NeonConnectionError(f"FinDoc 查询失败: {e}") from e
+
+        if not row:
+            return None
+
+        uploaded = row[1]
+        uploaded_str = (
+            uploaded.isoformat()
+            if hasattr(uploaded, "isoformat")
+            else str(uploaded)
+        )
+        editor_raw = row[6]
+        editor_text = (
+            editor_raw.strip()
+            if isinstance(editor_raw, str) and editor_raw.strip()
+            else None
+        )
+        if not editor_text:
+            return None
+
+        return ProjectUploadRecord(
+            id=str(row[0]),
+            project_id=project_id,
+            user_id=user_id,
+            uploaded_at=uploaded_str,
+            body_only=bool(row[2]),
+            result_count=int(row[4] or 0),
+            success_count=int(row[5] or 0),
+            source=str(row[3] or "findoc"),
+            editor_text=editor_text,
+            title=str(row[7] or ""),
         )
 
     def create_manual_upload(
@@ -1051,7 +1342,11 @@ class NeonRepository:
                                jsonb_array_length(results),
                                0
                            ) AS result_count,
-                           COALESCE(success_count, 0) AS success_count
+                           COALESCE(success_count, 0) AS success_count,
+                           COALESCE(
+                               NULLIF(TRIM(results->0->>'title'), ''),
+                               CASE WHEN source = 'findoc' THEN 'FinDoc 文档' ELSE '' END
+                           ) AS title
                     FROM {}.{}
                     ORDER BY uploaded_at DESC
                     LIMIT %s
@@ -1081,6 +1376,7 @@ class NeonRepository:
                     source=str(row[3] or "scrape"),
                     result_count=int(row[4] or 0),
                     success_count=int(row[5] or 0),
+                    title=str(row[6] or ""),
                 )
             )
         return out

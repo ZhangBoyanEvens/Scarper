@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react'
-import './ProjectPage.css'
+import { Form, Input, Modal } from 'antd'
+import { useEffect } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 
 interface NewProjectModalProps {
   open: boolean
@@ -12,107 +13,59 @@ export function NewProjectModal({
   onClose,
   onCreate,
 }: NewProjectModalProps) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const nameId = useId()
-  const inputRef = useRef<HTMLInputElement>(null)
+  const { t } = useI18n()
+  const [form] = Form.useForm<{ name: string; description: string }>()
 
   useEffect(() => {
-    if (!open) return
-    setName('')
-    setDescription('')
-    setError(null)
-    const t = window.setTimeout(() => inputRef.current?.focus(), 0)
-    return () => window.clearTimeout(t)
-  }, [open])
-
-  if (!open) return null
-
-  const submit = () => {
-    const trimmed = name.trim()
-    if (!trimmed) {
-      setError('请输入项目名称')
-      return
+    if (open) {
+      form.resetFields()
     }
-    if (trimmed.length > 80) {
-      setError('项目名称不超过 80 个字符')
-      return
+  }, [open, form])
+
+  const handleOk = async () => {
+    try {
+      const values = await form.validateFields()
+      onCreate(values.name.trim(), (values.description ?? '').trim())
+      onClose()
+    } catch {
+      /* validation failed */
     }
-    onCreate(trimmed, description.trim())
-    onClose()
   }
 
   return (
-    <div
-      className="project-modal-backdrop"
-      role="presentation"
-      onClick={onClose}
+    <Modal
+      title={t('project.modal.title')}
+      open={open}
+      onCancel={onClose}
+      onOk={() => void handleOk()}
+      okText={t('project.modal.create')}
+      cancelText={t('common.cancel')}
+      destroyOnHidden
     >
-      <div
-        className="project-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-project-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 id="new-project-title" className="project-modal__title">
-          新建 Project
-        </h2>
-        <label className="project-modal__label" htmlFor={nameId}>
-          项目名称
-        </label>
-        <input
-          ref={inputRef}
-          id={nameId}
-          type="text"
-          className="project-modal__input"
-          value={name}
-          placeholder="例如：竞品监控 Q2"
-          maxLength={80}
-          onChange={(e) => {
-            setName(e.target.value)
-            if (error) setError(null)
-          }}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') submit()
-            if (e.key === 'Escape') onClose()
-          }}
-        />
-        <label className="project-modal__label" htmlFor={`${nameId}-desc`}>
-          备注（可选）
-        </label>
-        <textarea
-          id={`${nameId}-desc`}
-          className="project-modal__textarea"
-          value={description}
-          rows={3}
-          placeholder="用途说明…"
-          maxLength={300}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        {error && (
-          <p className="project-modal__error" role="alert">
-            {error}
-          </p>
-        )}
-        <div className="project-modal__actions">
-          <button
-            type="button"
-            className="project-btn project-btn--ghost"
-            onClick={onClose}
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            className="project-btn project-btn--primary"
-            onClick={submit}
-          >
-            创建
-          </button>
-        </div>
-      </div>
-    </div>
+      <Form form={form} layout="vertical" requiredMark={false}>
+        <Form.Item
+          name="name"
+          label={t('project.modal.nameLabel')}
+          rules={[
+            { required: true, message: t('project.modal.nameRequired') },
+            { max: 80, message: t('project.modal.nameMax') },
+          ]}
+        >
+          <Input
+            placeholder={t('project.modal.namePlaceholder')}
+            maxLength={80}
+            autoFocus
+          />
+        </Form.Item>
+        <Form.Item name="description" label={t('project.modal.notesLabel')}>
+          <Input.TextArea
+            placeholder={t('project.modal.notesPlaceholder')}
+            rows={3}
+            maxLength={300}
+            showCount
+          />
+        </Form.Item>
+      </Form>
+    </Modal>
   )
 }

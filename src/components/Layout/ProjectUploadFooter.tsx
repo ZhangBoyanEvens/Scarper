@@ -1,6 +1,11 @@
+import { UploadOutlined } from '@ant-design/icons'
+import { Button, Card, Checkbox, Flex, Select, Typography } from 'antd'
 import { useCallback, useEffect, useId, useState } from 'react'
 import type { ResultsState } from '../Results/ResultsPanel'
 import { useAppSettings } from '../../contexts/AppSettingsContext'
+import { useI18n } from '../../contexts/I18nContext'
+import { formatScrapeUploadStatus } from '../../i18n/scrapeHelpers'
+import { formatLocaleShortDateTime } from '../../i18n/localeFormat'
 import { listProjects, touchProject } from '../../services/projectService'
 import { uploadProjectResults } from '../../services/projectUpload'
 import {
@@ -10,17 +15,18 @@ import {
 import { listProjectsLocal } from '../../storage/projectStorage'
 import { isExtractSuccess } from '../../types/extraction'
 import { prepareUploadResults } from '../../utils/uploadPayload'
-import '../../styles/layout.css'
-import '../../styles/panel.css'
-import './OutputLanguageSelect.css'
-import './TextInputSection.css'
+import { ScarperToolbarField } from '../common/ScarperToolbarField'
+import { scarperSelectProps } from '../common/scarperForm'
 import './ProjectUploadFooter.css'
+
+const { Text } = Typography
 
 interface ProjectUploadFooterProps {
   resultsState: ResultsState
 }
 
 export function ProjectUploadFooter({ resultsState }: ProjectUploadFooterProps) {
+  const { t, locale } = useI18n()
   const { settings, patchScrape } = useAppSettings()
   const selectId = useId()
   const checkId = useId()
@@ -98,92 +104,80 @@ export function ProjectUploadFooter({ resultsState }: ProjectUploadFooterProps) 
       window.dispatchEvent(new Event('scarper:projects-changed'))
       const ok = payload.filter(isExtractSuccess).length
       const total = payload.length
-      const uploadedAt = new Date(entry.uploadedAt)
-      const timeLabel = uploadedAt.toLocaleString('en-US', {
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-      const bodyNote = includeBody ? 'with body' : 'summary only'
-      const store = entry.storage === 'neon' ? 'Neon' : 'local'
+      const timeLabel = formatLocaleShortDateTime(entry.uploadedAt, locale)
       setStatus(
-        `Saved to project · Scrape · ${bodyNote} · ${ok}/${total} items · ${timeLabel} · ${store}`,
+        formatScrapeUploadStatus(t, {
+          includeBody,
+          ok,
+          total,
+          timeLabel,
+          storage: entry.storage === 'neon' ? 'neon' : 'local',
+        }),
       )
     } catch (err) {
       setStatus(
-        err instanceof Error ? err.message : 'Upload failed — try again later',
+        err instanceof Error ? err.message : t('scrape.upload.uploadFailed'),
       )
     } finally {
       setUploading(false)
     }
-  }, [canUpload, projectId, resultsState, includeBody])
+  }, [canUpload, projectId, resultsState, includeBody, t, locale])
 
   const noProjects = projects.length === 0
+  const statusIsError = status?.toLowerCase().includes('fail') ?? false
 
   return (
-    <footer className="scrape-page-footer" aria-label="Upload to project">
-      <div className="panel-shell scrape-footer-bar">
-        <div className="panel-inner scrape-footer-bar-inner">
-          <span className="scrape-footer-field-label" id={`${selectId}-label`}>
-            Select project:
-          </span>
-          <select
-            id={selectId}
-            className="lang-select-control scrape-footer-select"
-            aria-labelledby={`${selectId}-label`}
-            value={projectId}
-            disabled={noProjects || uploading}
-            onChange={(e) => handleProjectChange(e.target.value)}
-          >
-            {noProjects ? (
-              <option value="">No projects</option>
-            ) : (
-              projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))
-            )}
-          </select>
-
-          <label className="scrape-footer-check" htmlFor={checkId}>
-            <input
-              id={checkId}
-              type="checkbox"
-              className="scrape-footer-check-input"
-              checked={includeBody}
-              disabled={uploading}
-              onChange={(e) => {
-                patchScrape({ uploadIncludeBody: e.target.checked })
-                setStatus(null)
-              }}
+    <footer className="scrape-page__upload" aria-label={t('scrape.upload.aria')}>
+      <Card size="small" styles={{ body: { padding: '12px 16px' } }}>
+        <Flex wrap="wrap" gap={12} align="center">
+          <ScarperToolbarField label={t('fields.project')}>
+            <Select
+              id={selectId}
+              {...scarperSelectProps({ minWidth: 180, maxWidth: 260 })}
+              aria-labelledby={`${selectId}-label`}
+              value={projectId || undefined}
+              placeholder={
+                noProjects ? t('scrape.upload.noProjects') : t('scrape.upload.selectProject')
+              }
+              disabled={noProjects || uploading}
+              options={projects.map((p) => ({ value: p.id, label: p.name }))}
+              onChange={handleProjectChange}
             />
-            <span className="scrape-footer-check-text">Include full body text</span>
-          </label>
+          </ScarperToolbarField>
 
-          <button
-            type="button"
-            className="text-input-save scrape-footer-upload-btn"
+          <Checkbox
+            id={checkId}
+            checked={includeBody}
+            disabled={uploading}
+            onChange={(e) => {
+              patchScrape({ uploadIncludeBody: e.target.checked })
+              setStatus(null)
+            }}
+          >
+            {t('scrape.upload.includeBody')}
+          </Checkbox>
+
+          <Button
+            type="primary"
+            icon={<UploadOutlined />}
             disabled={!canUpload || uploading}
+            loading={uploading}
+            style={{ marginLeft: 'auto' }}
             onClick={() => void handleUpload()}
           >
-            {uploading ? 'Uploading…' : 'Upload to Project Database'}
-          </button>
-        </div>
-      </div>
-      {status && (
-        <p
-          className={`scrape-footer-message${
-            status.toLowerCase().includes('fail')
-              ? ' scrape-footer-message--error'
-              : ' scrape-footer-message--ok'
-          }`}
+            {t('scrape.upload.uploadToProject')}
+          </Button>
+        </Flex>
+      </Card>
+      {status ? (
+        <Text
+          type={statusIsError ? 'danger' : 'success'}
+          style={{ display: 'block', marginTop: 8, fontSize: 12 }}
           role="status"
         >
           {status}
-        </p>
-      )}
+        </Text>
+      ) : null}
     </footer>
   )
 }

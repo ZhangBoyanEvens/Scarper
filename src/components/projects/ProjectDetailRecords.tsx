@@ -1,4 +1,8 @@
+import { DeleteOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Button, List, Space, Spin, Tag, Typography, theme } from 'antd'
 import { useCallback, useEffect, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
+import { formatLocaleDateTime } from '../../i18n/localeFormat'
 import { useLoadingVisible } from '../../hooks/useLoadingVisible'
 import {
   deleteProjectDataRecord,
@@ -7,34 +11,7 @@ import {
 } from '../../services/projectRecordService'
 import type { ProjectDataRecord } from '../../types/projectRecord'
 
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return iso
-  }
-}
-
-function uploadMethodLabel(source: string): string {
-  if (source === 'scrape') return 'Scrape'
-  if (source === 'findoc') return 'FinDoc'
-  return source
-}
-
-function recordSummary(record: ProjectDataRecord): string {
-  if (record.source === 'findoc') {
-    return 'FinDoc 文档 · 含正文'
-  }
-  return `${record.resultCount} 条${
-    record.successCount >= 0 ? `（成功 ${record.successCount}）` : ''
-  }`
-}
+const { Text } = Typography
 
 interface ProjectDetailRecordsProps {
   projectId: string
@@ -45,11 +22,32 @@ export function ProjectDetailRecords({
   projectId,
   onOpenFindocRecord,
 }: ProjectDetailRecordsProps) {
+  const { t, locale } = useI18n()
+  const { token } = theme.useToken()
   const initial = peekProjectRecords(projectId)
   const [records, setRecords] = useState<ProjectDataRecord[]>(initial)
   const [loading, setLoading] = useState(initial.length === 0)
   const [error, setError] = useState<string | null>(null)
   const showLoading = useLoadingVisible(loading && records.length === 0)
+
+  const uploadMethodLabel = (source: string): string => {
+    if (source === 'scrape') return t('recordSource.scrape')
+    if (source === 'findoc') return t('recordSource.findoc')
+    return source
+  }
+
+  const recordSummary = (record: ProjectDataRecord): string => {
+    if (record.source === 'findoc') {
+      return t('recordSource.findocDoc')
+    }
+    const countKey =
+      record.resultCount === 1 ? 'recordSource.item' : 'recordSource.items'
+    const base = t(countKey, { count: record.resultCount })
+    if (record.successCount >= 0) {
+      return `${base} ${t('recordSource.succeeded', { count: record.successCount })}`
+    }
+    return base
+  }
 
   const load = useCallback(async () => {
     const stale = peekProjectRecords(projectId)
@@ -66,12 +64,14 @@ export function ProjectDetailRecords({
     } catch (err) {
       if (stale.length === 0) {
         setRecords([])
-        setError(err instanceof Error ? err.message : '加载记录失败')
+        setError(
+          err instanceof Error ? err.message : t('project.records.loadFailed'),
+        )
       }
     } finally {
       setLoading(false)
     }
-  }, [projectId])
+  }, [projectId, t])
 
   useEffect(() => {
     void load()
@@ -85,9 +85,13 @@ export function ProjectDetailRecords({
   }, [load])
 
   const handleDelete = async (record: ProjectDataRecord) => {
+    const date = formatLocaleDateTime(record.uploadedAt, locale)
     if (
       !window.confirm(
-        `确定删除这条数据记录？\n${formatDate(record.uploadedAt)} · ${record.resultCount} 条`,
+        t('project.records.deleteConfirm', {
+          date,
+          count: record.resultCount,
+        }),
       )
     ) {
       return
@@ -96,79 +100,113 @@ export function ProjectDetailRecords({
       await deleteProjectDataRecord(projectId, record.id)
       await load()
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : '删除失败')
+      window.alert(
+        err instanceof Error ? err.message : t('project.records.deleteFailed'),
+      )
     }
   }
 
   return (
-    <section className="project-records" aria-label="数据插入记录">
+    <section className="project-records" aria-label={t('project.records.title')}>
       <div className="project-records__head">
-        <h4 className="project-records__title">更新记录</h4>
-        <button
-          type="button"
-          className="project-records__refresh"
-          disabled={loading}
+        <Text strong>{t('project.records.title')}</Text>
+        <Button
+          size="small"
+          icon={<ReloadOutlined />}
+          loading={loading}
           onClick={() => void load()}
         >
-          刷新
-        </button>
+          {t('project.records.refresh')}
+        </Button>
       </div>
 
-      {showLoading && <p className="project-records__hint">加载中…</p>}
-      {error && !showLoading && (
-        <p className="project-records__error" role="alert">
-          {error}
-        </p>
+      {showLoading && (
+        <div className="project-records__center">
+          <Spin size="small" />
+          <Text type="secondary">{t('project.records.loading')}</Text>
+        </div>
       )}
+
+      {error && !showLoading && (
+        <Text type="danger" role="alert">
+          {error}
+        </Text>
+      )}
+
       {!showLoading && !error && records.length === 0 && (
-        <p className="project-records__hint">
-          暂无记录。在 Scrape 页上传抓取结果，或在 FinDoc 页 Save 保存文档至此。
-        </p>
+        <Text type="secondary">{t('project.records.empty')}</Text>
       )}
 
       {!showLoading && records.length > 0 && (
-        <ul className="project-records__list">
-          {records.map((record, index) => (
-            <li key={record.id} className="project-records__item">
-              <div className="project-records__main">
-                <span className="project-records__index">{index + 1}</span>
-                <div className="project-records__content">
-                  <span className="project-records__type">
-                    更新记录 · {uploadMethodLabel(record.source)}
-                    {record.bodyOnly ? ' · 含正文' : ' · 不含正文'}
-                  </span>
-                  <span className="project-records__stats">
-                    {recordSummary(record)}
-                    {' · '}
-                    {record.storage === 'neon' ? 'Neon' : '本地'}
-                  </span>
-                  <span className="project-records__time">
-                    上传于 {formatDate(record.uploadedAt)}
-                  </span>
-                </div>
-              </div>
-              <div className="project-records__actions">
-                {record.source === 'findoc' && onOpenFindocRecord ? (
-                  <button
-                    type="button"
-                    className="project-records__open"
+        <List
+          className="project-records__list"
+          dataSource={records}
+          renderItem={(record, index) => (
+            <List.Item
+              className="project-records__item"
+              style={{
+                background: token.colorFillAlter,
+                border: `1px solid ${token.colorBorderSecondary}`,
+                borderRadius: token.borderRadiusLG,
+                marginBottom: 8,
+                padding: '12px 16px',
+              }}
+              actions={[
+                record.source === 'findoc' && onOpenFindocRecord ? (
+                  <Button
+                    key="open"
+                    type="link"
+                    size="small"
                     onClick={() => onOpenFindocRecord(projectId, record.id)}
                   >
-                    在 FinDoc 打开
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="project-records__delete"
-                  aria-label="删除记录"
+                    {t('project.records.openInFindoc')}
+                  </Button>
+                ) : null,
+                <Button
+                  key="delete"
+                  type="text"
+                  size="small"
+                  danger
+                  icon={<DeleteOutlined />}
+                  aria-label={t('project.records.deleteRecord')}
                   onClick={() => void handleDelete(record)}
-                >
-                  ×
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                />,
+              ].filter(Boolean)}
+            >
+              <List.Item.Meta
+                avatar={
+                  <Tag color="blue" style={{ margin: 0 }}>
+                    {index + 1}
+                  </Tag>
+                }
+                title={
+                  <Text>
+                    {t('project.records.updateRecord')} ·{' '}
+                    {uploadMethodLabel(record.source)}
+                    {record.bodyOnly
+                      ? ` · ${t('project.records.withBody')}`
+                      : ` · ${t('project.records.withoutBody')}`}
+                  </Text>
+                }
+                description={
+                  <Space direction="vertical" size={2}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {recordSummary(record)} ·{' '}
+                      {record.storage === 'neon'
+                        ? t('project.records.storageNeon')
+                        : t('project.records.storageLocal')}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      {t('project.records.uploaded', {
+                        date: formatLocaleDateTime(record.uploadedAt, locale),
+                      })}
+                    </Text>
+                  </Space>
+                }
+              />
+            </List.Item>
+          )}
+        />
       )}
     </section>
   )

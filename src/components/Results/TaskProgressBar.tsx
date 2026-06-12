@@ -1,4 +1,7 @@
-import './TaskProgressBar.css'
+import { Progress, Space, Tag, Typography } from 'antd'
+import { useI18n } from '../../contexts/I18nContext'
+
+const { Text, Paragraph } = Typography
 
 interface TaskProgressBarProps {
   progress: number
@@ -19,37 +22,34 @@ export function TaskProgressBar({
   currentUrl,
   usingPrompt,
 }: TaskProgressBarProps) {
+  const { t } = useI18n()
   const clamped = Math.min(100, Math.max(0, progress))
 
   return (
-    <div className="task-progress" aria-busy="true" aria-live="polite">
-      <div className="task-progress-header">
-        <span className="task-progress-count">
-          Task {taskIndex}/{taskTotal}
-        </span>
-        {usingPrompt && (
-          <span className="task-progress-prompt">Processing prompt applied</span>
-        )}
-      </div>
-      <div
-        className="task-progress-track"
-        role="progressbar"
-        aria-valuenow={clamped}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <div
-          className="task-progress-fill"
-          style={{ width: `${clamped}%` }}
-        />
-      </div>
-      <p className="task-progress-step">{stepLabel}</p>
-      {stepHint && <p className="task-progress-hint">{stepHint}</p>}
-      {currentUrl && (
-        <p className="task-progress-url" title={currentUrl}>
+    <div aria-busy="true" aria-live="polite">
+      <Space wrap style={{ marginBottom: 12 }}>
+        <Text strong>
+          {t('scrape.progress.task', { index: taskIndex, total: taskTotal })}
+        </Text>
+        {usingPrompt ? (
+          <Tag color="processing">{t('scrape.progress.promptApplied')}</Tag>
+        ) : null}
+      </Space>
+      <Progress percent={clamped} status="active" showInfo={false} />
+      <Paragraph style={{ margin: '12px 0 0', marginBottom: 0 }}>{stepLabel}</Paragraph>
+      {stepHint ? (
+        <Text type="secondary" style={{ display: 'block', marginTop: 6, fontSize: 13 }}>
+          {stepHint}
+        </Text>
+      ) : null}
+      {currentUrl ? (
+        <Text
+          type="secondary"
+          style={{ display: 'block', marginTop: 6, fontSize: 12, wordBreak: 'break-all' }}
+        >
           {currentUrl}
-        </p>
-      )}
+        </Text>
+      ) : null}
     </div>
   )
 }

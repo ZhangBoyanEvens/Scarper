@@ -190,24 +190,26 @@ export function renderFindocRichTextToWordHtml(text: string): string {
   return parts.join('')
 }
 
-export const FINDOC_TYPOGRAPHY_RULES = `【排版与字号 — 输出必须包含】
-- 文档最上方用一行 \`# 主标题\`（最大字号，写文档题目）
-- 各分区仍用 Template 要求的 \`### 分区名\` 作为节标题（大字号）
-- 关键结论、重要数字、核心短语用 \`**...**\` 包裹（加粗+略大）
-- 普通正文正常字号；段与段之间空一行
-- 要点用 \`•\` 或 \`-\` 开头，每条独占一行
-- 禁止输出 HTML；只用上述 Markdown 式标记`
+export const FINDOC_TYPOGRAPHY_RULES = `[Typography — required in output]
+- Start with one \`# Main title\` line (largest type, document title)
+- Use Template section headings as \`### Section name\` (large section titles)
+- Wrap key conclusions, figures, and phrases in \`**...**\` (bold emphasis)
+- Normal body size; blank line between paragraphs
+- Bullet lists start with \`•\` or \`-\`, one item per line
+- No HTML; use only the Markdown markers above`
 
 /** 从 FinDoc 正文提取显示标题 */
 export function extractFindocDocumentTitle(content: string): string {
   const trimmed = content.trim()
-  if (!trimmed) return 'FinDoc 文档'
+  if (!trimmed) return 'FinDoc document'
 
   const display = trimmed.match(/^#\s+(.+)$/m)
   if (display?.[1]?.trim()) return display[1].trim()
 
   const lines = trimmed.split('\n')
-  const titleIdx = lines.findIndex((line) => /^###\s+标题\s*$/.test(line.trim()))
+  const titleIdx = lines.findIndex((line) =>
+    /^###\s+(标题|Title)\s*$/i.test(line.trim()),
+  )
   if (titleIdx >= 0) {
     for (let i = titleIdx + 1; i < lines.length; i++) {
       const next = lines[i].trim()
@@ -220,5 +222,5 @@ export function extractFindocDocumentTitle(content: string): string {
   const firstLine = lines.find((line) => line.trim() && !/^#{1,4}\s/.test(line.trim()))
   if (firstLine?.trim()) return firstLine.trim().slice(0, 80)
 
-  return 'FinDoc 文档'
+  return 'FinDoc document'
 }

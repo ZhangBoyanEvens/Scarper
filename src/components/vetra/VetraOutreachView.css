@@ -16,7 +16,7 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
-  background: #05060c;
+  background: var(--sc-bg-layout);
 }
 
 .vetra-outreach-body__panel {
@@ -40,13 +40,13 @@
   max-height: 100%;
 }
 
-.vetra-outreach-editor__panel.panel-shell {
-  height: auto;
-  flex: 1 1 0;
-  min-height: 0;
+.vetra-outreach-editor__panel.scarper-panel,
+.vetra-outreach-editor__panel.scarper-panel .ant-card-body {
+  background: var(--sc-bg-container);
 }
 
-.vetra-outreach-editor__panel .panel-inner.panel-fill {
+.vetra-outreach-editor__panel.scarper-panel {
+  height: auto;
   flex: 1 1 0;
   min-height: 0;
 }
@@ -57,6 +57,7 @@
   flex: 1 1 0;
   min-height: 0;
   gap: 0;
+  background: var(--sc-bg-container);
 }
 
 .vetra-outreach-editor__subject-field,
@@ -68,7 +69,7 @@
 
 .vetra-outreach-editor__subject-field {
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--sc-divider);
 }
 
 .vetra-outreach-editor__body-field {
@@ -83,15 +84,15 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #64748b;
+  color: var(--sc-text-muted);
 }
 
 .vetra-outreach-editor__subject {
   width: 100%;
   padding: 8px 18px 12px;
   border: none;
-  background: transparent;
-  color: #f1f5f9;
+  background: var(--sc-bg-container);
+  color: var(--sc-text-strong);
   font: inherit;
   font-size: 0.95rem;
   line-height: 1.45;
@@ -101,7 +102,7 @@
 }
 
 .vetra-outreach-editor__subject::placeholder {
-  color: #64748b;
+  color: var(--sc-text-muted);
 }
 
 .vetra-outreach-editor__textarea {
@@ -110,8 +111,8 @@
   min-height: 0;
   padding: 8px 18px 12px;
   border: none;
-  background: transparent;
-  color: #f1f5f9;
+  background: var(--sc-bg-container);
+  color: var(--sc-text-strong);
   font: inherit;
   font-size: 0.95rem;
   line-height: 1.55;
@@ -124,7 +125,7 @@
 }
 
 .vetra-outreach-editor__textarea::placeholder {
-  color: #64748b;
+  color: var(--sc-text-muted);
 }
 
 .vetra-outreach-editor__actions {

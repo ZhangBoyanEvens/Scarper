@@ -1,4 +1,21 @@
 import {
+  DeleteOutlined,
+  PlusOutlined,
+  ThunderboltOutlined,
+} from '@ant-design/icons'
+import {
+  Button,
+  Checkbox,
+  Empty,
+  Flex,
+  Input,
+  List,
+  Space,
+  Tag,
+  Typography,
+} from 'antd'
+import type { InputRef } from 'antd/es/input'
+import {
   type KeyboardEvent,
   useCallback,
   useEffect,
@@ -7,15 +24,13 @@ import {
   useState,
 } from 'react'
 import { useAppSettingsOptional } from '../../contexts/AppSettingsContext'
-import {
-  MAX_URLS_PER_BATCH,
-  normalizeUrl,
-  urlValidationMessage,
-} from '../../utils/urlValidation'
+import { useI18n } from '../../contexts/I18nContext'
+import { urlValidationMessage } from '../../i18n/scrapeHelpers'
+import { MAX_URLS_PER_BATCH, normalizeUrl } from '../../utils/urlValidation'
 import { GlowPanel } from '../Layout/GlowPanel'
-import '../../styles/panel.css'
-import '../Layout/TextInputSection.css'
 import './SearchBar.css'
+
+const { Text } = Typography
 
 export interface UrlTask {
   id: string
@@ -35,6 +50,7 @@ function nextTaskId(): string {
 }
 
 export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
+  const { t } = useI18n()
   const appSettings = useAppSettingsOptional()
   const defaultIntegrate =
     appSettings?.settings.scrape.defaultAiIntegrate ?? false
@@ -42,17 +58,17 @@ export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
   const [draft, setDraft] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [aiIntegrate, setAiIntegrate] = useState(defaultIntegrate)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<InputRef>(null)
   const listId = useId()
 
   const addFromDraft = useCallback((): boolean => {
     const trimmed = draft.trim()
     if (!trimmed) {
-      setError('Enter a URL')
+      setError(t('scrape.validation.enterUrl'))
       return false
     }
 
-    const msg = urlValidationMessage(trimmed)
+    const msg = urlValidationMessage(trimmed, t)
     if (msg) {
       setError(msg)
       return false
@@ -60,17 +76,17 @@ export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
 
     const normalized = normalizeUrl(trimmed)
     if (!normalized) {
-      setError('Enter a valid http/https URL')
+      setError(t('scrape.validation.invalidUrl'))
       return false
     }
 
-    if (tasks.some((t) => t.url === normalized)) {
-      setError('This link is already in the task list')
+    if (tasks.some((task) => task.url === normalized)) {
+      setError(t('scrape.urlTask.duplicateLink'))
       return false
     }
 
     if (tasks.length >= MAX_URLS_PER_BATCH) {
-      setError(`You can add at most ${MAX_URLS_PER_BATCH} tasks`)
+      setError(t('scrape.urlTask.maxTasks', { max: MAX_URLS_PER_BATCH }))
       return false
     }
 
@@ -79,7 +95,7 @@ export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
     setError(null)
     inputRef.current?.focus()
     return true
-  }, [draft, tasks])
+  }, [draft, tasks, t])
 
   const removeTask = useCallback((id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id))
@@ -96,14 +112,14 @@ export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
 
   const handleRun = useCallback(() => {
     if (tasks.length === 0) {
-      setError('Add at least one link task first')
+      setError(t('scrape.urlTask.addFirst'))
       return
     }
     setError(null)
     onSearch?.(tasks.map((t) => t.url), {
       aiIntegrate: canIntegrate && aiIntegrate,
     })
-  }, [tasks, onSearch, canIntegrate, aiIntegrate])
+  }, [tasks, onSearch, canIntegrate, aiIntegrate, t])
 
   const handleDraftKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -113,44 +129,53 @@ export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
   }
 
   return (
-    <GlowPanel title="URLs to scrape" bodyClassName="panel-body--input">
+    <GlowPanel title={t('scrape.urlTask.title')} bodyClassName="panel-body--input">
       <div className="url-task-panel">
-        <ul
-          id={listId}
-          className="url-task-list"
-          aria-label="Pending scrape tasks"
-        >
+        <div id={listId} className="url-task-list" aria-label={t('scrape.urlTask.pendingAria')}>
           {tasks.length === 0 ? (
-            <li className="url-task-empty">Enter a link, then press Enter or + to add a task</li>
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={t('scrape.urlTask.emptyDesc')}
+              style={{ margin: '24px 0' }}
+            />
           ) : (
-            tasks.map((task, index) => (
-              <li key={task.id} className="url-task-item">
-                <span className="url-task-index">{index + 1}</span>
-                <span className="url-task-url" title={task.url}>
-                  {task.url}
-                </span>
-                <button
-                  type="button"
-                  className="url-task-remove"
-                  aria-label={`Remove task ${index + 1}`}
-                  onClick={() => removeTask(task.id)}
+            <List
+              size="small"
+              dataSource={tasks}
+              renderItem={(task, index) => (
+                <List.Item
+                  className="url-task-item"
+                  actions={[
+                    <Button
+                      key="remove"
+                      type="text"
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      aria-label={t('scrape.urlTask.removeTask', { n: index + 1 })}
+                      onClick={() => removeTask(task.id)}
+                    />,
+                  ]}
                 >
-                  ×
-                </button>
-              </li>
-            ))
+                  <Space size={8} align="start">
+                    <Tag color="blue">{index + 1}</Tag>
+                    <Text style={{ wordBreak: 'break-all' }}>{task.url}</Text>
+                  </Space>
+                </List.Item>
+              )}
+            />
           )}
-        </ul>
+        </div>
 
         <div className="url-task-add-row">
-          <input
+          <Input
             ref={inputRef}
-            type="text"
+            size="middle"
             inputMode="url"
-            className="url-task-input"
             value={draft}
-            placeholder="https://example.com"
+            placeholder={t('scrape.urlTask.urlPlaceholder')}
             spellCheck={false}
+            status={error ? 'error' : undefined}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? 'url-task-error' : listId}
             onChange={(e) => {
@@ -161,67 +186,45 @@ export function UrlTaskPanel({ onSearch }: UrlTaskPanelProps) {
           />
         </div>
 
-        <div className="text-input-footer url-task-footer">
-          <label
-            className={`url-task-integrate${canIntegrate ? '' : ' url-task-integrate--disabled'}`}
-            title={
-              canIntegrate
-                ? 'Merge multiple pages into one result'
-                : 'Add at least 2 tasks to enable'
-            }
+        <Flex
+          className="url-task-footer"
+          align="center"
+          justify="space-between"
+          gap={8}
+          wrap="wrap"
+        >
+          <Checkbox
+            checked={aiIntegrate}
+            disabled={!canIntegrate}
+            onChange={(e) => setAiIntegrate(e.target.checked)}
           >
-            <input
-              type="checkbox"
-              className="url-task-integrate__input"
-              checked={aiIntegrate}
-              disabled={!canIntegrate}
-              onChange={(e) => setAiIntegrate(e.target.checked)}
-            />
-            <span className="url-task-integrate__box" aria-hidden />
-            <span className="url-task-integrate__label">AI merge</span>
-          </label>
-          {error && (
-            <span id="url-task-error" className="text-input-status" role="alert">
+            {t('scrape.aiMerge')}
+          </Checkbox>
+          {error ? (
+            <Text type="danger" id="url-task-error" style={{ fontSize: 12 }}>
               {error}
-            </span>
-          )}
-          <div className="url-task-footer__actions">
-          <button
-            type="button"
-            className="url-task-add-btn"
-            aria-label="Add task"
-            title="Add task"
-            onClick={() => addFromDraft()}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="url-task-run-btn"
-            disabled={tasks.length === 0}
-            title="Scrape and analyze"
-            onClick={handleRun}
-          >
-            <span className="url-task-run-btn__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M5 12h11M13 7l5 5-5 5"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className="url-task-run-btn__text">
-              Scrape & analyze
-              {tasks.length > 0 && (
-                <span className="url-task-run-btn__count">{tasks.length}</span>
-              )}
-            </span>
-          </button>
-          </div>
-        </div>
+            </Text>
+          ) : null}
+          <Space size={8} wrap>
+            <Button
+              icon={<PlusOutlined />}
+              aria-label={t('scrape.urlTask.addAria')}
+              onClick={() => addFromDraft()}
+            >
+              {t('scrape.urlTask.add')}
+            </Button>
+            <Button
+              type="primary"
+              icon={<ThunderboltOutlined />}
+              disabled={tasks.length === 0}
+              onClick={handleRun}
+            >
+              {tasks.length > 0
+                ? t('scrape.urlTask.scrapeAnalyzeCount', { count: tasks.length })
+                : t('scrape.urlTask.scrapeAnalyze')}
+            </Button>
+          </Space>
+        </Flex>
       </div>
     </GlowPanel>
   )

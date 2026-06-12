@@ -24,7 +24,7 @@ export const OUTPUT_LANGUAGE_OPTIONS: OutputLanguageOption[] = [
   },
 ]
 
-export const DEFAULT_OUTPUT_LANGUAGE: OutputLanguage = 'zh'
+export const DEFAULT_OUTPUT_LANGUAGE: OutputLanguage = 'en'
 
 export function getOutputLanguageLabel(lang: OutputLanguage): string {
   return OUTPUT_LANGUAGE_OPTIONS.find((o) => o.value === lang)?.label ?? 'Chinese'
@@ -36,9 +36,9 @@ export function outputLanguageInstruction(lang: OutputLanguage): string {
     case 'en':
       return 'English'
     case 'original':
-      return '与素材原文语言一致（不翻译）'
+      return 'Match the source material language (no translation)'
     case 'zh':
     default:
-      return '中文'
+      return 'Chinese'
   }
 }

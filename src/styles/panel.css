@@ -1,49 +1,37 @@
-/* 与搜索栏共用的玻璃面板（无动效） */
 .panel-shell {
   position: relative;
-  padding: 3px;
-  border-radius: 20px;
-  background: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.5),
-    rgba(6, 182, 212, 0.35),
-    rgba(236, 72, 153, 0.45)
-  );
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
-    0 16px 32px -12px rgba(0, 0, 0, 0.5),
-    0 0 60px -20px rgba(124, 58, 237, 0.25);
+  border-radius: var(--sc-radius-card);
+  border: 1px solid var(--sc-border);
+  background: var(--sc-surface-elevated);
+  box-shadow: var(--sc-shadow-1);
 }
 
 .panel-inner {
   position: relative;
-  border-radius: 17px;
-  background: rgba(8, 10, 18, 0.82);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-radius: var(--sc-radius-card);
+  background: var(--sc-surface-elevated);
   overflow: hidden;
 }
 
 .panel-header {
-  padding: 14px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: var(--sc-space-3) var(--sc-space-4);
+  border-bottom: 1px solid var(--sc-divider);
   flex-shrink: 0;
 }
 
 .panel-header h2 {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #94a3b8;
+  font-size: var(--sc-font-size-title);
+  font-weight: var(--sc-font-weight-medium);
+  letter-spacing: 0;
+  color: var(--sc-text-strong);
 }
 
 .panel-header--actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--sc-space-3);
 }
 
 .panel-header--actions h2 {
@@ -61,11 +49,11 @@
 .panel-body {
   flex: 1 1 0;
   min-height: 0;
-  padding: 16px 18px;
+  padding: var(--sc-space-3) var(--sc-space-4);
   overflow: auto;
-  color: #64748b;
-  font-size: 0.95rem;
-  line-height: 1.55;
+  color: var(--sc-text);
+  font-size: var(--sc-font-size-base);
+  line-height: var(--sc-line-height-body);
 }
 
 .panel-body.panel-body--results,
@@ -76,5 +64,5 @@
 
 .panel-placeholder {
   margin: 0;
-  color: #475569;
+  color: var(--sc-text-muted);
 }

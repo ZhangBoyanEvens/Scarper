@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import '../../styles/panel.css'
 import '../../styles/scrollbar.css'
 import '../Layout/TextInputSection.css'
@@ -64,6 +65,7 @@ export function VetraCompanyIntroEditor({
   statusMessage = null,
   statusIsError = false,
 }: VetraCompanyIntroEditorProps) {
+  const { t } = useI18n()
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const highlightRef = useRef<HTMLDivElement>(null)
   const [bodyFocused, setBodyFocused] = useState(false)
@@ -138,12 +140,12 @@ export function VetraCompanyIntroEditor({
       />
 
       <GlowPanel
-        title="Company introduction"
+        title={t('vetra.companyEditor.title')}
         className="vetra-email-editor__panel"
         bodyClassName="panel-body--input"
       >
         <div className="vetra-email-editor__form">
-          <div className="vetra-email-editor__body-label">Introduction</div>
+          <div className="vetra-email-editor__body-label">{t('vetra.companyEditor.introLabel')}</div>
 
           <div
             className={`vetra-email-editor__body-wrap${
@@ -157,7 +159,7 @@ export function VetraCompanyIntroEditor({
             >
               <HighlightedIntroText
                 value={value}
-                placeholder="Write the company introduction. Wrap AI-editable text in {{double braces}}."
+                placeholder={t('vetra.companyEditor.placeholder')}
               />
             </div>
             <textarea
@@ -173,8 +175,7 @@ export function VetraCompanyIntroEditor({
           </div>
 
           <p className="vetra-email-editor__hint">
-            Yellow highlights mark {'{{AI slots}}'} — only these regions can be
-            rewritten by AI.
+            {t('vetra.companyEditor.hint')}
           </p>
 
           <footer className="text-input-footer vetra-email-editor__footer">
@@ -193,7 +194,7 @@ export function VetraCompanyIntroEditor({
               disabled={saving}
               onClick={onCancel}
             >
-              Cancel
+              {t('vetra.companyEditor.cancel')}
             </button>
             <button
               type="button"
@@ -201,7 +202,7 @@ export function VetraCompanyIntroEditor({
               disabled={saving}
               onClick={onSave}
             >
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? t('vetra.companyEditor.saving') : t('vetra.companyEditor.save')}
             </button>
           </footer>
         </div>

@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAppSettings } from '../../contexts/AppSettingsContext'
 import { isClerkConfigured } from '../../config/clerk'
+import { createTranslator } from '../../i18n/translator'
 import { subscribeVetraAuthReady } from './vetraAuthReady'
 import {
   deleteVetraCompany,
@@ -32,10 +34,6 @@ import {
 
 function nextCompanyId(): string {
   return crypto.randomUUID()
-}
-
-function defaultCompanyName(count: number): string {
-  return `Company ${count}`
 }
 
 function clonePayload(payload: VetraCompanyPayload): VetraCompanyPayload {
@@ -103,6 +101,11 @@ function isNeonAuthError(error: unknown): boolean {
 }
 
 export function useVetraCompanyWorkspace() {
+  const { settings } = useAppSettings()
+  const t = useMemo(
+    () => createTranslator(settings.ui.locale),
+    [settings.ui.locale],
+  )
   const [authReady, setAuthReady] = useState(!isClerkConfigured)
   const authRetryRef = useRef(0)
   const initial = resolveInitialWorkspace()
@@ -246,7 +249,7 @@ export function useVetraCompanyWorkspace() {
         ) {
           if (!cancelled && generation === syncGenerationRef.current) {
             if (records.length === 0 && protectedCount > 0) {
-              setLoadError('Could not refresh companies — kept your saved data')
+              setLoadError(t('vetra.companies.refreshFailed'))
             }
           }
           return
@@ -270,11 +273,11 @@ export function useVetraCompanyWorkspace() {
             return
           }
           if (isNeonAuthError(error)) {
-            setLoadError('Unable to authenticate — refresh the page or sign in again')
+            setLoadError(t('vetra.companies.authFailed'))
             return
           }
           setLoadError(
-            error instanceof Error ? error.message : 'Failed to load companies',
+            error instanceof Error ? error.message : t('vetra.companies.loadFailed'),
           )
         }
       } finally {
@@ -290,7 +293,7 @@ export function useVetraCompanyWorkspace() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- resync when auth becomes ready
-  }, [applyRecords, authReady])
+  }, [applyRecords, authReady, t])
 
   const getPayload = useCallback(
     (companyId: string): VetraCompanyPayload =>
@@ -344,7 +347,7 @@ export function useVetraCompanyWorkspace() {
   const handleCreate = () => {
     bumpMutation()
     const id = nextCompanyId()
-    const name = defaultCompanyName(companies.length + 1)
+    const name = t('vetra.companies.defaultName', { count: companies.length + 1 })
     const payload: VetraCompanyPayload = {
       introduction: createEmptyCompanyIntroduction(),
     }
@@ -364,7 +367,7 @@ export function useVetraCompanyWorkspace() {
     setSelectedId(id)
     setEditingId(id)
     setEditingName(name)
-    setStatusMessage('Creating…')
+    setStatusMessage(t('vetra.companies.creating'))
     persistCache(nextCompanies, id, nextPayloadById)
 
     void (async () => {
@@ -375,11 +378,11 @@ export function useVetraCompanyWorkspace() {
           introduction: payload.introduction,
         })
         reconcileRecord(record, id)
-        setStatusMessage('Company created')
+        setStatusMessage(t('vetra.companies.created'))
       } catch (error) {
         restoreSnapshot(rollback)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to create company',
+          error instanceof Error ? error.message : t('vetra.companies.createFailed'),
         )
       }
     })()
@@ -411,16 +414,16 @@ export function useVetraCompanyWorkspace() {
     persistCache(nextCompanies, selectedId, payloadById)
     setEditingId(null)
     setEditingName('')
-    setStatusMessage('Renaming…')
+    setStatusMessage(t('vetra.companies.renaming'))
 
     void (async () => {
       try {
         await persistCompany(targetId, trimmed, getPayload(targetId))
-        setStatusMessage('Company renamed')
+        setStatusMessage(t('vetra.companies.renamed'))
       } catch (error) {
         restoreSnapshot(rollback)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to rename company',
+          error instanceof Error ? error.message : t('vetra.companies.renameFailed'),
         )
       }
     })()
@@ -435,7 +438,7 @@ export function useVetraCompanyWorkspace() {
   }
 
   const handleDelete = (companyId: string, companyName: string) => {
-    if (!window.confirm(`Delete company "${companyName}"?`)) return
+    if (!window.confirm(t('vetra.companies.deleteConfirm', { name: companyName }))) return
 
     bumpMutation()
     const rollback = snapshotWorkspace(
@@ -459,7 +462,7 @@ export function useVetraCompanyWorkspace() {
       setEditingName('')
     }
     persistCache(remaining, nextSelectedId, nextPayloadById)
-    setStatusMessage('Company deleted')
+    setStatusMessage(t('vetra.companies.deleted'))
 
     if (isOptimisticCompanyId(companyId)) return
 
@@ -469,7 +472,7 @@ export function useVetraCompanyWorkspace() {
       } catch (error) {
         restoreSnapshot(rollback)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to delete company',
+          error instanceof Error ? error.message : t('vetra.companies.deleteFailed'),
         )
       }
     })()

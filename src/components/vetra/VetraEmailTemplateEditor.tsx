@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import '../../styles/panel.css'
 import '../../styles/scrollbar.css'
 import '../Layout/TextInputSection.css'
@@ -77,6 +78,7 @@ export function VetraEmailTemplateEditor({
   statusMessage = null,
   statusIsError = false,
 }: VetraEmailTemplateEditorProps) {
+  const { t } = useI18n()
   const subjectRef = useRef<HTMLInputElement>(null)
   const subjectHighlightRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -199,13 +201,13 @@ export function VetraEmailTemplateEditor({
       />
 
       <GlowPanel
-        title="Email template"
+        title={t('vetra.emailEditor.title')}
         className="vetra-email-editor__panel"
         bodyClassName="panel-body--input"
       >
         <div className="vetra-email-editor__form">
           <label className="vetra-email-editor__subject-row">
-            <span className="vetra-email-editor__label">Subject</span>
+            <span className="vetra-email-editor__label">{t('vetra.emailEditor.subject')}</span>
             <div
               className={`vetra-email-editor__subject-wrap${
                 subjectFocused ? ' vetra-email-editor__subject-wrap--focus' : ''
@@ -218,7 +220,7 @@ export function VetraEmailTemplateEditor({
               >
                 <HighlightedTemplateText
                   value={template.subject}
-                  placeholder="Email subject with optional {{ai_slots}}"
+                  placeholder={t('vetra.emailEditor.subjectPh')}
                 />
               </div>
               <input
@@ -238,7 +240,7 @@ export function VetraEmailTemplateEditor({
             </div>
           </label>
 
-          <div className="vetra-email-editor__body-label">Body</div>
+          <div className="vetra-email-editor__body-label">{t('vetra.emailEditor.body')}</div>
 
           <div
             className={`vetra-email-editor__body-wrap${
@@ -252,7 +254,7 @@ export function VetraEmailTemplateEditor({
             >
               <HighlightedTemplateText
                 value={template.body}
-                placeholder="Write your outreach email. Wrap AI-editable text in {{double braces}}."
+                placeholder={t('vetra.emailEditor.bodyPh')}
               />
             </div>
             <textarea
@@ -273,15 +275,15 @@ export function VetraEmailTemplateEditor({
           <p className="vetra-email-editor__hint">
             <span className="vetra-email-editor__hint-item">
               <span className="vetra-email-editor__swatch vetra-email-editor__swatch--locked" />
-              Red {'[[locked]]'} — never changed by AI
+              {t('vetra.emailEditor.hintLock')}
             </span>
             <span className="vetra-email-editor__hint-item">
               <span className="vetra-email-editor__swatch vetra-email-editor__swatch--plain" />
-              Plain text — AI may adapt for context
+              {t('vetra.emailEditor.hintPlain')}
             </span>
             <span className="vetra-email-editor__hint-item">
               <span className="vetra-email-editor__swatch vetra-email-editor__swatch--slot" />
-              Yellow {'{{AI slots}}'} — AI fills in
+              {t('vetra.emailEditor.hintAi')}
             </span>
           </p>
 
@@ -301,7 +303,7 @@ export function VetraEmailTemplateEditor({
               disabled={saving}
               onClick={onCancel}
             >
-              Cancel
+              {t('vetra.emailEditor.cancel')}
             </button>
             <button
               type="button"
@@ -309,7 +311,7 @@ export function VetraEmailTemplateEditor({
               disabled={saving}
               onClick={onSave}
             >
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? t('vetra.emailEditor.saving') : t('vetra.emailEditor.save')}
             </button>
           </footer>
         </div>

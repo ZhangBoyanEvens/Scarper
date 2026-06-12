@@ -1,37 +1,32 @@
 .segmented-control {
   display: inline-flex;
-  padding: 3px;
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.12);
-  gap: 2px;
+  padding: var(--sc-space-1);
+  border-radius: var(--sc-radius-md);
+  background: var(--sc-gray-100);
+  border: 1px solid var(--sc-border);
+  gap: var(--sc-space-1);
 }
 
 .segmented-control__btn {
-  padding: 8px 16px;
+  padding: var(--sc-space-2) var(--sc-space-3);
   border: none;
-  border-radius: 9px;
+  border-radius: var(--sc-radius-sm);
   cursor: pointer;
   font: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #94a3b8;
+  font-size: var(--sc-font-size-sm);
+  font-weight: var(--sc-font-weight-medium);
+  color: var(--sc-text-muted);
   background: transparent;
-  transition:
-    color 0.15s ease,
-    background 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: color 0.2s ease, background 0.2s ease;
   white-space: nowrap;
 }
 
 .segmented-control__btn:hover {
-  color: #e2e8f0;
+  color: var(--sc-text);
 }
 
 .segmented-control__btn--active {
-  color: #f8fafc;
-  background: rgba(30, 41, 59, 0.95);
-  box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  color: var(--sc-primary);
+  background: var(--sc-bg-container);
+  box-shadow: var(--sc-shadow-1);
 }

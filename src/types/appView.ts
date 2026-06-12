@@ -2,7 +2,6 @@ export type AppView =
   | 'homepage'
   | 'tutorial'
   | 'project'
-  | 'dashboard'
   | 'tools'
   | 'findoc'
   | 'findoc-templates'
@@ -11,17 +10,11 @@ export type AppView =
   | 'scrape'
   | 'settings'
 
-export interface NavItem {
-  id: AppView
-  label: string
-}
-
-export const APP_NAV_ITEMS: NavItem[] = [
-  { id: 'homepage', label: 'Homepage' },
-  { id: 'project', label: 'Project' },
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'tools', label: 'Tools' },
-  { id: 'settings', label: 'Setting' },
+export const APP_NAV_ITEMS: AppView[] = [
+  'homepage',
+  'project',
+  'tools',
+  'settings',
 ]
 
 export const DEFAULT_APP_VIEW: AppView = 'homepage'

@@ -61,11 +61,14 @@ export function useUserProfileOptional() {
   return useContext(UserProfileContext)
 }
 
-export function formatExtractQuota(profile: UserProfile | null): string {
+export function formatExtractQuota(
+  profile: UserProfile | null,
+  unlimitedLabel = '(unlimited)',
+): string {
   const count = profile?.extract_count ?? 0
   const limit = profile?.extract_limit
   if (limit != null && limit > 0) {
     return `${count}/${limit}`
   }
-  return `${count}（不限）`
+  return `${count} ${unlimitedLabel}`
 }

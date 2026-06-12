@@ -14,12 +14,15 @@ import {
   DEFAULT_OUTPUT_LANGUAGE,
   type OutputLanguage,
 } from '../types/outputLanguage'
+import type { UiLocale } from '../i18n/types'
 import { loadSavedPrompt, savePromptToStorage } from './promptStorage'
 
 const STORAGE_KEY = 'scarper.app.settings.v1'
 const LEGACY_UPLOAD_BODY_KEY = 'scarper.scrape.uploadIncludeBody'
 
 export interface UiSettings {
+  /** Scarper UI display language (separate from AI output language) */
+  locale: UiLocale
   compactMode: boolean
   showProgressHints: boolean
   reduceMotion: boolean
@@ -50,6 +53,7 @@ export interface AppSettings {
 }
 
 export const DEFAULT_UI_SETTINGS: UiSettings = {
+  locale: 'en',
   compactMode: false,
   showProgressHints: true,
   reduceMotion: false,
@@ -103,6 +107,9 @@ function normalizeSettings(parsed: Partial<AppSettings>): AppSettings {
     costCurrency,
     processingPrompt,
     ui: {
+      locale: isUiLocale(parsed.ui?.locale)
+        ? parsed.ui.locale
+        : DEFAULT_UI_SETTINGS.locale,
       compactMode: parsed.ui?.compactMode ?? DEFAULT_UI_SETTINGS.compactMode,
       showProgressHints:
         parsed.ui?.showProgressHints ?? DEFAULT_UI_SETTINGS.showProgressHints,
@@ -134,6 +141,10 @@ function isOutputLanguage(v: unknown): v is OutputLanguage {
 
 function isOutputDetail(v: unknown): v is OutputDetail {
   return v === 'detailed' || v === 'concise'
+}
+
+function isUiLocale(v: unknown): v is UiLocale {
+  return v === 'en' || v === 'zh'
 }
 
 export function loadAppSettings(): AppSettings {

@@ -1,6 +1,6 @@
 .brand-mark {
-  --brand-green: #1bdd1b;
-  --brand-green-dim: rgba(27, 221, 27, 0.55);
+  --brand-green: var(--sc-primary);
+  --brand-green-dim: rgba(22, 119, 255, 0.35);
   display: inline-flex;
   align-items: center;
 }
@@ -15,14 +15,13 @@
 .brand-mark__row {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
 }
 
 .brand-mark__logo {
   flex-shrink: 0;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 0 10px rgba(27, 221, 27, 0.35));
 }
 
 .brand-mark--sm .brand-mark__logo {
@@ -35,31 +34,9 @@
   height: 48px;
 }
 
-.brand-mark__title {
-  margin: 0;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: #f1f5f9;
-  -webkit-text-stroke: 1px var(--brand-green-dim);
-  paint-order: stroke fill;
-  text-shadow:
-    0 0 16px rgba(27, 221, 27, 0.35),
-    0 0 32px rgba(27, 221, 27, 0.12),
-    1px 1px 0 rgba(27, 221, 27, 0.2),
-    -1px -1px 0 rgba(27, 221, 27, 0.15);
-}
-
-.brand-mark--sm .brand-mark__title {
-  font-size: 1.1rem;
-}
-
-.brand-mark--lg .brand-mark__title {
-  font-size: 2rem;
-}
-
 .brand-mark__tagline {
   margin: 0;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
   font-size: 0.95rem;
   line-height: 1.4;
 }

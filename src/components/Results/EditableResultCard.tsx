@@ -1,3 +1,4 @@
+import { useI18n } from '../../contexts/I18nContext'
 import type { ExtractResponse, ExtractSuccess } from '../../types/extraction'
 import { isExtractSuccess } from '../../types/extraction'
 import { splitResultUrls } from '../../utils/resultUrls'
@@ -22,6 +23,8 @@ export function EditableResultCard({
   index,
   onChange,
 }: EditableResultCardProps) {
+  const { t } = useI18n()
+
   if (!isExtractSuccess(data)) {
     return (
       <article className="result-card result-card--error">
@@ -56,10 +59,12 @@ export function EditableResultCard({
   return (
     <article className="result-card result-card--editable">
       {index !== undefined && (
-        <span className="result-card-badge">Task {index + 1}</span>
+        <span className="result-card-badge">
+          {t('scrape.results.taskBadge', { n: index + 1 })}
+        </span>
       )}
       <label className="result-field">
-        <span className="result-field__label">Title</span>
+        <span className="result-field__label">{t('scrape.results.fields.title')}</span>
         <input
           type="text"
           className="result-field__input"
@@ -84,7 +89,7 @@ export function EditableResultCard({
         {data.detected_language && <span> · {data.detected_language}</span>}
       </p>
       <label className="result-field">
-        <span className="result-field__label">Summary</span>
+        <span className="result-field__label">{t('scrape.results.fields.summary')}</span>
         <AutoResizeTextarea
           className="result-field__textarea"
           minRows={3}
@@ -95,7 +100,7 @@ export function EditableResultCard({
         />
       </label>
       <label className="result-field">
-        <span className="result-field__label">Key points (one per line)</span>
+        <span className="result-field__label">{t('scrape.results.fields.keyPoints')}</span>
         <AutoResizeTextarea
           className="result-field__textarea"
           minRows={3}
@@ -113,7 +118,7 @@ export function EditableResultCard({
         />
       </label>
       <label className="result-field">
-        <span className="result-field__label">Body</span>
+        <span className="result-field__label">{t('scrape.results.fields.body')}</span>
         <AutoResizeTextarea
           className="result-field__textarea result-field__textarea--body"
           minRows={8}

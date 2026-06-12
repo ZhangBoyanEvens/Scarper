@@ -6,7 +6,7 @@ export function HomepageClerkSignIn() {
   if (!isClerkConfigured) return null
 
   return (
-    <div className="homepage-auth" aria-label="登录">
+    <div className="homepage-auth" aria-label="Sign in">
       <SignIn
         routing="virtual"
         signUpUrl="#/sign-up"

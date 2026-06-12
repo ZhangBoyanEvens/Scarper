@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import './VetraEmailToolbar.css'
 
 interface VetraEmailToolbarProps {
@@ -28,15 +29,17 @@ export function VetraEmailToolbar({
   onInsertSignoff,
   showLockedTools = true,
 }: VetraEmailToolbarProps) {
+  const { t } = useI18n()
+
   return (
-    <div className="vetra-email-toolbar" aria-label="Email template tools">
+    <div className="vetra-email-toolbar" aria-label={t('vetra.emailToolbar.aria')}>
       {showLockedTools && onInsertLocked && onRemoveLocked ? (
         <>
           <button
             type="button"
             className="vetra-email-toolbar__btn vetra-email-toolbar__btn--lock"
-            title="Mark as locked [[ ]]"
-            aria-label="Mark as locked"
+            title={t('vetra.emailToolbar.lock')}
+            aria-label={t('vetra.emailToolbar.lock')}
             onClick={onInsertLocked}
           >
             <ToolbarIcon>
@@ -56,14 +59,14 @@ export function VetraEmailToolbar({
                 strokeLinecap="round"
               />
             </ToolbarIcon>
-            <span className="vetra-email-toolbar__hint">Lock</span>
+            <span className="vetra-email-toolbar__hint">{t('vetra.emailToolbar.lockShort')}</span>
           </button>
 
           <button
             type="button"
             className="vetra-email-toolbar__btn vetra-email-toolbar__btn--lock-remove"
-            title="Remove locked [[ ]]"
-            aria-label="Remove locked mark"
+            title={t('vetra.emailToolbar.removeLock')}
+            aria-label={t('vetra.emailToolbar.removeLock')}
             onClick={onRemoveLocked}
           >
             <ToolbarIcon>
@@ -91,8 +94,8 @@ export function VetraEmailToolbar({
       <button
         type="button"
         className="vetra-email-toolbar__btn"
-        title="Insert AI slot {{ }}"
-        aria-label="Insert AI slot"
+        title={t('vetra.emailToolbar.insertAi')}
+        aria-label={t('vetra.emailToolbar.insertAi')}
         onClick={onInsertAiSlot}
       >
         <ToolbarIcon>
@@ -112,14 +115,14 @@ export function VetraEmailToolbar({
             strokeWidth="1.75"
           />
         </ToolbarIcon>
-        <span className="vetra-email-toolbar__hint">AI</span>
+        <span className="vetra-email-toolbar__hint">{t('vetra.emailToolbar.aiShort')}</span>
       </button>
 
       <button
         type="button"
         className="vetra-email-toolbar__btn vetra-email-toolbar__btn--unwrap"
-        title="Remove AI highlight {{ }}"
-        aria-label="Remove AI highlight"
+        title={t('vetra.emailToolbar.removeAi')}
+        aria-label={t('vetra.emailToolbar.removeAi')}
         onClick={onRemoveAiSlot}
       >
         <ToolbarIcon>
@@ -145,8 +148,8 @@ export function VetraEmailToolbar({
       <button
         type="button"
         className="vetra-email-toolbar__btn"
-        title="Insert greeting block"
-        aria-label="Insert greeting block"
+        title={t('vetra.emailToolbar.insertGreeting')}
+        aria-label={t('vetra.emailToolbar.insertGreeting')}
         onClick={onInsertGreeting}
       >
         <ToolbarIcon>
@@ -162,8 +165,8 @@ export function VetraEmailToolbar({
       <button
         type="button"
         className="vetra-email-toolbar__btn"
-        title="Insert sign-off block"
-        aria-label="Insert sign-off block"
+        title={t('vetra.emailToolbar.insertSignoff')}
+        aria-label={t('vetra.emailToolbar.insertSignoff')}
         onClick={onInsertSignoff}
       >
         <ToolbarIcon>
@@ -181,12 +184,12 @@ export function VetraEmailToolbar({
         {showLockedTools ? (
           <span className="vetra-email-toolbar__legend-row">
             <span className="vetra-email-toolbar__legend-swatch vetra-email-toolbar__legend-swatch--locked" />
-            Lock
+            {t('vetra.emailToolbar.legendLock')}
           </span>
         ) : null}
         <span className="vetra-email-toolbar__legend-row">
           <span className="vetra-email-toolbar__legend-swatch vetra-email-toolbar__legend-swatch--slot" />
-          Fill
+          {t('vetra.emailToolbar.legendFill')}
         </span>
       </div>
     </div>

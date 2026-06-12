@@ -10,7 +10,7 @@
   margin: 0 0 12px;
   font-size: 0.78rem;
   line-height: 1.55;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-task-import-modal__list {
@@ -42,7 +42,7 @@
 .vetra-task-import-modal__radio {
   flex-shrink: 0;
   margin-top: 3px;
-  accent-color: #818cf8;
+  accent-color: var(--sc-accent);
 }
 
 .vetra-task-import-modal__item-text {
@@ -56,11 +56,11 @@
   padding: 24px 12px;
   text-align: center;
   font-size: 0.85rem;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .vetra-task-import-modal__status {
   margin: 0 0 12px;
   font-size: 0.8125rem;
-  color: #a5b4fc;
+  color: var(--sc-accent-alt);
 }

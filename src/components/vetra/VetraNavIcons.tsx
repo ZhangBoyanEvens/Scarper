@@ -1,5 +1,5 @@
 interface VetraNavIconProps {
-  name: 'dashboard' | 'companies' | 'outreach' | 'templates' | 'reports'
+  name: 'companies' | 'outreach' | 'templates'
 }
 
 export function VetraNavIcon({ name }: VetraNavIconProps) {
@@ -10,14 +10,6 @@ export function VetraNavIcon({ name }: VetraNavIconProps) {
       fill="none"
       aria-hidden
     >
-      {name === 'dashboard' && (
-        <>
-          <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.75" />
-          <rect x="13" y="3" width="8" height="5" rx="1.5" stroke="currentColor" strokeWidth="1.75" />
-          <rect x="13" y="10" width="8" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.75" />
-          <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.75" />
-        </>
-      )}
       {name === 'companies' && (
         <>
           <path
@@ -66,22 +58,6 @@ export function VetraNavIcon({ name }: VetraNavIconProps) {
           />
           <path d="M16 4v4h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M9 13h6M9 17h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-        </>
-      )}
-      {name === 'reports' && (
-        <>
-          <path
-            d="M6 20V10M12 20V4M18 20v-7"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
-          <path
-            d="M4 20h16"
-            stroke="currentColor"
-            strokeWidth="1.75"
-            strokeLinecap="round"
-          />
         </>
       )}
     </svg>

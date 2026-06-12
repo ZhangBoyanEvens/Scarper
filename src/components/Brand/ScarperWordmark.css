@@ -1,0 +1,68 @@
+/* Homepage breathe palette — adapted for light navbar */
+
+@keyframes scarper-wordmark-breathe-dark {
+  0%,
+  100% {
+    color: #000;
+  }
+  33% {
+    color: #0e7490;
+  }
+  66% {
+    color: #14532d;
+  }
+}
+
+@keyframes scarper-wordmark-breathe-accent {
+  0%,
+  100% {
+    color: #4ade80;
+    text-shadow: 0 0 8px rgba(74, 222, 128, 0.35);
+  }
+  33% {
+    color: #22d3ee;
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+  }
+  66% {
+    color: #16a34a;
+    text-shadow: 0 0 8px rgba(22, 163, 74, 0.3);
+  }
+}
+
+.scarper-wordmark {
+  display: inline-block;
+  line-height: 1;
+  user-select: none;
+}
+
+.scarper-wordmark__text {
+  font-family: 'Outfit', var(--sc-font-sans);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  animation: scarper-wordmark-breathe-dark 12s ease-in-out infinite;
+}
+
+.scarper-wordmark__accent {
+  animation: scarper-wordmark-breathe-accent 12s ease-in-out infinite;
+}
+
+.scarper-wordmark--sm .scarper-wordmark__text {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.scarper-wordmark--lg .scarper-wordmark__text {
+  font-size: 22px;
+  letter-spacing: -0.025em;
+}
+
+html.reduce-motion .scarper-wordmark__text {
+  animation: none;
+  color: #000;
+}
+
+html.reduce-motion .scarper-wordmark__accent {
+  animation: none;
+  color: var(--sc-success);
+  text-shadow: none;
+}

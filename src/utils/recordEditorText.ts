@@ -17,18 +17,18 @@ export function resultsToEditorText(results: ExtractResponse[]): string {
   for (const item of results) {
     if (isExtractSuccess(item)) {
       const parts: string[] = []
-      if (item.title?.trim()) parts.push(`### 标题\n${item.title.trim()}`)
-      if (item.summary?.trim()) parts.push(`### 摘要\n${item.summary.trim()}`)
+      if (item.title?.trim()) parts.push(`### Title\n${item.title.trim()}`)
+      if (item.summary?.trim()) parts.push(`### Summary\n${item.summary.trim()}`)
       if (item.key_points?.length) {
         parts.push(
-          `### 要点\n${item.key_points.map((p) => `• ${p}`).join('\n')}`,
+          `### Key points\n${item.key_points.map((p) => `• ${p}`).join('\n')}`,
         )
       }
-      if (item.content?.trim()) parts.push(`### 正文\n${item.content.trim()}`)
+      if (item.content?.trim()) parts.push(`### Body\n${item.content.trim()}`)
       const body = parts.join('\n')
       blocks.push(`## ${item.url}\n${body}`)
     } else {
-      blocks.push(`## ${item.url}\n[错误] ${item.error}`)
+      blocks.push(`## ${item.url}\n[Error] ${item.error}`)
     }
   }
   return blocks.join('\n\n---\n\n')

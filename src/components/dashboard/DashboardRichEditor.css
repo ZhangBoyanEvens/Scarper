@@ -4,13 +4,13 @@
   overflow: auto;
   padding: clamp(12px, 2.5vw, 24px) clamp(16px, 3vw, 28px);
   padding-right: clamp(20px, 3vw, 32px);
-  background: rgba(8, 10, 18, 0.4);
+  background: #ffffff;
 }
 
 .dashboard-doc-empty {
   margin: 0 0 16px;
   font-size: 0.88rem;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .dashboard-doc-article {
@@ -48,7 +48,7 @@
   border: none;
   border-radius: 0;
   background: transparent;
-  color: #cbd5e1;
+  color: rgba(0, 0, 0, 0.88);
   font-family: inherit;
   line-height: 1.55;
   resize: vertical;
@@ -59,9 +59,9 @@
 
 .dashboard-doc-input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(22, 119, 255, 0.04);
   border-radius: 4px;
-  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(22, 119, 255, 0.25);
 }
 
 .dashboard-doc-input:disabled {
@@ -73,7 +73,7 @@
 .dashboard-doc-input--solo-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: rgba(0, 0, 0, 0.88);
   line-height: 1.35;
 }
 
@@ -83,18 +83,18 @@
 
 .dashboard-doc-input--summary {
   font-size: 0.92rem;
-  color: #cbd5e1;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .dashboard-doc-input--points {
   font-size: 0.9rem;
-  color: #cbd5e1;
+  color: rgba(0, 0, 0, 0.88);
   padding-left: 0.15rem;
 }
 
 .dashboard-doc-input--body {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: rgba(0, 0, 0, 0.65);
   line-height: 1.6;
   min-height: 12em;
 }
@@ -103,8 +103,15 @@
   margin-bottom: 14px;
 }
 
-/* 查找命中高亮 */
-.dashboard-doc-input::selection {
-  background: rgba(250, 204, 21, 0.45);
-  color: #fffbeb;
+/* 正文选中：深灰底 + 白字，白底上可读 */
+.dashboard-doc-input::selection,
+.dashboard-doc-input::-moz-selection {
+  background: rgba(0, 0, 0, 0.72);
+  color: #ffffff;
+}
+
+.dashboard-doc-editor ::selection,
+.dashboard-doc-editor ::-moz-selection {
+  background: rgba(0, 0, 0, 0.72);
+  color: #ffffff;
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import { loadTaskContentForFinDoc } from '../../services/projectRecordService'
 import { generateCompanyIntroFromTask } from '../../services/vetraCompanyIntroImport'
 import '../../styles/panel.css'
@@ -15,6 +16,7 @@ import { useVetraCompanyWorkspaceContext } from './VetraWorkspaceContext'
 import './VetraCompaniesView.css'
 
 export function VetraCompaniesIntroView() {
+  const { t } = useI18n()
   const workspace = useVetraCompanyWorkspaceContext()
   const {
     companies,
@@ -79,19 +81,19 @@ export function VetraCompaniesIntroView() {
     const nextPayload = { ...payload, introduction: draft }
 
     setSaved(draft)
-    setStatusMessage('Saving…')
+    setStatusMessage(t('vetra.companies.saving'))
 
     void (async () => {
       try {
         await persistCompany(company.id, company.name, nextPayload)
         skipDraftLoadRef.current = false
-        setStatusMessage('Saved to Neon')
+        setStatusMessage(t('vetra.companies.savedNeon'))
       } catch (error) {
         const restored = getPayload(selectedId).introduction
         setDraft(restored)
         setSaved(restored)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to save introduction',
+          error instanceof Error ? error.message : t('vetra.companies.saveFailed'),
         )
       }
     })()
@@ -99,7 +101,7 @@ export function VetraCompaniesIntroView() {
 
   const handleOpenImport = () => {
     if (!selectedId) {
-      setStatusMessage('Select or create a company first')
+      setStatusMessage(t('vetra.companies.selectFirst'))
       return
     }
     setStatusMessage(null)
@@ -110,7 +112,7 @@ export function VetraCompaniesIntroView() {
   const handleImportTask = (task: VetraOutreachTaskOption) => {
     const company = companies.find((item) => item.id === selectedId)
     if (!company) {
-      setStatusMessage('Select or create a company first')
+      setStatusMessage(t('vetra.companies.selectFirst'))
       return
     }
 
@@ -118,7 +120,7 @@ export function VetraCompaniesIntroView() {
     const controller = new AbortController()
     importAbortRef.current = controller
     setImporting(true)
-    setStatusMessage('Importing from Task…')
+    setStatusMessage(t('vetra.companies.importing'))
 
     void (async () => {
       try {
@@ -141,13 +143,13 @@ export function VetraCompaniesIntroView() {
           introduction,
         })
 
-        setStatusMessage('Imported from Task and saved')
+        setStatusMessage(t('vetra.companies.importDone'))
         setImportOpen(false)
       } catch (error) {
         if (controller.signal.aborted) return
         skipDraftLoadRef.current = false
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to import from Task',
+          error instanceof Error ? error.message : t('vetra.companies.importFailed'),
         )
       } finally {
         if (importAbortRef.current === controller) {
@@ -163,14 +165,14 @@ export function VetraCompaniesIntroView() {
     setEditingName(company.name)
   }
 
-  const listStatusMessage = loadError ?? (syncing ? 'Syncing…' : null)
+  const listStatusMessage = loadError ?? (syncing ? t('vetra.companies.syncing') : null)
   const listStatusIsError = Boolean(loadError)
   const bannerMessage = listStatusMessage
   const bannerIsError = listStatusIsError
 
   return (
     <div className="vetra-companies-view">
-      <section className="vetra-companies-center" aria-label="Company introduction workspace">
+      <section className="vetra-companies-center" aria-label={t('vetra.workspace.companiesAria')}>
         <VetraCompanyIntroEditor
           value={draft}
           saving={importing}
@@ -186,12 +188,12 @@ export function VetraCompaniesIntroView() {
       </section>
 
       <VetraCompanyListPanel
-        title="Companies"
-        listLabel="Company list"
-        createLabel="Create company"
-        importLabel="Import from Task"
-        renameLabel="Rename company"
-        deleteLabel="Delete company"
+        title={t('vetra.companies.listTitle')}
+        listLabel={t('vetra.companies.listAria')}
+        createLabel={t('vetra.companies.create')}
+        importLabel={t('vetra.companies.importFromTask')}
+        renameLabel={t('vetra.companies.rename')}
+        deleteLabel={t('vetra.companies.delete')}
         companies={companies}
         selectedId={selectedId}
         editingId={editingId}

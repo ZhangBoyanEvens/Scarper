@@ -1,10 +1,9 @@
+import { Col, Row } from 'antd'
 import type { ExtractResponse } from '../../types/extraction'
 import type { ResultsState } from '../Results/ResultsPanel'
 import { ResultsPanel } from '../Results/ResultsPanel'
 import { SearchBar } from '../SearchBar/SearchBar'
 import { ProjectUploadFooter } from './ProjectUploadFooter'
-import '../../styles/layout.css'
-import './ContentSections.css'
 
 interface ContentSectionsProps {
   resultsState: ResultsState
@@ -21,27 +20,14 @@ export function ContentSections({
   onResultChange,
 }: ContentSectionsProps) {
   return (
-    <div className="scrape-layout">
-      <div className="page-split content-split scrape-layout__main">
-        <section
-          className="page-col page-col--left content-col content-col--links"
-          aria-label="URL input"
-        >
-          <SearchBar layout="panel" onSearch={onSearch} />
-        </section>
-        <section
-          className="page-col page-col--right content-col content-col--stacked"
-          aria-label="Scrape results"
-        >
-          <div className="content-col__results">
-            <ResultsPanel
-              state={resultsState}
-              onResultChange={onResultChange}
-            />
-          </div>
-          <ProjectUploadFooter resultsState={resultsState} />
-        </section>
-      </div>
-    </div>
+    <Row gutter={[16, 16]} className="scrape-page__row">
+      <Col xs={24} lg={9} xl={8} className="scrape-page__col">
+        <SearchBar layout="panel" onSearch={onSearch} />
+      </Col>
+      <Col xs={24} lg={15} xl={16} className="scrape-page__col scrape-page__col--stack">
+        <ResultsPanel state={resultsState} onResultChange={onResultChange} />
+        <ProjectUploadFooter resultsState={resultsState} />
+      </Col>
+    </Row>
   )
 }

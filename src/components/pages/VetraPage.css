@@ -4,7 +4,7 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  background: #05060c;
+  background: var(--sc-bg-layout);
 }
 
 .vetra-shell {
@@ -23,7 +23,7 @@
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: #05060c;
+  background: var(--sc-bg-layout);
 }
 
 .vetra-main--outreach {
@@ -53,12 +53,12 @@
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: rgba(0, 0, 0, 0.88);
 }
 
 .vetra-main__placeholder-hint {
   margin: 0;
   font-size: 0.875rem;
-  color: #64748b;
+  color: rgba(0, 0, 0, 0.45);
 }
 

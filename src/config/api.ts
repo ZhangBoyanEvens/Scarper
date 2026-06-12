@@ -17,5 +17,3 @@ export function resolveApiBase(): string {
   return envApiBase
 }
 
-/** @deprecated 请用 resolveApiBase() */
-export const apiBase = envApiBase

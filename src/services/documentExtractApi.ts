@@ -42,13 +42,13 @@ export async function extractDocumentFile(
     })
   } catch {
     throw new DocumentExtractError(
-      '无法连接后端，请确认服务已启动',
+      'Cannot reach backend — ensure the service is running',
       'network_error',
     )
   }
 
   if (!res.ok) {
-    let message = `解析失败 (${res.status})`
+    let message = `Parse failed (${res.status})`
     try {
       const body = (await res.json()) as { detail?: string }
       if (typeof body.detail === 'string') message = body.detail

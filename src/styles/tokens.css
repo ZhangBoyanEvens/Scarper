@@ -1,0 +1,110 @@
+:root {
+  color-scheme: light;
+
+  /* ── Typography ── */
+  --sc-font-sans: system-ui, -apple-system, blinkmacsystemfont, 'Segoe UI', roboto,
+    'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --sc-font-mono: consolas, menlo, 'SFMono-Regular', 'Liberation Mono', monospace;
+
+  --sc-font-size-caption: 12px;
+  --sc-font-size-sm: 14px;
+  --sc-font-size-base: 16px;
+  --sc-font-size-title: 20px;
+  --sc-font-size-headline: 24px;
+  --sc-font-size-headline-lg: 28px;
+  --sc-font-size-display: 32px;
+
+  --sc-line-height-body: 1.5;
+  --sc-line-height-title: 1.25;
+  --sc-line-height-caption: 1.35;
+
+  --sc-font-weight-regular: 400;
+  --sc-font-weight-medium: 500;
+  --sc-font-weight-bold: 700;
+
+  /* legacy aliases */
+  --sc-text-sm: var(--sc-font-size-sm);
+  --sc-text-base: var(--sc-font-size-base);
+
+  /* ── Color (≤8, WCAG AA) ── */
+  --sc-primary: #1a73e8;
+  --sc-success: #188038;
+  --sc-warning: #f9ab00;
+  --sc-error: #d93025;
+
+  --sc-gray-50: #f8f9fa;
+  --sc-gray-100: #f1f3f4;
+  --sc-gray-200: #e8eaed;
+  --sc-gray-500: #5f6368;
+  --sc-gray-900: #202124;
+
+  --sc-text: var(--sc-gray-900);
+  --sc-text-strong: var(--sc-gray-900);
+  --sc-text-muted: var(--sc-gray-500);
+  --sc-text-secondary: var(--sc-gray-500);
+  --sc-text-subtle: var(--sc-gray-500);
+  --sc-text-tertiary: #80868b;
+  --sc-text-faint: #80868b;
+
+  --sc-bg-layout: var(--sc-gray-50);
+  --sc-bg-container: #ffffff;
+  --sc-surface-elevated: #ffffff;
+  --sc-surface-inset: #ffffff;
+  --sc-surface-nav: #ffffff;
+
+  --sc-border: var(--sc-gray-200);
+  --sc-border-strong: #dadce0;
+  --sc-divider: var(--sc-gray-200);
+
+  --sc-accent: var(--sc-primary);
+  --sc-accent-alt: var(--sc-primary);
+  --sc-accent-soft: rgba(26, 115, 232, 0.08);
+  --sc-accent-border: rgba(26, 115, 232, 0.24);
+  --sc-accent-glow: rgba(26, 115, 232, 0.12);
+
+  --sc-primary-hover: #1765cc;
+  --sc-primary-active: #1557b0;
+
+  /* antd bridge */
+  --sc-success-ant: var(--sc-success);
+  --sc-warning-ant: var(--sc-warning);
+  --sc-error-ant: var(--sc-error);
+
+  /* ── Spacing (8px grid) ── */
+  --sc-space-1: 4px;
+  --sc-space-2: 8px;
+  --sc-space-3: 16px;
+  --sc-space-4: 24px;
+  --sc-space-5: 32px;
+  --sc-space-6: 48px;
+
+  --sc-page-padding-x: clamp(16px, 4vw, 24px);
+  --sc-page-padding-y: clamp(16px, 3vw, 24px);
+  --sc-read-max: 65ch;
+  --sc-max-content: 1200px;
+  --sc-nav-height: 64px;
+  --sc-touch-min: 48px;
+
+  /* ── Radius (4px / 8px only) ── */
+  --sc-radius-sm: 4px;
+  --sc-radius-md: 8px;
+  --sc-radius-control: var(--sc-radius-sm);
+  --sc-radius-card: var(--sc-radius-md);
+  --sc-radius-lg: var(--sc-radius-md);
+  --sc-radius: var(--sc-radius-sm);
+  --sc-radius-pill: 9999px;
+
+  /* ── Shadow (single layer) ── */
+  --sc-shadow-1: 0 1px 3px rgba(60, 64, 67, 0.12);
+  --sc-shadow-panel: var(--sc-shadow-1);
+  --sc-shadow-accent: none;
+  --sc-shadow-focus: 0 0 0 2px rgba(26, 115, 232, 0.24);
+
+  /* ── Motion ── */
+  --sc-duration-fast: 150ms;
+  --sc-ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* solid fills (no gradient accents) */
+  --sc-gradient-accent: var(--sc-primary);
+  --sc-gradient-panel-border: var(--sc-border);
+}

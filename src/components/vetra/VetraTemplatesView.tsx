@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
 import '../../styles/panel.css'
 import '../../styles/scrollbar.css'
 import '../projects/ProjectPage.css'
@@ -16,6 +17,7 @@ function cloneTemplate(template: VetraEmailTemplate): VetraEmailTemplate {
 }
 
 export function VetraTemplatesView() {
+  const { t } = useI18n()
   const workspace = useVetraTemplateWorkspaceContext()
   const {
     templates,
@@ -68,18 +70,18 @@ export function VetraTemplatesView() {
 
     updatePayload(template.id, nextPayload)
     setSaved(next)
-    setStatusMessage('Saving…')
+    setStatusMessage(t('vetra.templates.saving'))
 
     void (async () => {
       try {
         await persistTemplate(template.id, template.name, nextPayload)
-        setStatusMessage('Saved to Neon')
+        setStatusMessage(t('vetra.templates.savedNeon'))
       } catch (error) {
         const restored = recordToEmailTemplate(getPayload(selectedId))
         setDraft(cloneTemplate(restored))
         setSaved(cloneTemplate(restored))
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to save template',
+          error instanceof Error ? error.message : t('vetra.templates.saveFailed'),
         )
       }
     })()
@@ -90,15 +92,15 @@ export function VetraTemplatesView() {
     setEditingName(item.name)
   }
 
-  const bannerMessage = loadError ?? (syncing ? 'Syncing…' : null)
+  const bannerMessage = loadError ?? (syncing ? t('vetra.templates.syncing') : null)
   const bannerIsError = Boolean(loadError)
 
-  const listStatusMessage = loadError ?? (syncing ? 'Syncing…' : null)
+  const listStatusMessage = loadError ?? (syncing ? t('vetra.templates.syncing') : null)
   const listStatusIsError = Boolean(loadError)
 
   return (
     <div className="vetra-companies-view">
-      <section className="vetra-companies-center" aria-label="Email template workspace">
+      <section className="vetra-companies-center" aria-label={t('vetra.workspace.templatesAria')}>
         <VetraEmailTemplateEditor
           template={draft}
           saving={false}
@@ -114,11 +116,11 @@ export function VetraTemplatesView() {
       </section>
 
       <VetraCompanyListPanel
-        title="Templates"
-        listLabel="Template list"
-        createLabel="Create template"
-        renameLabel="Rename template"
-        deleteLabel="Delete template"
+        title={t('vetra.templates.listTitle')}
+        listLabel={t('vetra.templates.listAria')}
+        createLabel={t('vetra.templates.create')}
+        renameLabel={t('vetra.templates.rename')}
+        deleteLabel={t('vetra.templates.delete')}
         companies={templates}
         selectedId={selectedId}
         editingId={editingId}

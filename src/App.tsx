@@ -5,17 +5,28 @@ import { clerkPublishableKey, isClerkConfigured } from './config/clerk'
 import { AppSettingsProvider } from './contexts/AppSettingsContext'
 import { ScrapeSessionProvider } from './contexts/ScrapeSessionContext'
 import { UserProfileProvider } from './contexts/UserProfileContext'
+import { AntdProvider } from './providers/AntdProvider'
 import './App.css'
 
 function AppShell() {
+  const body = (
+    <AntdProvider>
+      <ScrapeSessionProvider>
+        {isClerkConfigured ? (
+          <UserProfileProvider>
+            <AppLayout />
+          </UserProfileProvider>
+        ) : (
+          <AppLayout />
+        )}
+      </ScrapeSessionProvider>
+    </AntdProvider>
+  )
+
   if (!isClerkConfigured) {
     return (
       <div className="app">
-        <AppSettingsProvider>
-          <ScrapeSessionProvider>
-            <AppLayout />
-          </ScrapeSessionProvider>
-        </AppSettingsProvider>
+        <AppSettingsProvider>{body}</AppSettingsProvider>
       </div>
     )
   }
@@ -23,13 +34,7 @@ function AppShell() {
   return (
     <div className="app">
       <AuthGate>
-        <AppSettingsProvider>
-          <ScrapeSessionProvider>
-            <UserProfileProvider>
-              <AppLayout />
-            </UserProfileProvider>
-          </ScrapeSessionProvider>
-        </AppSettingsProvider>
+        <AppSettingsProvider>{body}</AppSettingsProvider>
       </AuthGate>
     </div>
   )

@@ -1,5 +1,9 @@
 import type { OutputLanguage } from '../../types/outputLanguage'
 import { OUTPUT_LANGUAGE_OPTIONS } from '../../types/outputLanguage'
+import { Select } from 'antd'
+import { useI18n } from '../../contexts/I18nContext'
+import { ScarperToolbarField } from '../common/ScarperToolbarField'
+import { scarperSelectProps } from '../common/scarperForm'
 import type { VetraCompany } from './companiesData'
 import type { VetraTemplate } from './templatesData'
 import './VetraOutreachNavbar.css'
@@ -17,43 +21,6 @@ interface VetraOutreachNavbarProps {
   onOutreachLanguageChange: (language: OutputLanguage) => void
 }
 
-function CompanySelect({
-  id,
-  value,
-  companies,
-  disabled,
-  ariaLabel,
-  onChange,
-}: {
-  id: string
-  value: string
-  companies: VetraCompany[]
-  disabled?: boolean
-  ariaLabel?: string
-  onChange: (companyId: string) => void
-}) {
-  return (
-    <select
-      id={id}
-      className="vetra-outreach-navbar__select"
-      value={value}
-      disabled={disabled || companies.length === 0}
-      aria-label={ariaLabel}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      {companies.length === 0 ? (
-        <option value="">No companies</option>
-      ) : (
-        companies.map((company) => (
-          <option key={company.id} value={company.id}>
-            {company.name}
-          </option>
-        ))
-      )}
-    </select>
-  )
-}
-
 export function VetraOutreachNavbar({
   companies,
   fromCompanyId,
@@ -66,73 +33,79 @@ export function VetraOutreachNavbar({
   outreachLanguage,
   onOutreachLanguageChange,
 }: VetraOutreachNavbarProps) {
+  const { t } = useI18n()
+
+  const companyOptions =
+    companies.length === 0
+      ? [{ value: '', label: t('vetra.outreach.noCompanies'), disabled: true }]
+      : companies.map((company) => ({
+          value: company.id,
+          label: company.name,
+        }))
+
+  const templateOptions =
+    templates.length === 0
+      ? [{ value: '', label: t('vetra.outreach.noTemplates'), disabled: true }]
+      : templates.map((template) => ({
+          value: template.id,
+          label: template.name,
+        }))
+
   return (
-    <nav className="vetra-outreach-navbar" aria-label="Outreach context">
+    <nav className="vetra-outreach-navbar" aria-label={t('vetra.outreachNav.aria')}>
       <div className="vetra-outreach-navbar__group">
-        <span className="vetra-outreach-navbar__label">Company</span>
+        <span className="vetra-outreach-navbar__label">{t('vetra.outreachNav.company')}</span>
         <div className="vetra-outreach-navbar__company-row">
-          <label className="vetra-outreach-navbar__subfield" htmlFor="vetra-outreach-from">
-            <span className="vetra-outreach-navbar__sublabel">From</span>
-            <CompanySelect
+          <ScarperToolbarField label={t('vetra.outreach.from')}>
+            <Select
               id="vetra-outreach-from"
-              value={fromCompanyId}
-              companies={companies}
+              {...scarperSelectProps()}
+              value={fromCompanyId || undefined}
+              disabled={companies.length === 0}
+              options={companyOptions}
               onChange={onFromCompanyChange}
             />
-          </label>
+          </ScarperToolbarField>
           <span className="vetra-outreach-navbar__connector" aria-hidden="true">
-            to
+            {t('vetra.outreachNav.toConnector')}
           </span>
-          <label className="vetra-outreach-navbar__subfield" htmlFor="vetra-outreach-to">
-            <CompanySelect
+          <ScarperToolbarField label={t('vetra.outreach.to')}>
+            <Select
               id="vetra-outreach-to"
-              value={toCompanyId}
-              companies={companies}
-              ariaLabel="To company"
+              {...scarperSelectProps()}
+              value={toCompanyId || undefined}
+              disabled={companies.length === 0}
+              aria-label={t('vetra.outreachNav.toAria')}
+              options={companyOptions}
               onChange={onToCompanyChange}
             />
-          </label>
+          </ScarperToolbarField>
         </div>
       </div>
 
-      <label className="vetra-outreach-navbar__field" htmlFor="vetra-outreach-template">
-        <span className="vetra-outreach-navbar__label">Template</span>
-        <select
+      <ScarperToolbarField label={t('vetra.nav.templates')}>
+        <Select
           id="vetra-outreach-template"
-          className="vetra-outreach-navbar__select"
-          value={selectedTemplateId}
+          {...scarperSelectProps()}
+          value={selectedTemplateId || undefined}
           disabled={templates.length === 0}
-          onChange={(event) => onTemplateChange(event.target.value)}
-        >
-          {templates.length === 0 ? (
-            <option value="">No templates</option>
-          ) : (
-            templates.map((template) => (
-              <option key={template.id} value={template.id}>
-                {template.name}
-              </option>
-            ))
-          )}
-        </select>
-      </label>
+          options={templateOptions}
+          onChange={onTemplateChange}
+        />
+      </ScarperToolbarField>
 
-      <label className="vetra-outreach-navbar__field" htmlFor="vetra-outreach-language">
-        <span className="vetra-outreach-navbar__label">Outreach language</span>
-        <select
+      <ScarperToolbarField label={t('vetra.outreach.language')}>
+        <Select
           id="vetra-outreach-language"
-          className="vetra-outreach-navbar__select vetra-outreach-navbar__select--language"
+          {...scarperSelectProps({ minWidth: 140, maxWidth: 200 })}
           value={outreachLanguage}
-          onChange={(event) =>
-            onOutreachLanguageChange(event.target.value as OutputLanguage)
-          }
-        >
-          {OUTPUT_LANGUAGE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          options={OUTPUT_LANGUAGE_OPTIONS.map((option) => ({
+            value: option.value,
+            label: option.label,
+          }))}
+          onChange={onOutreachLanguageChange}
+        />
+      </ScarperToolbarField>
     </nav>
   )
 }

@@ -1,14 +1,11 @@
-import { type FormEvent, useCallback, useState } from 'react'
-import {
-  parseUrlBatch,
-  URL_BATCH_SEPARATOR,
-  urlValidationMessage,
-} from '../../utils/urlValidation'
+import { Input } from 'antd'
+import { useCallback, useState } from 'react'
+import { useI18n } from '../../contexts/I18nContext'
+import { urlValidationMessage } from '../../i18n/scrapeHelpers'
+import { parseUrlBatch } from '../../utils/urlValidation'
 import { UrlTaskPanel } from './UrlTaskPanel'
-import './SearchBar.css'
 
 export interface SearchBarProps {
-  /** toolbar = 顶部横条；panel = 左侧大面板（原处理指令框尺寸） */
   layout?: 'toolbar' | 'panel'
   onSearch?: (
     urls: string[],
@@ -17,28 +14,28 @@ export interface SearchBarProps {
 }
 
 export function SearchBar({ layout = 'toolbar', onSearch }: SearchBarProps) {
+  const { t } = useI18n()
   const [value, setValue] = useState('')
-  const [focused, setFocused] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const submit = useCallback(
-    (e?: FormEvent) => {
-      e?.preventDefault()
-      const msg = urlValidationMessage(value)
+    (nextValue?: string) => {
+      const raw = nextValue ?? value
+      const msg = urlValidationMessage(raw, t)
       if (msg) {
         setError(msg)
         return
       }
-      const urls = parseUrlBatch(value)
+      const urls = parseUrlBatch(raw)
       setError(null)
       onSearch?.(urls)
     },
-    [value, onSearch],
+    [value, onSearch, t],
   )
 
   const handleChange = (next: string) => {
     setValue(next)
-    if (error) setError(urlValidationMessage(next))
+    if (error) setError(urlValidationMessage(next, t))
   }
 
   if (layout === 'panel') {
@@ -47,62 +44,21 @@ export function SearchBar({ layout = 'toolbar', onSearch }: SearchBarProps) {
 
   return (
     <div className="search-bar">
-      <form
-        className={`panel-shell search-shell ${focused ? 'search-shell--focus' : ''} ${error ? 'search-shell--invalid' : ''}`}
-        onSubmit={submit}
-        role="search"
-      >
-        <label className="panel-inner search-field">
-          <span className="search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
-              <path
-                d="M20 20l-3.5-3.5"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-
-          <input
-            type="text"
-            inputMode="url"
-            className="search-input"
-            value={value}
-            placeholder={`https://a.com${URL_BATCH_SEPARATOR}https://b.com`}
-            autoComplete="off"
-            spellCheck={false}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'search-error' : undefined}
-            onChange={(e) => handleChange(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-          />
-
-          <button
-            type="submit"
-            className="search-go"
-            disabled={!value.trim()}
-            aria-label="Scrape and analyze"
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M5 12h12M13 6l6 6-6 6"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </label>
-      </form>
-      {error && (
-        <p id="search-error" className="search-error" role="alert">
+      <Input.Search
+        size="large"
+        value={value}
+        placeholder={t('scrape.search.batchPlaceholder')}
+        status={error ? 'error' : undefined}
+        enterButton={t('scrape.search.button')}
+        onChange={(e) => handleChange(e.target.value)}
+        onSearch={(v) => submit(v)}
+        onPressEnter={() => submit()}
+      />
+      {error ? (
+        <p id="search-error" role="alert" style={{ margin: '8px 0 0', color: '#ff4d4f', fontSize: 13 }}>
           {error}
         </p>
-      )}
+      ) : null}
     </div>
   )
 }

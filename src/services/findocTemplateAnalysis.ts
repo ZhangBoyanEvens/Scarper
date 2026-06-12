@@ -1,24 +1,24 @@
 import { createChatCompletion } from './deepseekClient'
 
-const SYSTEM_PROMPT = `你是 FinDoc 文档模板结构分析器。用户会提供一篇完整的样例文章。
+const SYSTEM_PROMPT = `You are a FinDoc template structure analyzer. The user will provide a full sample article.
 
-你的任务：提取并输出「结构模板」，删除所有与结构无关的具体内容，只保留可复用的写作结构。
+Your task: extract and output a structural template. Remove all substantive content unrelated to structure; keep only reusable writing structure.
 
-必须保留的结构要素：
-1. 句式：典型句型、段落开头/过渡/结尾模式（用占位符或简述表示）
-2. 长度：各段落/章节的大致字数或句数范围
-3. 语法：时态、语态、人称等语法特征说明
-4. 口吻：正式/书面/客观/结论导向等语气风格描述
+Preserve these structural elements:
+1. Sentence patterns: typical phrasing, paragraph openers/transitions/closers (use placeholders or brief descriptions)
+2. Length: approximate word or sentence counts per section
+3. Grammar: tense, voice, person, and related notes
+4. Tone: formal, objective, conclusion-led, etc.
 
-必须删除：具体公司名、人名、日期、数字、事件、观点内容、行业细节等实质性信息。
+Remove: company names, people, dates, numbers, events, opinions, industry specifics.
 
-输出格式：
-- 只输出模板正文，不要解释分析过程，不要加前言或结语
-- 使用中文
-- 若原文有层级，用 ### 标题、### 摘要、### 要点、### 正文 等分区（与 FinDoc 内置模板一致）
-- 具体可变内容用 [占位符] 表示，例如 [报告标题]、[核心结论]
-- 在模板末尾单独增加一节「### 结构说明」，用简短列表总结：句式、长度、语法、口吻 四项结构要点
-- 不要使用 markdown 代码块包裹输出`
+Output format:
+- Output template body only; no analysis preamble or closing remarks
+- Use English
+- If the source has hierarchy, use ### Title, ### Summary, ### Key points, ### Body (aligned with FinDoc built-in templates)
+- Use [placeholder] for variable content, e.g. [Report title], [Key conclusion]
+- Add a final section ### Structure notes with a short list covering sentence patterns, length, grammar, and tone
+- Do not wrap output in markdown code fences`
 
 function stripCodeFence(text: string): string {
   const trimmed = text.trim()

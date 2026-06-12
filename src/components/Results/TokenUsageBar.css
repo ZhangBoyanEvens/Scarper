@@ -2,20 +2,20 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
-  gap: 10px 20px;
+  gap: var(--sc-space-3) var(--sc-space-4);
   margin: 0;
   flex-shrink: 0;
-  padding: 10px 18px;
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(34, 211, 238, 0.12);
-  font-size: 0.8rem;
+  padding: var(--sc-space-3) var(--sc-space-4);
+  border-radius: var(--sc-radius-md);
+  background: var(--sc-gray-100);
+  border: 1px solid var(--sc-border);
+  font-size: var(--sc-font-size-caption);
 }
 
 .token-usage-bar__item {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sc-space-1);
   min-width: 0;
 }
 
@@ -26,70 +26,49 @@
 .token-usage-bar__cost-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sc-space-2);
   flex-wrap: wrap;
 }
 
 .token-usage-bar__currency {
   flex-shrink: 0;
-  max-width: 9.5rem;
-  padding: 3px 22px 3px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.85);
-  color: #94a3b8;
-  font: inherit;
-  font-size: 0.68rem;
-  line-height: 1.3;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M1 1l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
+  font-size: var(--sc-font-size-caption);
 }
 
-.token-usage-bar__currency:hover {
-  border-color: rgba(34, 211, 238, 0.35);
-  color: #cbd5e1;
-}
-
-.token-usage-bar__currency:focus {
-  outline: none;
-  border-color: rgba(34, 211, 238, 0.5);
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.15);
+.token-usage-bar__currency.ant-select {
+  min-width: 88px;
 }
 
 .token-usage-bar__label {
-  color: #64748b;
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
+  color: var(--sc-text-muted);
+  font-size: var(--sc-font-size-caption);
   white-space: nowrap;
 }
 
 .token-usage-bar__value {
-  color: #e2e8f0;
+  color: var(--sc-text);
   font-variant-numeric: tabular-nums;
-  font-weight: 500;
+  font-weight: var(--sc-font-weight-medium);
 }
 
 .token-usage-bar__cost {
-  color: #22d3ee;
-  font-weight: 600;
+  color: var(--sc-primary);
+  font-weight: var(--sc-font-weight-medium);
 }
 
 .token-usage-bar__cache--hit {
-  color: #4ade80;
+  color: var(--sc-success);
 }
 
 .token-usage-bar__cache--partial {
-  color: #fbbf24;
+  color: var(--sc-warning);
 }
 
 .token-usage-bar__sub {
   display: block;
-  font-size: 0.65rem;
-  font-weight: 400;
-  color: #64748b;
+  font-size: 11px;
+  font-weight: var(--sc-font-weight-regular);
+  color: var(--sc-text-muted);
 }
 
 @media (max-width: 640px) {

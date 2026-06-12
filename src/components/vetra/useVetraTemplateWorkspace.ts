@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAppSettings } from '../../contexts/AppSettingsContext'
 import { isClerkConfigured } from '../../config/clerk'
+import { createTranslator } from '../../i18n/translator'
 import { subscribeVetraAuthReady } from './vetraAuthReady'
 import {
   deleteVetraTemplate,
@@ -30,10 +32,6 @@ import {
 
 function nextTemplateId(): string {
   return crypto.randomUUID()
-}
-
-function defaultTemplateName(count: number): string {
-  return `Template ${count}`
 }
 
 function clonePayload(payload: VetraTemplatePayload): VetraTemplatePayload {
@@ -101,6 +99,11 @@ function isNeonAuthError(error: unknown): boolean {
 }
 
 export function useVetraTemplateWorkspace() {
+  const { settings } = useAppSettings()
+  const t = useMemo(
+    () => createTranslator(settings.ui.locale),
+    [settings.ui.locale],
+  )
   const [authReady, setAuthReady] = useState(!isClerkConfigured)
   const authRetryRef = useRef(0)
   const initial = resolveInitialWorkspace()
@@ -244,7 +247,7 @@ export function useVetraTemplateWorkspace() {
         ) {
           if (!cancelled && generation === syncGenerationRef.current) {
             if (records.length === 0 && protectedCount > 0) {
-              setLoadError('Could not refresh templates — kept your saved data')
+              setLoadError(t('vetra.templates.refreshFailed'))
             }
           }
           return
@@ -268,11 +271,11 @@ export function useVetraTemplateWorkspace() {
             return
           }
           if (isNeonAuthError(error)) {
-            setLoadError('Unable to authenticate — refresh the page or sign in again')
+            setLoadError(t('vetra.templates.authFailed'))
             return
           }
           setLoadError(
-            error instanceof Error ? error.message : 'Failed to load templates',
+            error instanceof Error ? error.message : t('vetra.templates.loadFailed'),
           )
         }
       } finally {
@@ -288,7 +291,7 @@ export function useVetraTemplateWorkspace() {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- resync when auth becomes ready
-  }, [applyRecords, authReady])
+  }, [applyRecords, authReady, t])
 
   const getPayload = useCallback(
     (templateId: string): VetraTemplatePayload =>
@@ -341,7 +344,7 @@ export function useVetraTemplateWorkspace() {
   const handleCreate = () => {
     bumpMutation()
     const id = nextTemplateId()
-    const name = defaultTemplateName(templates.length + 1)
+    const name = t('vetra.templates.defaultName', { count: templates.length + 1 })
     const payload: VetraTemplatePayload = createEmptyEmailTemplate()
     const rollback = snapshotWorkspace(
       templates,
@@ -359,7 +362,7 @@ export function useVetraTemplateWorkspace() {
     setSelectedId(id)
     setEditingId(id)
     setEditingName(name)
-    setStatusMessage('Creating…')
+    setStatusMessage(t('vetra.templates.creating'))
     persistCache(nextTemplates, id, nextPayloadById)
 
     void (async () => {
@@ -371,11 +374,11 @@ export function useVetraTemplateWorkspace() {
           body: payload.body,
         })
         reconcileRecord(record, id)
-        setStatusMessage('Template created')
+        setStatusMessage(t('vetra.templates.created'))
       } catch (error) {
         restoreSnapshot(rollback)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to create template',
+          error instanceof Error ? error.message : t('vetra.templates.createFailed'),
         )
       }
     })()
@@ -407,16 +410,16 @@ export function useVetraTemplateWorkspace() {
     persistCache(nextTemplates, selectedId, payloadById)
     setEditingId(null)
     setEditingName('')
-    setStatusMessage('Renaming…')
+    setStatusMessage(t('vetra.templates.renaming'))
 
     void (async () => {
       try {
         await persistTemplate(targetId, trimmed, getPayload(targetId))
-        setStatusMessage('Template renamed')
+        setStatusMessage(t('vetra.templates.renamed'))
       } catch (error) {
         restoreSnapshot(rollback)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to rename template',
+          error instanceof Error ? error.message : t('vetra.templates.renameFailed'),
         )
       }
     })()
@@ -431,7 +434,7 @@ export function useVetraTemplateWorkspace() {
   }
 
   const handleDelete = (templateId: string, templateName: string) => {
-    if (!window.confirm(`Delete template "${templateName}"?`)) return
+    if (!window.confirm(t('vetra.templates.deleteConfirm', { name: templateName }))) return
 
     bumpMutation()
     const rollback = snapshotWorkspace(
@@ -455,7 +458,7 @@ export function useVetraTemplateWorkspace() {
       setEditingName('')
     }
     persistCache(remaining, nextSelectedId, nextPayloadById)
-    setStatusMessage('Template deleted')
+    setStatusMessage(t('vetra.templates.deleted'))
 
     if (isOptimisticTemplateId(templateId)) return
 
@@ -465,7 +468,7 @@ export function useVetraTemplateWorkspace() {
       } catch (error) {
         restoreSnapshot(rollback)
         setStatusMessage(
-          error instanceof Error ? error.message : 'Failed to delete template',
+          error instanceof Error ? error.message : t('vetra.templates.deleteFailed'),
         )
       }
     })()

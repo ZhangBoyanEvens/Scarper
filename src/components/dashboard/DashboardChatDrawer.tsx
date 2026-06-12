@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { Button, Input, Typography } from 'antd'
 import { streamChatCompletion } from '../../services/deepseekClient'
 import type { ChatRole } from '../../types/deepseek'
 import {
@@ -23,6 +24,8 @@ import {
 import '../../styles/panel.css'
 import '../../styles/scrollbar.css'
 import './DashboardChatDrawer.css'
+
+const { Text } = Typography
 
 interface UiMessage {
   id: string
@@ -100,26 +103,26 @@ export function DashboardChatDrawer({
         chatFailed: 'Chat request failed',
       }
     : {
-        drawerLabel: 'AI 对话助手',
-        tabExpand: '展开 AI 助手',
-        tabCollapse: '收起 AI 助手',
-        title: 'AI 助手',
-        hintSelection: ' · 已选中文本',
-        hintLoading: ' · 加载库…',
-        hintBase: '改稿标黄采纳 · 问答仅依据数据库',
+        drawerLabel: 'AI chat assistant',
+        tabExpand: 'Expand AI assistant',
+        tabCollapse: 'Collapse AI assistant',
+        title: 'AI assistant',
+        hintSelection: ' · text selected',
+        hintLoading: ' · loading corpus…',
+        hintBase: 'Revisions highlighted for accept · Q&A grounded in database',
         empty: (
           <>
-            改稿：「把第二段改得更正式」「再详细一点」→ 标黄预览后采纳。
+            Revise: &quot;Make paragraph 2 more formal&quot; &quot;Add more detail&quot; → preview highlighted, then accept.
             <br />
-            问答：「这家公司有哪些项目？」→ 仅根据当前 Task 数据库回答；未涉及则明确说明。
+            Q&A: &quot;What projects does this company have?&quot; → answers from current Task database only; says when out of scope.
           </>
         ),
-        thinking: '思考中…',
-        placeholder: '改稿或提问文档/数据（问答严格依据数据库）…',
-        clear: '清空',
-        stop: '停止',
-        send: '发送',
-        chatFailed: '对话请求失败',
+        thinking: 'Thinking…',
+        placeholder: 'Revise or ask about document/data (Q&A strictly from database)…',
+        clear: 'Clear',
+        stop: 'Stop',
+        send: 'Send',
+        chatFailed: 'Chat request failed',
       }
 
   useEffect(() => {
@@ -160,13 +163,13 @@ export function DashboardChatDrawer({
         editSessionRef.current = true
         onProposeEdit({
           revision: proposal.revision,
-          note: proposal.note ?? '已根据你的要求生成修改预览',
+          note: proposal.note ?? 'Revision preview generated from your request',
           originalText: editorContextRef.current,
         })
         const chatText =
           stripEditBlockForChat(rawContent) ||
           proposal.note ||
-          '已在左侧编辑器标黄显示修改，请确认后点击「采纳」。'
+          'Changes are highlighted in the left editor — review and click Accept.'
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
@@ -270,7 +273,7 @@ export function DashboardChatDrawer({
                     content:
                       display ||
                       (accumulated.includes('scarper-edit')
-                        ? '正在生成修改预览…'
+                        ? 'Generating revision preview…'
                         : accumulated),
                   }
                 : m,
@@ -352,11 +355,11 @@ export function DashboardChatDrawer({
           <div className="panel-inner dashboard-chat-panel__inner">
             <header className="dashboard-chat-head">
               <h3>{ui.title}</h3>
-              <span className="dashboard-chat-head__hint">
+              <Text type="secondary" className="dashboard-chat-head__hint">
                 {isRagOnly
                   ? `${ui.hintBase}${selectionContext.trim() ? ui.hintSelection : ''}${ragLoading ? ui.hintLoading : ''}`
                   : `${ui.hintBase}${ragLoading ? ui.hintLoading : ''}`}
-              </span>
+              </Text>
             </header>
 
             <div
@@ -390,7 +393,7 @@ export function DashboardChatDrawer({
             </div>
 
             <footer className="dashboard-chat-compose">
-              <textarea
+              <Input.TextArea
                 className="dashboard-chat-input"
                 value={draft}
                 placeholder={ui.placeholder}
@@ -400,31 +403,26 @@ export function DashboardChatDrawer({
                 onKeyDown={onComposeKeyDown}
               />
               <div className="dashboard-chat-compose__actions">
-                <button
-                  type="button"
-                  className="project-btn project-btn--ghost"
+                <Button
+                  size="middle"
                   disabled={messages.length === 0 && !streaming}
                   onClick={handleClear}
                 >
                   {ui.clear}
-                </button>
+                </Button>
                 {streaming ? (
-                  <button
-                    type="button"
-                    className="project-btn project-btn--ghost"
-                    onClick={handleStop}
-                  >
+                  <Button size="middle" onClick={handleStop}>
                     {ui.stop}
-                  </button>
+                  </Button>
                 ) : null}
-                <button
-                  type="button"
-                  className="text-input-save"
+                <Button
+                  type="primary"
+                  size="middle"
                   disabled={!draft.trim() || streaming}
                   onClick={() => void handleSend()}
                 >
                   {ui.send}
-                </button>
+                </Button>
               </div>
             </footer>
           </div>

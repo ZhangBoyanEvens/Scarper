@@ -57,13 +57,13 @@ function ArticleBlock({
     <article className="result-card dashboard-doc-article">
       {article.url ? (
         <>
-          <span className="result-card-badge">来源 {index + 1}</span>
+          <span className="result-card-badge">Source {index + 1}</span>
           <section className="dashboard-doc-field dashboard-doc-field--title-block">
             <textarea
               ref={reg('title')}
               className="dashboard-doc-input dashboard-doc-input--title"
               value={article.title}
-              placeholder="标题"
+              placeholder="Title"
               disabled={disabled}
               rows={1}
               onChange={(e) => onPatch(article.id, { title: e.target.value })}
@@ -80,7 +80,7 @@ function ArticleBlock({
           ref={reg('title')}
           className="dashboard-doc-input dashboard-doc-input--title dashboard-doc-input--solo-title"
           value={article.title}
-          placeholder="文档标题（可选）"
+          placeholder="Document title (optional)"
           disabled={disabled}
           rows={1}
           onChange={(e) => onPatch(article.id, { title: e.target.value })}
@@ -89,12 +89,12 @@ function ArticleBlock({
 
       {(article.url || article.summary) && (
         <section className="dashboard-doc-field">
-          <h4>摘要</h4>
+          <h4>Summary</h4>
           <textarea
             ref={reg('summary')}
             className="dashboard-doc-input dashboard-doc-input--summary"
             value={article.summary}
-            placeholder="摘要"
+            placeholder="Summary"
             disabled={disabled}
             rows={2}
             onChange={(e) => onPatch(article.id, { summary: e.target.value })}
@@ -104,12 +104,12 @@ function ArticleBlock({
 
       {(article.url || article.keyPoints.length > 0) && (
         <section className="dashboard-doc-field">
-          <h4>要点</h4>
+          <h4>Key points</h4>
           <textarea
             ref={reg('points')}
             className="dashboard-doc-input dashboard-doc-input--points"
             value={pointsText}
-            placeholder="每行一条要点"
+            placeholder="One key point per line"
             disabled={disabled}
             rows={Math.max(2, article.keyPoints.length)}
             onChange={(e) => {
@@ -124,12 +124,12 @@ function ArticleBlock({
       )}
 
       <section className="dashboard-doc-field">
-        {article.url ? <h4>正文</h4> : null}
+        {article.url ? <h4>Body</h4> : null}
         <textarea
           ref={reg('body')}
           className="dashboard-doc-input dashboard-doc-input--body"
           value={article.body}
-          placeholder={article.url ? '正文内容' : placeholderFallback}
+          placeholder={article.url ? 'Body text' : placeholderFallback}
           disabled={disabled}
           rows={Math.max(8, article.body.split('\n').length + 1)}
           onChange={(e) => onPatch(article.id, { body: e.target.value })}
@@ -139,7 +139,7 @@ function ArticleBlock({
   )
 }
 
-const placeholderFallback = '在此编辑文档内容…'
+const placeholderFallback = 'Edit document content here…'
 
 export const DashboardRichEditor = forwardRef<
   DashboardEditorHandle,

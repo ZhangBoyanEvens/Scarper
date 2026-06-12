@@ -1,5 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="320" height="200" viewBox="0 0 320 200" role="img" aria-hidden="true">
-  <rect width="320" height="200" fill="#0f172a" rx="10"/>
-  <path d="M120 50 L160 150 L200 50" fill="none" stroke="#6366f1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="160" cy="100" r="60" fill="none" stroke="#334155" stroke-width="2" stroke-dasharray="6 8"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="620" viewBox="0 0 800 620" role="img" aria-hidden="true">
+  <rect width="800" height="620" fill="#fafafa"/>
+  <ellipse cx="400" cy="560" rx="280" ry="28" fill="#e6e6e6"/>
+
+  <!-- Company profile cards -->
+  <g transform="translate(88 72) rotate(-8)">
+    <rect width="120" height="88" rx="8" fill="#fff" stroke="#e6e6e6" stroke-width="2"/>
+    <rect x="14" y="14" width="36" height="36" rx="18" fill="#35a760"/>
+    <path d="M26 32l6 6 12-12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="58" y="18" width="48" height="8" rx="4" fill="#e6e6e6"/>
+    <rect x="58" y="34" width="36" height="6" rx="3" fill="#f2f2f2"/>
+    <rect x="14" y="62" width="92" height="6" rx="3" fill="#f2f2f2"/>
+  </g>
+  <g transform="translate(612 96) rotate(10)">
+    <rect width="108" height="78" rx="8" fill="#fff" stroke="#e6e6e6" stroke-width="2"/>
+    <rect x="12" y="12" width="84" height="10" rx="5" fill="#35a760" opacity="0.85"/>
+    <rect x="12" y="30" width="72" height="6" rx="3" fill="#e6e6e6"/>
+    <rect x="12" y="42" width="60" height="6" rx="3" fill="#f2f2f2"/>
+    <rect x="12" y="54" width="48" height="6" rx="3" fill="#f2f2f2"/>
+  </g>
+
+  <!-- Email template panel -->
+  <g transform="translate(470 118)">
+    <rect width="168" height="132" rx="10" fill="#fff" stroke="#090814" stroke-width="2.5"/>
+    <rect x="16" y="16" width="136" height="18" rx="4" fill="#35a760"/>
+    <rect x="16" y="44" width="112" height="8" rx="4" fill="#e6e6e6"/>
+    <rect x="16" y="58" width="96" height="8" rx="4" fill="#f2f2f2"/>
+    <rect x="16" y="72" width="104" height="8" rx="4" fill="#f2f2f2"/>
+    <rect x="16" y="86" width="72" height="8" rx="4" fill="#f2f2f2"/>
+    <rect x="16" y="104" width="56" height="12" rx="6" fill="#35a760"/>
+  </g>
+
+  <!-- Main envelope -->
+  <g transform="translate(248 168)">
+    <rect width="220" height="150" rx="12" fill="#35a760"/>
+    <path d="M0 36 L110 108 L220 36" fill="none" stroke="#fff" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M0 36 L110 92 L220 36" fill="#2d8f52"/>
+    <circle cx="196" cy="28" r="22" fill="#fff"/>
+    <path d="M188 28l6 6 12-12" fill="none" stroke="#35a760" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Sent trail -->
+  <path d="M470 250 C520 220, 560 210, 610 228" fill="none" stroke="#35a760" stroke-width="4" stroke-dasharray="8 10" stroke-linecap="round"/>
+  <g transform="translate(618 214)">
+    <path d="M0 8 L24 0 L24 16 Z" fill="#35a760"/>
+  </g>
+
+  <!-- Person -->
+  <g transform="translate(118 300)">
+    <path d="M58 188c-18 0-34-14-34-32V96c0-18 16-32 34-32s34 14 34 32v60c0 18-16 32-34 32Z" fill="#ed9da0"/>
+    <ellipse cx="58" cy="52" rx="34" ry="36" fill="#ed9da0"/>
+    <path d="M24 48c4-28 32-42 58-28 18 10 24 30 20 48-8-12-24-18-40-16-10 1-18 0-24-4Z" fill="#090814"/>
+    <path d="M12 188h92c8 0 14 8 12 16l-8 36H8l-8-36c-2-8 4-16 12-16Z" fill="#090814"/>
+    <path d="M0 188h24l8 52H-8Z" fill="#35a760"/>
+    <path d="M92 188h24l-8 52H84Z" fill="#35a760"/>
+    <rect x="34" y="118" width="48" height="70" rx="8" fill="#e6e6e6"/>
+    <rect x="42" y="128" width="32" height="22" rx="4" fill="#fff"/>
+    <rect x="46" y="156" width="24" height="4" rx="2" fill="#35a760"/>
+    <rect x="46" y="164" width="18" height="4" rx="2" fill="#d6d6e3"/>
+  </g>
+
+  <!-- Outreach workflow nodes -->
+  <g transform="translate(330 430)">
+    <circle cx="24" cy="24" r="24" fill="#fff" stroke="#35a760" stroke-width="3"/>
+    <rect x="14" y="18" width="20" height="14" rx="3" fill="none" stroke="#35a760" stroke-width="2.5"/>
+    <path d="M14 18 L24 28 L34 18" fill="none" stroke="#35a760" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M48 24 H92" stroke="#35a760" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="116" cy="24" r="24" fill="#fff" stroke="#35a760" stroke-width="3"/>
+    <path d="M108 24h16M116 16v16" stroke="#35a760" stroke-width="3" stroke-linecap="round"/>
+    <path d="M140 24 H184" stroke="#35a760" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="208" cy="24" r="24" fill="#35a760"/>
+    <path d="M200 24l6 6 12-12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Floating mini mails -->
+  <g transform="translate(560 360) rotate(12)">
+    <rect width="54" height="38" rx="6" fill="#fff" stroke="#e6e6e6" stroke-width="2"/>
+    <path d="M4 10 L27 26 L50 10" fill="none" stroke="#35a760" stroke-width="3" stroke-linejoin="round"/>
+  </g>
+  <g transform="translate(680 320) rotate(-8)">
+    <rect width="48" height="34" rx="6" fill="#fff" stroke="#e6e6e6" stroke-width="2"/>
+    <path d="M4 9 L24 23 L44 9" fill="none" stroke="#35a760" stroke-width="3" stroke-linejoin="round"/>
+  </g>
 </svg>
