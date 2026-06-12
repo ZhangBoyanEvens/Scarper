@@ -1,0 +1,155 @@
+.vetra-outreach-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.vetra-outreach-body {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: #05060c;
+}
+
+.vetra-outreach-body__panel {
+  flex: 0 0 70%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px clamp(20px, 4vw, 32px) clamp(16px, 3vw, 24px) 0;
+  box-sizing: border-box;
+  gap: 12px;
+}
+
+.vetra-outreach-editor__panel {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.vetra-outreach-editor__panel.panel-shell {
+  height: auto;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.vetra-outreach-editor__panel .panel-inner.panel-fill {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.vetra-outreach-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  gap: 0;
+}
+
+.vetra-outreach-editor__subject-field,
+.vetra-outreach-editor__body-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vetra-outreach-editor__subject-field {
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vetra-outreach-editor__body-field {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.vetra-outreach-editor__field-label {
+  flex-shrink: 0;
+  padding: 10px 18px 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.vetra-outreach-editor__subject {
+  width: 100%;
+  padding: 8px 18px 12px;
+  border: none;
+  background: transparent;
+  color: #f1f5f9;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vetra-outreach-editor__subject::placeholder {
+  color: #64748b;
+}
+
+.vetra-outreach-editor__textarea {
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 18px 12px;
+  border: none;
+  background: transparent;
+  color: #f1f5f9;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.vetra-outreach-editor__textarea::placeholder {
+  color: #64748b;
+}
+
+.vetra-outreach-editor__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 4px;
+}
+
+.vetra-outreach-editor__status {
+  margin-right: auto;
+}
+
+@media (max-width: 900px) {
+  .vetra-outreach-body {
+    flex-direction: column;
+  }
+
+  .vetra-outreach-body__panel {
+    flex: 1 1 0;
+    width: 100%;
+    min-height: 0;
+    padding: clamp(16px, 4vw, 24px);
+  }
+}

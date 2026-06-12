@@ -3,6 +3,7 @@
 -- 1) 用户目录：u_<user_id>
 --    projects — 项目登记（id, name, description, data_schema, ...）
 --    findoc_templates — FinDoc 模板库（id, name, content, created_at, updated_at）
+--    vetra_companies — Vetra 公司（id, name, introduction, subject, body, created_at, updated_at）
 --
 -- 2) 每个 Project 独立库：u_<user_id>_p_<project_uuid>
 --    scrape_upload_batches — Scrape 上传批次（source='scrape'）

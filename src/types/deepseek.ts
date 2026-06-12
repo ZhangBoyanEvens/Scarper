@@ -11,6 +11,7 @@ export interface ChatCompletionRequest {
   messages: Array<{ role: ChatRole; content: string }>
   stream?: boolean
   temperature?: number
+  max_tokens?: number
 }
 
 export interface ChatCompletionResponse {

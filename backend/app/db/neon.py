@@ -39,6 +39,8 @@ _STORAGE_CACHE_TTL_SEC = 90.0
 
 _CATALOG_PROJECTS = "projects"
 _FINDOC_TEMPLATES = "findoc_templates"
+_VETRA_COMPANIES = "vetra_companies"
+_VETRA_TEMPLATES = "vetra_templates"
 _SCRAPE_UPLOADS = "scrape_upload_batches"
 
 
@@ -57,6 +59,25 @@ class FindocTemplateRecord:
     id: str
     name: str
     content: str
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class VetraCompanyRecord:
+    id: str
+    name: str
+    introduction: str
+    created_at: str
+    updated_at: str
+
+
+@dataclass(frozen=True)
+class VetraTemplateRecord:
+    id: str
+    name: str
+    subject: str
+    body: str
     created_at: str
     updated_at: str
 
@@ -174,6 +195,19 @@ class NeonRepository:
             else:
                 self._storage_cache.clear()
 
+    def adjust_storage_cache(self, user_id: str, delta: int) -> None:
+        """增量更新存储缓存，避免每次 Vetra 写入都全量重算配额。"""
+        if not user_id or delta == 0:
+            return
+        with self._storage_cache_lock:
+            cached = self._storage_cache.get(user_id)
+            if not cached:
+                return
+            self._storage_cache[user_id] = (
+                time.monotonic(),
+                max(0, cached[1] + int(delta)),
+            )
+
     def _resolve_project_data_schema(
         self, conn, user_id: str, project_id: str
     ) -> str:
@@ -218,6 +252,8 @@ class NeonRepository:
         schema_id = sql.Identifier(schema_name)
         projects_id = sql.Identifier(_CATALOG_PROJECTS)
         templates_id = sql.Identifier(_FINDOC_TEMPLATES)
+        vetra_id = sql.Identifier(_VETRA_COMPANIES)
+        vetra_tpl_id = sql.Identifier(_VETRA_TEMPLATES)
 
         statements = [
             sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(schema_id),
@@ -245,6 +281,31 @@ class NeonRepository:
                 """
             ).format(schema_id, templates_id),
             sql.SQL(
+                """
+                CREATE TABLE IF NOT EXISTS {}.{} (
+                    id UUID PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    introduction TEXT NOT NULL DEFAULT '',
+                    subject TEXT NOT NULL DEFAULT '',
+                    body TEXT NOT NULL DEFAULT '',
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL
+                )
+                """
+            ).format(schema_id, vetra_id),
+            sql.SQL(
+                """
+                CREATE TABLE IF NOT EXISTS {}.{} (
+                    id UUID PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    subject TEXT NOT NULL DEFAULT '',
+                    body TEXT NOT NULL DEFAULT '',
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL
+                )
+                """
+            ).format(schema_id, vetra_tpl_id),
+            sql.SQL(
                 "CREATE INDEX IF NOT EXISTS {} ON {}.{} (updated_at DESC)"
             ).format(
                 sql.Identifier(f"idx_{schema_name}_catalog_updated"),
@@ -258,15 +319,34 @@ class NeonRepository:
                 schema_id,
                 templates_id,
             ),
+            sql.SQL(
+                "CREATE INDEX IF NOT EXISTS {} ON {}.{} (updated_at DESC)"
+            ).format(
+                sql.Identifier(f"idx_{schema_name}_vetra_co_updated"),
+                schema_id,
+                vetra_id,
+            ),
+            sql.SQL(
+                "CREATE INDEX IF NOT EXISTS {} ON {}.{} (updated_at DESC)"
+            ).format(
+                sql.Identifier(f"idx_{schema_name}_vetra_tpl_updated"),
+                schema_id,
+                vetra_tpl_id,
+            ),
         ]
 
         alter_col = sql.SQL(
             "ALTER TABLE {}.{} ADD COLUMN IF NOT EXISTS data_schema TEXT"
         ).format(schema_id, projects_id)
 
+        vetra_intro_col = sql.SQL(
+            "ALTER TABLE {}.{} ADD COLUMN IF NOT EXISTS introduction TEXT NOT NULL DEFAULT ''"
+        ).format(schema_id, vetra_id)
+
         for stmt in statements:
             conn.execute(stmt)
         conn.execute(alter_col)
+        conn.execute(vetra_intro_col)
         with conn.cursor() as cur:
             cur.execute(
                 sql.SQL(
@@ -574,6 +654,46 @@ class NeonRepository:
         except Exception:
             return 0
 
+    def _sum_catalog_vetra_company_bytes(self, conn, schema_name: str) -> int:
+        schema_id = sql.Identifier(schema_name)
+        table_id = sql.Identifier(_VETRA_COMPANIES)
+        query = sql.SQL(
+            """
+            SELECT COALESCE(SUM(
+                pg_column_size(name) + pg_column_size(introduction)
+            ), 0)::bigint
+            FROM {}.{}
+            """
+        ).format(schema_id, table_id)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                row = cur.fetchone()
+            return int(row[0] or 0) if row else 0
+        except Exception:
+            return 0
+
+    def _sum_catalog_vetra_template_bytes(self, conn, schema_name: str) -> int:
+        schema_id = sql.Identifier(schema_name)
+        table_id = sql.Identifier(_VETRA_TEMPLATES)
+        query = sql.SQL(
+            """
+            SELECT COALESCE(SUM(
+                pg_column_size(name)
+                + pg_column_size(subject)
+                + pg_column_size(body)
+            ), 0)::bigint
+            FROM {}.{}
+            """
+        ).format(schema_id, table_id)
+        try:
+            with conn.cursor() as cur:
+                cur.execute(query)
+                row = cur.fetchone()
+            return int(row[0] or 0) if row else 0
+        except Exception:
+            return 0
+
     def _sum_all_upload_bytes(
         self, conn, user_id: str, projects: list[ProjectRecord]
     ) -> int:
@@ -637,6 +757,8 @@ class NeonRepository:
         try:
             with self._session() as conn:
                 total += self._sum_catalog_findoc_template_bytes(conn, catalog)
+                total += self._sum_catalog_vetra_company_bytes(conn, catalog)
+                total += self._sum_catalog_vetra_template_bytes(conn, catalog)
                 total += self._sum_all_upload_bytes(conn, user_id, projects)
         except NeonConnectionError:
             raise
@@ -1356,6 +1478,448 @@ class NeonRepository:
             return deleted
         except Exception as e:
             raise NeonConnectionError(f"FinDoc 模板删除失败: {e}") from e
+
+    @staticmethod
+    def _row_to_vetra_company(row: tuple) -> VetraCompanyRecord:
+        created = row[3]
+        updated = row[4]
+        return VetraCompanyRecord(
+            id=str(row[0]),
+            name=str(row[1]),
+            introduction=str(row[2] or ""),
+            created_at=(
+                created.isoformat()
+                if hasattr(created, "isoformat")
+                else str(created)
+            ),
+            updated_at=(
+                updated.isoformat()
+                if hasattr(updated, "isoformat")
+                else str(updated)
+            ),
+        )
+
+    @staticmethod
+    def _row_to_vetra_template(row: tuple) -> VetraTemplateRecord:
+        created = row[4]
+        updated = row[5]
+        return VetraTemplateRecord(
+            id=str(row[0]),
+            name=str(row[1]),
+            subject=str(row[2] or ""),
+            body=str(row[3] or ""),
+            created_at=(
+                created.isoformat()
+                if hasattr(created, "isoformat")
+                else str(created)
+            ),
+            updated_at=(
+                updated.isoformat()
+                if hasattr(updated, "isoformat")
+                else str(updated)
+            ),
+        )
+
+    def _vetra_company_bytes(self, conn, catalog: str, company_id: str) -> int:
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_COMPANIES)
+        query = sql.SQL(
+            """
+            SELECT COALESCE(
+                pg_column_size(name) + pg_column_size(introduction),
+                0
+            )::bigint
+            FROM {}.{}
+            WHERE id = %s
+            """
+        ).format(schema_id, table_id)
+        with conn.cursor() as cur:
+            cur.execute(query, (company_id,))
+            row = cur.fetchone()
+        return int(row[0] or 0) if row else 0
+
+    def _vetra_template_bytes(self, conn, catalog: str, template_id: str) -> int:
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_TEMPLATES)
+        query = sql.SQL(
+            """
+            SELECT COALESCE(
+                pg_column_size(name)
+                + pg_column_size(subject)
+                + pg_column_size(body),
+                0
+            )::bigint
+            FROM {}.{}
+            WHERE id = %s
+            """
+        ).format(schema_id, table_id)
+        with conn.cursor() as cur:
+            cur.execute(query, (template_id,))
+            row = cur.fetchone()
+        return int(row[0] or 0) if row else 0
+
+    def list_vetra_companies(self, user_id: str) -> list[VetraCompanyRecord]:
+        catalog = self.ensure_user_catalog(user_id)
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_COMPANIES)
+        query = sql.SQL(
+            """
+            SELECT id, name, introduction, created_at, updated_at
+            FROM {}.{}
+            ORDER BY updated_at DESC
+            """
+        ).format(schema_id, table_id)
+
+        try:
+            with self._session() as conn:
+                with conn.cursor() as cur:
+                    cur.execute(query)
+                    rows = cur.fetchall()
+        except Exception as e:
+            raise NeonConnectionError(f"Vetra 公司列表查询失败: {e}") from e
+
+        return [self._row_to_vetra_company(row) for row in rows]
+
+    def save_vetra_company(
+        self,
+        user_id: str,
+        *,
+        company_id: str | None,
+        name: str,
+        introduction: str,
+    ) -> VetraCompanyRecord:
+        if not user_id:
+            raise ValueError("user_id 必填")
+
+        catalog = self.ensure_user_catalog(user_id)
+        trimmed_name = name.strip()
+        if not trimmed_name:
+            raise ValueError("公司名称不能为空")
+
+        now = datetime.now(timezone.utc)
+        incoming = (
+            estimate_utf8_bytes(trimmed_name)
+            + estimate_utf8_bytes(introduction)
+            + 48
+        )
+
+        raw_id = (company_id or "").strip()
+        update_id: str | None = None
+        insert_id = str(uuid.uuid4())
+        if raw_id:
+            try:
+                uuid.UUID(raw_id)
+                update_id = raw_id
+                insert_id = raw_id
+            except ValueError:
+                update_id = None
+
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_COMPANIES)
+
+        try:
+            with self._session() as conn:
+                old_bytes = 0
+                if update_id:
+                    old_bytes = self._vetra_company_bytes(conn, catalog, update_id)
+                delta = max(0, incoming - old_bytes)
+                if delta > 0:
+                    self.assert_user_storage_quota(user_id, delta)
+
+                update_sql = sql.SQL(
+                    """
+                    UPDATE {}.{}
+                    SET name = %s, introduction = %s, updated_at = %s
+                    WHERE id = %s
+                    RETURNING id, name, introduction, created_at, updated_at
+                    """
+                ).format(schema_id, table_id)
+                insert_sql = sql.SQL(
+                    """
+                    INSERT INTO {}.{} (id, name, introduction, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s)
+                    RETURNING id, name, introduction, created_at, updated_at
+                    """
+                ).format(schema_id, table_id)
+
+                row = None
+                with conn.cursor() as cur:
+                    if update_id:
+                        cur.execute(
+                            update_sql,
+                            (trimmed_name, introduction, now, update_id),
+                        )
+                        row = cur.fetchone()
+
+                    if not row:
+                        cur.execute(
+                            insert_sql,
+                            (insert_id, trimmed_name, introduction, now, now),
+                        )
+                        row = cur.fetchone()
+        except NeonStorageQuotaError:
+            raise
+        except Exception as e:
+            raise NeonConnectionError(f"Vetra 公司保存失败: {e}") from e
+
+        if not row:
+            raise NeonConnectionError("Vetra 公司保存失败")
+
+        self.adjust_storage_cache(user_id, incoming - old_bytes)
+        return self._row_to_vetra_company(row)
+
+    def delete_vetra_company(self, user_id: str, company_id: str) -> bool:
+        catalog = self.ensure_user_catalog(user_id)
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_COMPANIES)
+        delete_sql = sql.SQL("DELETE FROM {}.{} WHERE id = %s").format(
+            schema_id, table_id
+        )
+
+        try:
+            with self._session() as conn:
+                deleted_bytes = self._vetra_company_bytes(conn, catalog, company_id)
+                with conn.cursor() as cur:
+                    cur.execute(delete_sql, (company_id,))
+                    deleted = cur.rowcount > 0
+            if deleted:
+                self.adjust_storage_cache(user_id, -deleted_bytes)
+            return deleted
+        except Exception as e:
+            raise NeonConnectionError(f"Vetra 公司删除失败: {e}") from e
+
+    def _ensure_vetra_template_table(self, conn, catalog: str) -> None:
+        """已有用户目录时补建 vetra_templates 表（bootstrap 可能早于该表上线）。"""
+        schema_id = sql.Identifier(catalog)
+        tpl_id = sql.Identifier(_VETRA_TEMPLATES)
+        conn.execute(
+            sql.SQL(
+                """
+                CREATE TABLE IF NOT EXISTS {}.{} (
+                    id UUID PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    subject TEXT NOT NULL DEFAULT '',
+                    body TEXT NOT NULL DEFAULT '',
+                    created_at TIMESTAMPTZ NOT NULL,
+                    updated_at TIMESTAMPTZ NOT NULL
+                )
+                """
+            ).format(schema_id, tpl_id)
+        )
+        conn.execute(
+            sql.SQL(
+                "CREATE INDEX IF NOT EXISTS {} ON {}.{} (updated_at DESC)"
+            ).format(
+                sql.Identifier(f"idx_{catalog}_vetra_tpl_updated"),
+                schema_id,
+                tpl_id,
+            )
+        )
+
+    def _migrate_legacy_vetra_templates(self, conn, catalog: str) -> None:
+        """一次性：从旧 vetra_companies 表的 subject/body 复制到独立模板表。"""
+        schema_id = sql.Identifier(catalog)
+        tpl_id = sql.Identifier(_VETRA_TEMPLATES)
+        co_id = sql.Identifier(_VETRA_COMPANIES)
+        count_sql = sql.SQL("SELECT COUNT(*) FROM {}.{}").format(schema_id, tpl_id)
+        with conn.cursor() as cur:
+            cur.execute(count_sql)
+            if int(cur.fetchone()[0] or 0) > 0:
+                return
+
+            legacy_sql = sql.SQL(
+                """
+                SELECT name, subject, body
+                FROM {}.{}
+                WHERE COALESCE(subject, '') <> '' OR COALESCE(body, '') <> ''
+                ORDER BY updated_at DESC
+                """
+            ).format(schema_id, co_id)
+            cur.execute(legacy_sql)
+            legacy_rows = cur.fetchall()
+
+        now = datetime.now(timezone.utc)
+        insert_sql = sql.SQL(
+            """
+            INSERT INTO {}.{} (id, name, subject, body, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """
+        ).format(schema_id, tpl_id)
+
+        with conn.cursor() as cur:
+            if legacy_rows:
+                for name, subject, body in legacy_rows:
+                    cur.execute(
+                        insert_sql,
+                        (
+                            str(uuid.uuid4()),
+                            str(name),
+                            str(subject or ""),
+                            str(body or ""),
+                            now,
+                            now,
+                        ),
+                    )
+            else:
+                cur.execute(
+                    insert_sql,
+                    (
+                        str(uuid.uuid4()),
+                        "Default",
+                        "Partnership with {{contact_name}}",
+                        (
+                            "Dear {{contact_name}},\n\n"
+                            "{{personalized_intro}}\n\n"
+                            "We would love to explore how we can collaborate "
+                            "with your team.\n\n"
+                            "Best regards,\n{{sender_name}}"
+                        ),
+                        now,
+                        now,
+                    ),
+                )
+
+    def list_vetra_templates(self, user_id: str) -> list[VetraTemplateRecord]:
+        catalog = self.ensure_user_catalog(user_id)
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_TEMPLATES)
+        query = sql.SQL(
+            """
+            SELECT id, name, subject, body, created_at, updated_at
+            FROM {}.{}
+            ORDER BY updated_at DESC
+            """
+        ).format(schema_id, table_id)
+
+        try:
+            with self._session() as conn:
+                self._ensure_vetra_template_table(conn, catalog)
+                self._migrate_legacy_vetra_templates(conn, catalog)
+                with conn.cursor() as cur:
+                    cur.execute(query)
+                    rows = cur.fetchall()
+        except Exception as e:
+            raise NeonConnectionError(f"Vetra 模板列表查询失败: {e}") from e
+
+        return [self._row_to_vetra_template(row) for row in rows]
+
+    def save_vetra_template(
+        self,
+        user_id: str,
+        *,
+        template_id: str | None,
+        name: str,
+        subject: str,
+        body: str,
+    ) -> VetraTemplateRecord:
+        if not user_id:
+            raise ValueError("user_id 必填")
+
+        catalog = self.ensure_user_catalog(user_id)
+        trimmed_name = name.strip()
+        if not trimmed_name:
+            raise ValueError("模板名称不能为空")
+
+        now = datetime.now(timezone.utc)
+        incoming = (
+            estimate_utf8_bytes(trimmed_name)
+            + estimate_utf8_bytes(subject)
+            + estimate_utf8_bytes(body)
+            + 48
+        )
+
+        raw_id = (template_id or "").strip()
+        update_id: str | None = None
+        insert_id = str(uuid.uuid4())
+        if raw_id:
+            try:
+                uuid.UUID(raw_id)
+                update_id = raw_id
+                insert_id = raw_id
+            except ValueError:
+                update_id = None
+
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_TEMPLATES)
+
+        try:
+            with self._session() as conn:
+                self._ensure_vetra_template_table(conn, catalog)
+                old_bytes = 0
+                if update_id:
+                    old_bytes = self._vetra_template_bytes(conn, catalog, update_id)
+                delta = max(0, incoming - old_bytes)
+                if delta > 0:
+                    self.assert_user_storage_quota(user_id, delta)
+
+                update_sql = sql.SQL(
+                    """
+                    UPDATE {}.{}
+                    SET name = %s, subject = %s, body = %s, updated_at = %s
+                    WHERE id = %s
+                    RETURNING id, name, subject, body, created_at, updated_at
+                    """
+                ).format(schema_id, table_id)
+                insert_sql = sql.SQL(
+                    """
+                    INSERT INTO {}.{} (id, name, subject, body, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING id, name, subject, body, created_at, updated_at
+                    """
+                ).format(schema_id, table_id)
+
+                row = None
+                with conn.cursor() as cur:
+                    if update_id:
+                        cur.execute(
+                            update_sql,
+                            (trimmed_name, subject, body, now, update_id),
+                        )
+                        row = cur.fetchone()
+
+                    if not row:
+                        cur.execute(
+                            insert_sql,
+                            (
+                                insert_id,
+                                trimmed_name,
+                                subject,
+                                body,
+                                now,
+                                now,
+                            ),
+                        )
+                        row = cur.fetchone()
+        except NeonStorageQuotaError:
+            raise
+        except Exception as e:
+            raise NeonConnectionError(f"Vetra 模板保存失败: {e}") from e
+
+        if not row:
+            raise NeonConnectionError("Vetra 模板保存失败")
+
+        self.adjust_storage_cache(user_id, incoming - old_bytes)
+        return self._row_to_vetra_template(row)
+
+    def delete_vetra_template(self, user_id: str, template_id: str) -> bool:
+        catalog = self.ensure_user_catalog(user_id)
+        schema_id = sql.Identifier(catalog)
+        table_id = sql.Identifier(_VETRA_TEMPLATES)
+        delete_sql = sql.SQL("DELETE FROM {}.{} WHERE id = %s").format(
+            schema_id, table_id
+        )
+
+        try:
+            with self._session() as conn:
+                deleted_bytes = self._vetra_template_bytes(conn, catalog, template_id)
+                with conn.cursor() as cur:
+                    cur.execute(delete_sql, (template_id,))
+                    deleted = cur.rowcount > 0
+            if deleted:
+                self.adjust_storage_cache(user_id, -deleted_bytes)
+            return deleted
+        except Exception as e:
+            raise NeonConnectionError(f"Vetra 模板删除失败: {e}") from e
 
     def _connect(self):
         """兼容旧调用；请使用 _session()，连接在进程内复用。"""

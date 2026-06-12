@@ -7,6 +7,7 @@ export type AppView =
   | 'findoc'
   | 'findoc-templates'
   | 'rag-chat'
+  | 'vetra'
   | 'scrape'
   | 'settings'
 
@@ -31,6 +32,7 @@ const TOOLS_FAMILY: ReadonlySet<AppView> = new Set([
   'findoc',
   'findoc-templates',
   'rag-chat',
+  'vetra',
 ])
 
 export function isToolsFamilyView(view: AppView): boolean {

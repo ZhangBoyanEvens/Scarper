@@ -5,6 +5,8 @@ import { invalidateProjectsCache } from '../../services/projectService'
 import { invalidateRecordsCache } from '../../services/projectRecordService'
 import { clearNeonStatusCache } from '../../services/neonProjectApi'
 import { cacheInvalidate } from '../../services/memoryCache'
+import { invalidateVetraTemplateWorkspaceCache } from '../vetra/vetraTemplateWorkspaceCache'
+import { invalidateVetraWorkspaceCache } from '../vetra/vetraWorkspaceCache'
 import {
   clearAuthTokenGetter,
   registerAuthTokenGetter,
@@ -21,6 +23,8 @@ export function ClerkTokenBridge() {
     clearNeonStatusCache()
     invalidateProjectsCache()
     invalidateRecordsCache()
+    invalidateVetraWorkspaceCache()
+    invalidateVetraTemplateWorkspaceCache()
     cacheInvalidate(['taskText'])
     setSelectedProjectId(null)
     window.dispatchEvent(new Event('scarper:projects-changed'))
@@ -45,6 +49,7 @@ export function ClerkTokenBridge() {
       return
     }
     registerAuthTokenGetter(fetchClerkJwt)
+    window.dispatchEvent(new Event('scarper:auth-token-ready'))
     return () => clearAuthTokenGetter()
   }, [fetchClerkJwt, isSignedIn])
 

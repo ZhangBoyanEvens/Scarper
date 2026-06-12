@@ -10,6 +10,7 @@ if sys.platform == "win32":
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.deepseek_routes import router as deepseek_router
 from app.api.document_routes import router as document_router
 from app.api.diagnostics_routes import router as diagnostics_router
 from app.api.neon_routes import router as neon_router
@@ -55,6 +56,7 @@ app.add_middleware(
 )
 
 app.include_router(router)
+app.include_router(deepseek_router)
 app.include_router(document_router)
 app.include_router(diagnostics_router)
 app.include_router(neon_router)

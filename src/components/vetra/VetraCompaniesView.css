@@ -1,0 +1,291 @@
+.vetra-companies-view {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-height: 0;
+  min-width: 0;
+}
+
+.vetra-companies-view--loading {
+  align-items: center;
+  justify-content: center;
+}
+
+.vetra-companies-loading {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+.vetra-companies-loading--error {
+  color: #f87171;
+}
+
+.vetra-companies-center {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px) 0;
+  box-sizing: border-box;
+  background: #05060c;
+}
+
+.vetra-companies-list {
+  flex: 0 0 min(320px, 34vw);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 10, 18, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.vetra-companies-list__head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vetra-companies-list__status {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 8px 16px 10px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vetra-companies-list__status--error {
+  color: #f87171;
+}
+
+.vetra-companies-list__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.vetra-companies-list__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  cursor: pointer;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.55);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.vetra-companies-list__create svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vetra-companies-list__import {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  cursor: pointer;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.55);
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.vetra-companies-list__import svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vetra-companies-list__import:hover:not(:disabled) {
+  color: #a5b4fc;
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.vetra-companies-list__import:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.vetra-companies-list__create:hover {
+  color: #c7d2fe;
+  border-color: rgba(99, 102, 241, 0.45);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.vetra-companies-list__title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.vetra-companies-list__count {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #c7d2fe;
+  background: rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+}
+
+.vetra-companies-list__scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  overflow: auto;
+}
+
+.vetra-company-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.vetra-company-card:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+  background: rgba(30, 41, 59, 0.55);
+  transform: translateY(-1px);
+}
+
+.vetra-company-card--active {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.vetra-company-card--editing {
+  transform: none;
+}
+
+.vetra-company-card__row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.vetra-company-card__button {
+  display: block;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 14px;
+  border: none;
+  border-radius: inherit;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+.vetra-company-card__input {
+  width: 100%;
+  padding: 11px 13px;
+  border: none;
+  border-radius: inherit;
+  outline: none;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  background: rgba(2, 6, 23, 0.45);
+  box-sizing: border-box;
+}
+
+.vetra-company-card__input:focus {
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.45);
+}
+
+.vetra-company-card__name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.3;
+}
+
+.vetra-company-card__delete {
+  flex-shrink: 0;
+  align-self: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #94a3b8;
+  background: transparent;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.vetra-company-card__delete:hover:not(:disabled) {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.12);
+}
+
+.vetra-company-card__delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+html.reduce-motion .vetra-company-card {
+  transition: none;
+}
+
+html.reduce-motion .vetra-company-card:hover {
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .vetra-companies-view {
+    flex-direction: column;
+  }
+
+  .vetra-companies-list {
+    flex: 0 0 auto;
+    max-height: 42vh;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+}

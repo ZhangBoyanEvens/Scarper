@@ -154,3 +154,55 @@ class FindocTemplateDeleteResponse(BaseModel):
 class FindocProjectSaveRequest(BaseModel):
     editor_text: str = Field(min_length=1, max_length=500_000)
     title: str = Field(default="", max_length=200)
+
+
+class VetraCompanySaveRequest(BaseModel):
+    id: str | None = Field(default=None, max_length=64)
+    name: str = Field(min_length=1, max_length=80)
+    introduction: str = Field(default="", max_length=500_000)
+
+
+class VetraCompanyItemResponse(BaseModel):
+    id: str
+    name: str
+    introduction: str
+    created_at: str
+    updated_at: str
+
+
+class VetraCompanyListResponse(BaseModel):
+    items: list[VetraCompanyItemResponse]
+    storage: Literal["neon", "local"] = "neon"
+
+
+class VetraCompanyDeleteResponse(BaseModel):
+    id: str
+    deleted: bool = True
+    storage: Literal["neon", "local"] = "neon"
+
+
+class VetraTemplateSaveRequest(BaseModel):
+    id: str | None = Field(default=None, max_length=64)
+    name: str = Field(min_length=1, max_length=80)
+    subject: str = Field(default="", max_length=500)
+    body: str = Field(default="", max_length=500_000)
+
+
+class VetraTemplateItemResponse(BaseModel):
+    id: str
+    name: str
+    subject: str
+    body: str
+    created_at: str
+    updated_at: str
+
+
+class VetraTemplateListResponse(BaseModel):
+    items: list[VetraTemplateItemResponse]
+    storage: Literal["neon", "local"] = "neon"
+
+
+class VetraTemplateDeleteResponse(BaseModel):
+    id: str
+    deleted: bool = True
+    storage: Literal["neon", "local"] = "neon"

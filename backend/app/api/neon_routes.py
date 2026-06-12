@@ -36,6 +36,14 @@ from app.models.project_schemas import (
     ProjectManualRecordRequest,
     ProjectUploadRequest,
     ProjectUploadResponse,
+    VetraCompanyDeleteResponse,
+    VetraCompanyItemResponse,
+    VetraCompanyListResponse,
+    VetraCompanySaveRequest,
+    VetraTemplateDeleteResponse,
+    VetraTemplateItemResponse,
+    VetraTemplateListResponse,
+    VetraTemplateSaveRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -287,6 +295,184 @@ async def delete_findoc_template(
         raise HTTPException(status_code=404, detail="模板不存在")
 
     return FindocTemplateDeleteResponse(id=template_id, storage="neon")
+
+
+def _vetra_company_item(record) -> VetraCompanyItemResponse:
+    return VetraCompanyItemResponse(
+        id=record.id,
+        name=record.name,
+        introduction=record.introduction,
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
+
+
+def _vetra_template_item(record) -> VetraTemplateItemResponse:
+    return VetraTemplateItemResponse(
+        id=record.id,
+        name=record.name,
+        subject=record.subject,
+        body=record.body,
+        created_at=record.created_at,
+        updated_at=record.updated_at,
+    )
+
+
+@router.get("/vetra/companies", response_model=VetraCompanyListResponse)
+async def list_vetra_companies(
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> VetraCompanyListResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    try:
+        rows = await neon_io(repo.list_vetra_companies, user_id)
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    return VetraCompanyListResponse(
+        items=[_vetra_company_item(r) for r in rows],
+        storage="neon",
+    )
+
+
+@router.post("/vetra/companies", response_model=VetraCompanyItemResponse)
+async def save_vetra_company(
+    body: VetraCompanySaveRequest,
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> VetraCompanyItemResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    try:
+        record = await neon_io(
+            repo.save_vetra_company,
+            user_id,
+            company_id=body.id,
+            name=body.name,
+            introduction=body.introduction,
+        )
+    except NeonStorageQuotaError as e:
+        raise HTTPException(
+            status_code=413, detail=_storage_quota_http_detail(e)
+        ) from e
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    return _vetra_company_item(record)
+
+
+@router.delete(
+    "/vetra/companies/{company_id}",
+    response_model=VetraCompanyDeleteResponse,
+)
+async def delete_vetra_company(
+    company_id: str,
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> VetraCompanyDeleteResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    try:
+        deleted = await neon_io(repo.delete_vetra_company, user_id, company_id)
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="公司不存在")
+
+    return VetraCompanyDeleteResponse(id=company_id, storage="neon")
+
+
+@router.get("/vetra/templates", response_model=VetraTemplateListResponse)
+async def list_vetra_templates(
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> VetraTemplateListResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    try:
+        rows = await neon_io(repo.list_vetra_templates, user_id)
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    return VetraTemplateListResponse(
+        items=[_vetra_template_item(r) for r in rows],
+        storage="neon",
+    )
+
+
+@router.post("/vetra/templates", response_model=VetraTemplateItemResponse)
+async def save_vetra_template(
+    body: VetraTemplateSaveRequest,
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> VetraTemplateItemResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    try:
+        record = await neon_io(
+            repo.save_vetra_template,
+            user_id,
+            template_id=body.id,
+            name=body.name,
+            subject=body.subject,
+            body=body.body,
+        )
+    except NeonStorageQuotaError as e:
+        raise HTTPException(
+            status_code=413, detail=_storage_quota_http_detail(e)
+        ) from e
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    return _vetra_template_item(record)
+
+
+@router.delete(
+    "/vetra/templates/{template_id}",
+    response_model=VetraTemplateDeleteResponse,
+)
+async def delete_vetra_template(
+    template_id: str,
+    user: AuthUser | None = Depends(
+        require_user if settings.neon_require_auth else get_optional_user
+    ),
+) -> VetraTemplateDeleteResponse:
+    user_id = resolve_neon_user_id(user)
+    repo = get_neon_repository()
+    if not repo:
+        raise HTTPException(status_code=503, detail="Neon 未配置")
+
+    try:
+        deleted = await neon_io(repo.delete_vetra_template, user_id, template_id)
+    except NeonConnectionError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+    if not deleted:
+        raise HTTPException(status_code=404, detail="模板不存在")
+
+    return VetraTemplateDeleteResponse(id=template_id, storage="neon")
 
 
 @router.post(

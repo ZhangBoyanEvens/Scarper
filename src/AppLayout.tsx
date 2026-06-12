@@ -14,6 +14,7 @@ import { SettingsPage } from './components/pages/SettingsPage'
 import { ScarperApp } from './ScarperApp'
 import { RagChatPage } from './components/pages/RagChatPage'
 import { ToolsPage } from './components/pages/ToolsPage'
+import { VetraPage } from './components/pages/VetraPage'
 import type { FindocOpenRequest } from './services/findocNavigation'
 import {
   APP_NAV_ITEMS,
@@ -92,9 +93,11 @@ function AppLayoutBody({ authLocked }: AppLayoutBodyProps) {
             handleNavigate('findoc-templates')
           }}
           onOpenRagChat={() => handleNavigate('rag-chat')}
+          onOpenVetra={() => handleNavigate('vetra')}
         />
       )}
       {view === 'rag-chat' && !authLocked && <RagChatPage />}
+      {view === 'vetra' && !authLocked && <VetraPage />}
       {view === 'findoc' && !authLocked && (
         <FinDocPage
           pendingOpen={findocPendingOpen}

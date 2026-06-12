@@ -10,7 +10,7 @@
 }
 
 .tools-shell {
-  width: min(880px, 100%);
+  width: min(1080px, 100%);
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -32,19 +32,29 @@
 }
 
 .tools-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.tools-grid--four {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.tools-row {
+  display: grid;
+  gap: 16px;
 }
 
-@media (min-width: 960px) {
-  .tools-grid--four {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.tools-row--top {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.tools-row--bottom {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.tools-row--bottom .tools-card {
+  width: calc((100% - 32px) / 3);
+  flex-shrink: 0;
 }
 
 .tools-card {
@@ -130,9 +140,18 @@
   transform: translateX(2px);
 }
 
-@media (max-width: 720px) {
-  .tools-grid {
+@media (max-width: 900px) {
+  .tools-row--top {
     grid-template-columns: 1fr;
+  }
+
+  .tools-row--bottom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tools-row--bottom .tools-card {
+    width: 100%;
   }
 }
 

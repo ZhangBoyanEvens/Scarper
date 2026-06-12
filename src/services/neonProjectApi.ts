@@ -81,6 +81,11 @@ async function neonFetch(
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error('数据库请求已取消或超时，请稍后重试')
     }
+    if (err instanceof TypeError && err.message === 'Failed to fetch') {
+      throw new Error(
+        '无法连接后端（Failed to fetch）。请确认后端已启动（http://127.0.0.1:8000）。',
+      )
+    }
     throw err
   } finally {
     window.clearTimeout(timer)

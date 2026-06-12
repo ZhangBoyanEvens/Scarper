@@ -1,4 +1,4 @@
-import { DEEPSEEK_DEFAULTS } from '../config/deepseek'
+import { DEEPSEEK_DEFAULTS, resolveDeepseekApiBase } from '../config/deepseek'
 import type {
   ChatCompletionRequest,
   ChatCompletionResponse,
@@ -6,8 +6,18 @@ import type {
 } from '../types/deepseek'
 
 function chatUrl(): string {
-  const base = DEEPSEEK_DEFAULTS.apiBase.replace(/\/$/, '')
+  const base = resolveDeepseekApiBase().replace(/\/$/, '')
   return `${base}${DEEPSEEK_DEFAULTS.chatPath}`
+}
+
+function wrapNetworkError(err: unknown): Error {
+  if (err instanceof TypeError && err.message === 'Failed to fetch') {
+    return new Error(
+      '无法连接 AI 服务（Failed to fetch）。请确认后端已启动（http://127.0.0.1:8000），并检查网络与 API 配置。',
+    )
+  }
+  if (err instanceof Error) return err
+  return new Error('AI 请求失败')
 }
 
 async function parseError(res: Response): Promise<string> {
@@ -25,12 +35,17 @@ export async function createChatCompletion(
   signal?: AbortSignal,
 ): Promise<ChatCompletionResponse> {
   const model = request.model ?? DEEPSEEK_DEFAULTS.model
-  const res = await fetch(chatUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...request, model, stream: false }),
-    signal,
-  })
+  let res: Response
+  try {
+    res = await fetch(chatUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...request, model, stream: false }),
+      signal,
+    })
+  } catch (err) {
+    throw wrapNetworkError(err)
+  }
 
   if (!res.ok) {
     throw new Error(await parseError(res))
@@ -46,12 +61,17 @@ export async function streamChatCompletion(
   signal?: AbortSignal,
 ): Promise<void> {
   const model = request.model ?? DEEPSEEK_DEFAULTS.model
-  const res = await fetch(chatUrl(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...request, model, stream: true }),
-    signal,
-  })
+  let res: Response
+  try {
+    res = await fetch(chatUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...request, model, stream: true }),
+      signal,
+    })
+  } catch (err) {
+    throw wrapNetworkError(err)
+  }
 
   if (!res.ok) {
     throw new Error(await parseError(res))

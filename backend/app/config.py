@@ -60,7 +60,11 @@ class Settings(BaseSettings):
     # Cache (in-memory TTL seconds; 0 = disabled)
     cache_ttl_sec: int = 300
 
-    cors_origins: str = "http://localhost:5174,http://127.0.0.1:5174,http://localhost:5173,http://127.0.0.1:5173"
+    cors_origins: str = (
+        "http://localhost:5174,http://127.0.0.1:5174,"
+        "http://localhost:5173,http://127.0.0.1:5173,"
+        "http://localhost:4173,http://127.0.0.1:4173"
+    )
 
     # Clerk（留空则关闭后端 JWT 校验）
     clerk_secret_key: str = ""
